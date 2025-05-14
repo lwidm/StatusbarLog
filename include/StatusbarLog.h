@@ -22,8 +22,8 @@
  * - \c LOG_LEVEL_DBG: Logs debug messages to the console with the prefix
  * "DEBUG".
  *
- * \see log: Logginf function -> \todo
- * \see LOG_LEVEL: Globally set log level
+ *\see StatusbarLog::log: Logginf function -> \todo
+ *\see StatusbarLog::log_LEVEL: Globally set log level
  * \see print_err: Function for printing error messages -> \todo
  */
 // clang-format off
@@ -44,7 +44,7 @@ typedef enum {
  * a log level can be adjusted to control the verbosity of logging output.
  *
  * \see StatusbarLog::log: Logging function
- * \see Log_level: Different kinds of log levels
+ *\see StatusbarLog::log_level: Different kinds of log levels
  */
 #ifndef LOG_LEVEL
 #define LOG_LEVEL LOG_LEVEL_DBG
@@ -64,8 +64,8 @@ namespace StatusbarLog {
  *
  * \return 0 on success, non-zero on formatting error.
  *
- * \see Log_level: Different kinds of log levels
- * \see LOG_LEVEL: Globally set log level
+ *\see StatusbarLog::log_level: Different kinds of log levels
+ *\see StatusbarLog::log_LEVEL: Globally set log level
  * \see print_err: Function for printing error messages -> \todo
  */
 int log(const std::string& filename, const std::string& fmt,
@@ -75,7 +75,7 @@ int log(const std::string& filename, const std::string& fmt,
  * \def LOG_ERR
  * \brief Shortcut for logging warnings.
  *
- * \see log: General logging function
+ *\see StatusbarLog::log: General logging function
  */
 #define LOG_ERR(filename, fmt, ...) \
   StatusbarLog::log(filename, fmt, LOG_LEVEL_ERR, ##__VA_ARGS__)
@@ -84,7 +84,7 @@ int log(const std::string& filename, const std::string& fmt,
  * \def LOG_WRN
  * \brief Shortcut for logging warnings.
  *
- * \see log: General logging function
+ *\see StatusbarLog::log: General logging function
  */
 #define LOG_WRN(filename, fmt, ...) \
   StatusbarLog::log(filename, fmt, LOG_LEVEL_WRN, ##__VA_ARGS__)
@@ -93,7 +93,7 @@ int log(const std::string& filename, const std::string& fmt,
  * \def LOG_INF
  * \brief Shortcut for logging informational messages.
  *
- * \see log: General logging function
+ *\see StatusbarLog::log: General logging function
  */
 #define LOG_INF(filename, fmt, ...) \
   StatusbarLog::log(filename, fmt, LOG_LEVEL_INF, ##__VA_ARGS__)
@@ -102,7 +102,7 @@ int log(const std::string& filename, const std::string& fmt,
  * \def LOG_DBG
  * \brief Shortcut for logging debug messages.
  *
- * \see log: General logging function
+ *\see StatusbarLog::log: General logging function
  */
 #define LOG_DBG(filename, fmt, ...) \
   StatusbarLog::log(filename, fmt, LOG_LEVEL_DBG, ##__VA_ARGS__)
