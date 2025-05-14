@@ -1,0 +1,14 @@
+[
+{
+  "directory": "/home/lukas/Documents/StatusbarLog/build",
+  "command": "/usr/bin/clang++  -I/home/lukas/Documents/StatusbarLog/include -O3 -DNDEBUG -std=gnu++17 -O1 -Wall -Wextra -Wpedantic -Wno-unused-command-line-argument -Wformat -o CMakeFiles/statusbarlog.dir/src/main.cpp.o -c /home/lukas/Documents/StatusbarLog/src/main.cpp",
+  "file": "/home/lukas/Documents/StatusbarLog/src/main.cpp",
+  "output": "CMakeFiles/statusbarlog.dir/src/main.cpp.o"
+},
+{
+  "directory": "/home/lukas/Documents/StatusbarLog/build",
+  "command": "/usr/bin/clang++  -I/home/lukas/Documents/StatusbarLog/include -O3 -DNDEBUG -std=gnu++17 -O1 -Wall -Wextra -Wpedantic -Wno-unused-command-line-argument -Wformat -o CMakeFiles/statusbarlog.dir/src/StatusbarLog.cpp.o -c /home/lukas/Documents/StatusbarLog/src/StatusbarLog.cpp",
+  "file": "/home/lukas/Documents/StatusbarLog/src/StatusbarLog.cpp",
+  "output": "CMakeFiles/statusbarlog.dir/src/StatusbarLog.cpp.o"
+}
+]
