@@ -4,6 +4,7 @@
 #define STATUSBARLOG_H
 
 #include <cstdarg>
+#include <cstddef>
 #include <cstdio>
 #include <string>
 
@@ -106,6 +107,8 @@ int log(const std::string& filename, const std::string& fmt,
  */
 #define LOG_DBG(filename, fmt, ...) \
   StatusbarLog::log(filename, fmt, LOG_LEVEL_DBG, ##__VA_ARGS__)
+
+int draw_progress_bar(double percent, int bar_width, std::size_t spinner_idx);
 
 }  // namespace StatusbarLog
 
