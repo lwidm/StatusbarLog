@@ -8,6 +8,20 @@
 #include <iostream>
 #include <ostream>
 
+// Hidden implementation detail
+namespace {
+
+void _move_cursor_up(int move) {
+  if (move > 0) {
+    std::cout << "\033[" << move << "A";
+  } else if (move < 0) {
+    std::cout << std::string(-move, '\n');
+  }
+  std::cout << std::flush;
+}
+
+}  // namespace
+
 namespace StatusbarLog {
 
 int log(const std::string& filename, const std::string& fmt,
@@ -34,26 +48,28 @@ int log(const std::string& filename, const std::string& fmt,
   return 0;
 }
 
-int draw_progress_bar(double percent, int bar_width, std::size_t spinner_idx) {
+int draw_progress_bar(double percent, int bar_width, std::size_t spinner_idx,
+                      int move) {
   static const std::array<char, 4> spinner = {'|', '/', '-', '\\'};
   char spin_char = spinner[spinner_idx % spinner.size()];
 
   int fill = std::floor((percent * static_cast<double>(bar_width)) / 100.0);
   int empty = bar_width - fill;
 
-  std::string bar = "[";
-  bar += std::string(fill, '#');
-  if (bar_width > fill) {
-    bar += spin_char;
-    bar += std::string(empty - 1, ' ');
-  } else {
-    bar += std::string(empty, ' ');
-  }
-  bar += "] ";
   std::ostringstream oss;
+  oss << "[";
+  oss << std::string(fill, '#');
+  if (bar_width > fill) {
+    oss << spin_char;
+    oss << std::string(empty - 1, ' ');
+  } else {
+    oss << std::string(empty, ' ');
+  }
+  oss << "] ";
   oss << std::fixed << std::setprecision(2) << std::setw(5) << percent;
-  bar += oss.str();
-  std::cout << bar << '\r' << std::flush;
+  _move_cursor_up(move);
+  std::cout << oss.str() << std::flush;
+  _move_cursor_up(-move);
 
   return 0;
 }
