@@ -7,6 +7,7 @@
 #include <cstddef>
 #include <cstdio>
 #include <string>
+#include <vector>
 
 /**
  * \enum Log_level
@@ -52,6 +53,17 @@ typedef enum {
 #endif  // !LOG_LEVEL
 
 namespace StatusbarLog {
+
+typedef struct {
+  std::vector<unsigned int> positions;
+  std::vector<unsigned int> bar_sizes;
+  std::vector<std::string> prefixes;
+  std::vector<std::string> postfixes;
+  std::vector<std::size_t> spin_idxs;
+} ProgressBar;
+
+extern std::vector<ProgressBar> progressbars;
+
 
 /**
  * \brief Logs a formatted message to the console if its level is
@@ -108,7 +120,14 @@ int log(const std::string& filename, const std::string& fmt,
 #define LOG_DBG(filename, fmt, ...) \
   StatusbarLog::log(filename, fmt, LOG_LEVEL_DBG, ##__VA_ARGS__)
 
-int draw_progress_bar(double percent, int bar_width, std::size_t spinner_idx, int move);
+int create_progressbar(ProgressBar& progressbar,
+                       const std::vector<unsigned int> _positions,
+                       const std::vector<unsigned int> _bar_sizes,
+                       const std::vector<std::string> _prefixes,
+                       const std::vector<std::string> _postfixes);
+
+int update_progress_bar(ProgressBar& progressbar, const std::size_t idx,
+                        const double percent);
 
 }  // namespace StatusbarLog
 
