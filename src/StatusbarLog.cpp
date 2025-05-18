@@ -30,7 +30,8 @@ int _draw_progress_bar_component(const double percent,
   static const std::array<char, 4> spinner = {'|', '/', '-', '\\'};
   char spin_char = spinner[spinner_idx % spinner.size()];
 
-  const unsigned int fill = std::floor((percent * static_cast<double>(bar_width)) / 100.0);
+  const unsigned int fill =
+      std::floor((percent * static_cast<double>(bar_width)) / 100.0);
   const unsigned int empty = bar_width - fill;
 
   std::ostringstream oss;
@@ -58,11 +59,12 @@ int _draw_progress_bar_component(const double percent,
 
 namespace StatusbarLog {
 
-std::vector<ProgressBar> progressbars = {};
+std::vector<ProgressBar*> progressbars = {};
 
 int log(const std::string& filename, const std::string& fmt,
         const Log_level log_level, ...) {
   if (log_level > LOG_LEVEL) return 0;
+  const bool progressbars_active = !progressbars.empty();
 
   const char* prefix = "";
   // clang-format off
@@ -75,12 +77,38 @@ int log(const std::string& filename, const std::string& fmt,
   }
   // clang-format on
 
+  unsigned int move = 0;
+  if (progressbars_active) {
+    for (std::size_t i = 0; i < progressbars.size(); ++i) {
+      for (std::size_t j = 0; j < progressbars[i]->positions.size(); ++j) {
+        unsigned int current_pos = progressbars[i]->positions[j];
+        if (current_pos > move) {
+          move = current_pos;
+        }
+      }
+    }
+  }
+
   va_list args;
+  _move_cursor_up(move);
+  if (progressbars_active) printf("\r\033[2K\r");
   va_start(args, log_level);
   printf("%s [%s]: ", prefix, filename.c_str());
   vprintf(fmt.c_str(), args);
-  printf("\n");
+  _move_cursor_up(-move);
   va_end(args);
+
+  if (progressbars_active) {
+    for (std::size_t i = 0; i < progressbars.size(); ++i) {
+      for (std::size_t j = 0; j < progressbars[i]->positions.size(); ++j) {
+        update_progress_bar(*progressbars[i], j,
+                            progressbars[i]->percentages[j]);
+      }
+    }
+  } else {
+    printf("\n");
+  }
+
   return 0;
 }
 
@@ -89,8 +117,9 @@ int create_progressbar(ProgressBar& progressbar,
                        const std::vector<unsigned int> _bar_sizes,
                        const std::vector<std::string> _prefixes,
                        const std::vector<std::string> _postfixes) {
-  progressbar = {_positions, _bar_sizes, _prefixes, _postfixes,
-                 std::vector<std::size_t>{0}};
+  std::vector<double> percentages(_positions.size(), 0.0);
+  progressbar = {percentages, _positions, _bar_sizes,
+                 _prefixes,   _postfixes, std::vector<std::size_t>{0}};
   const unsigned int num_bars = progressbars.size();
   for (std::size_t idx = 0; idx < num_bars; idx++) {
     _draw_progress_bar_component(
@@ -104,6 +133,7 @@ int create_progressbar(ProgressBar& progressbar,
 
 int update_progress_bar(ProgressBar& progressbar, const std::size_t idx,
                         const double percent) {
+  progressbar.percentages[idx] = percent;
   _draw_progress_bar_component(
       percent, progressbar.bar_sizes[idx], progressbar.prefixes[idx],
       progressbar.postfixes[idx], progressbar.spin_idxs[idx],

@@ -55,6 +55,7 @@ typedef enum {
 namespace StatusbarLog {
 
 typedef struct {
+  std::vector<double> percentages;
   std::vector<unsigned int> positions;
   std::vector<unsigned int> bar_sizes;
   std::vector<std::string> prefixes;
@@ -62,8 +63,7 @@ typedef struct {
   std::vector<std::size_t> spin_idxs;
 } ProgressBar;
 
-extern std::vector<ProgressBar> progressbars;
-
+extern std::vector<ProgressBar*> progressbars;
 
 /**
  * \brief Logs a formatted message to the console if its level is
@@ -83,6 +83,9 @@ extern std::vector<ProgressBar> progressbars;
  */
 int log(const std::string& filename, const std::string& fmt,
         Log_level log_level, ...);
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wgnu-zero-variadic-macro-arguments"
 
 /**
  * \def LOG_ERR
@@ -119,6 +122,7 @@ int log(const std::string& filename, const std::string& fmt,
  */
 #define LOG_DBG(filename, fmt, ...) \
   StatusbarLog::log(filename, fmt, LOG_LEVEL_DBG, ##__VA_ARGS__)
+#pragma GCC diagnostic pop
 
 int create_progressbar(ProgressBar& progressbar,
                        const std::vector<unsigned int> _positions,
