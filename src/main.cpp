@@ -34,7 +34,7 @@ int main() {
     return err;
   }
 
-  for (int i = 0; i <= total_steps1; ++i) {
+  for (std::size_t i = 0; i <= total_steps1; ++i) {
     double percent = static_cast<double>(i) / total_steps1 * 100;
     StatusbarLog::update_statusbar(statusbar, 0, percent);
     if (i % 10 == 0) {
@@ -42,7 +42,7 @@ int main() {
     }
 
     // Simulate work:
-    for (int j = 0; j <= total_steps2; ++j) {
+    for (std::size_t j = 0; j <= total_steps2; ++j) {
       double percent = static_cast<double>(j) / total_steps2 * 100;
       StatusbarLog::update_statusbar(statusbar, 1, percent);
       std::this_thread::sleep_for(std::chrono::milliseconds(10));
