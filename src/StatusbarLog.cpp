@@ -13,6 +13,14 @@
 // Hidden implementation detail
 namespace {
 
+/**
+ * \brief Function used only by the StatusbarLog module to move the cursor up X
+ * lines in the standard output terminal
+ *
+ * \param[in] move: How many lines to move upwards. Negative values mean moving
+ * down.
+ *
+ */
 void _move_cursor_up(int move) {
   if (move > 0) {
     std::cout << "\033[" << move << "A";
@@ -22,11 +30,35 @@ void _move_cursor_up(int move) {
   std::cout << std::flush;
 }
 
-int _draw_progress_bar_component(const double percent,
-                                 const unsigned int bar_width,
-                                 const std::string prefix,
-                                 const std::string postfix,
-                                 std::size_t& spinner_idx, const int move) {
+/**
+ * \brief Function used only by that StatusbarLog module to draw a single status
+ * bar at a certain position.
+ *
+ * This function draws a single status bar (not multiple stacked ones) from
+ * primitive variables.
+ *
+ * Example single statusbar:
+ * "prefix string"[########/       ] 50% "postfix string"
+ *
+ * the bar can be drawn at an arbitrary postion above or on the cursur using the
+ * `move` parameter.
+ *
+ * \param[in] percent: Progress percentage (0-100).
+ * \param[in] bar_width: Total bar width (characters excluding prefix, postfix,
+ * percentage, '[' and '[').
+ * \param[in] prefix: Text before the bar.
+ * \param[in] postfix: Text after the bar.
+ * \param[in, out] spinner_idx: Index for spinner animation (incremented on call).
+ * \param[in] move: Vertical offset from cursor (positive = up).
+ *
+ * \details Using the spinner_idx the spinner character can cycle through { |,
+ * /, -, \ } on each update.
+ */
+int _draw_statusbar_component(const double percent,
+                              const unsigned int bar_width,
+                              const std::string prefix,
+                              const std::string postfix,
+                              std::size_t& spinner_idx, const int move) {
   static const std::array<char, 4> spinner = {'|', '/', '-', '\\'};
   char spin_char = spinner[spinner_idx % spinner.size()];
 
@@ -59,12 +91,12 @@ int _draw_progress_bar_component(const double percent,
 
 namespace StatusbarLog {
 
-std::vector<ProgressBar*> progressbars = {};
+std::vector<StatusBar*> g_statusbar_registry = {};
 
 int log(const std::string& filename, const std::string& fmt,
         const Log_level log_level, ...) {
   if (log_level > LOG_LEVEL) return 0;
-  const bool progressbars_active = !progressbars.empty();
+  const bool statusbars_active = !g_statusbar_registry.empty();
 
   const char* prefix = "";
   // clang-format off
@@ -78,10 +110,11 @@ int log(const std::string& filename, const std::string& fmt,
   // clang-format on
 
   unsigned int move = 0;
-  if (progressbars_active) {
-    for (std::size_t i = 0; i < progressbars.size(); ++i) {
-      for (std::size_t j = 0; j < progressbars[i]->positions.size(); ++j) {
-        unsigned int current_pos = progressbars[i]->positions[j];
+  if (statusbars_active) {
+    for (std::size_t i = 0; i < g_statusbar_registry.size(); ++i) {
+      for (std::size_t j = 0; j < g_statusbar_registry[i]->positions.size();
+           ++j) {
+        unsigned int current_pos = g_statusbar_registry[i]->positions[j];
         if (current_pos > move) {
           move = current_pos;
         }
@@ -91,18 +124,19 @@ int log(const std::string& filename, const std::string& fmt,
 
   va_list args;
   _move_cursor_up(move);
-  if (progressbars_active) printf("\r\033[2K\r");
+  if (statusbars_active) printf("\r\033[2K\r");
   va_start(args, log_level);
   printf("%s [%s]: ", prefix, filename.c_str());
   vprintf(fmt.c_str(), args);
   _move_cursor_up(-move);
   va_end(args);
 
-  if (progressbars_active) {
-    for (std::size_t i = 0; i < progressbars.size(); ++i) {
-      for (std::size_t j = 0; j < progressbars[i]->positions.size(); ++j) {
-        update_progress_bar(*progressbars[i], j,
-                            progressbars[i]->percentages[j]);
+  if (statusbars_active) {
+    for (std::size_t i = 0; i < g_statusbar_registry.size(); ++i) {
+      for (std::size_t j = 0; j < g_statusbar_registry[i]->positions.size();
+           ++j) {
+        update_statusbar(*g_statusbar_registry[i], j,
+                         g_statusbar_registry[i]->percentages[j]);
       }
     }
   } else {
@@ -112,32 +146,31 @@ int log(const std::string& filename, const std::string& fmt,
   return 0;
 }
 
-int create_progressbar(ProgressBar& progressbar,
-                       const std::vector<unsigned int> _positions,
-                       const std::vector<unsigned int> _bar_sizes,
-                       const std::vector<std::string> _prefixes,
-                       const std::vector<std::string> _postfixes) {
+int create_statusbar(StatusBar& statusbar,
+                     const std::vector<unsigned int> _positions,
+                     const std::vector<unsigned int> _bar_sizes,
+                     const std::vector<std::string> _prefixes,
+                     const std::vector<std::string> _postfixes) {
   std::vector<double> percentages(_positions.size(), 0.0);
-  progressbar = {percentages, _positions, _bar_sizes,
-                 _prefixes,   _postfixes, std::vector<std::size_t>{0}};
-  const unsigned int num_bars = progressbars.size();
+  statusbar = {percentages, _positions, _bar_sizes,
+               _prefixes,   _postfixes, std::vector<std::size_t>{0}};
+  const unsigned int num_bars = g_statusbar_registry.size();
   for (std::size_t idx = 0; idx < num_bars; idx++) {
-    _draw_progress_bar_component(
-        0.0, progressbar.bar_sizes[idx], progressbar.prefixes[idx],
-        progressbar.postfixes[idx], progressbar.spin_idxs[idx],
-        progressbar.positions[idx]);
+    _draw_statusbar_component(0.0, statusbar.bar_sizes[idx],
+                              statusbar.prefixes[idx], statusbar.postfixes[idx],
+                              statusbar.spin_idxs[idx],
+                              statusbar.positions[idx]);
     return 0;
   }
   return 0;
 }
 
-int update_progress_bar(ProgressBar& progressbar, const std::size_t idx,
-                        const double percent) {
-  progressbar.percentages[idx] = percent;
-  _draw_progress_bar_component(
-      percent, progressbar.bar_sizes[idx], progressbar.prefixes[idx],
-      progressbar.postfixes[idx], progressbar.spin_idxs[idx],
-      progressbar.positions[idx]);
+int update_statusbar(StatusBar& statusbar, const std::size_t idx,
+                     const double percent) {
+  statusbar.percentages[idx] = percent;
+  _draw_statusbar_component(percent, statusbar.bar_sizes[idx],
+                            statusbar.prefixes[idx], statusbar.postfixes[idx],
+                            statusbar.spin_idxs[idx], statusbar.positions[idx]);
   return 0;
 }
 

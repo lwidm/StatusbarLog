@@ -19,12 +19,12 @@ int main() {
   const int total_steps1 = 50;
   const int total_steps2 = 100;
 
-  StatusbarLog::ProgressBar progressbar;
-  StatusbarLog::progressbars.push_back(&progressbar);
+  StatusbarLog::StatusBar statusbar;
+  StatusbarLog::g_statusbar_registry.push_back(&statusbar);
 
   std::cout << "\n\n";
-  err = StatusbarLog::create_progressbar(
-      progressbar, {2, 1},                                     // <-- Postions
+  err = StatusbarLog::create_statusbar(
+      statusbar, {2, 1},                                     // <-- Postions
       {20, 10},                                                // <-- Bar widths
       {"first:  ", "second: "},                                // <-- prefixes
       {" -- 50 total steps", "           -- 100 total steps"}  // <-- postfixes
@@ -36,7 +36,7 @@ int main() {
 
   for (int i = 0; i <= total_steps1; ++i) {
     double percent = static_cast<double>(i) / total_steps1 * 100;
-    StatusbarLog::update_progress_bar(progressbar, 0, percent);
+    StatusbarLog::update_statusbar(statusbar, 0, percent);
     if (i % 10 == 0) {
       LOG_INF("main.cpp", "10 Ticks reached\n");
     }
@@ -44,7 +44,7 @@ int main() {
     // Simulate work:
     for (int j = 0; j <= total_steps2; ++j) {
       double percent = static_cast<double>(j) / total_steps2 * 100;
-      StatusbarLog::update_progress_bar(progressbar, 1, percent);
+      StatusbarLog::update_statusbar(statusbar, 1, percent);
       std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
   }
