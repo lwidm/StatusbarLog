@@ -26,3 +26,12 @@ If you are using a different operating system you might need to modify the follo
 DOT_PATH = /usr/bin/dot
 ```
 The line above specifies where to find the `dot` executable of the graphviz program.
+
+## Building
+```zsh
+cmake .. -DCMAKE_BUILD_TYPE=Release
+```
+
+```zsh
+cmake --build . -j$(nproc) --config Release
+```
