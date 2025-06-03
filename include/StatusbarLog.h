@@ -160,7 +160,7 @@ int create_statusbar_handle(StatusBar_handle& statusbar,
                             const std::vector<unsigned int> _bar_sizes,
                             const std::vector<std::string> _prefixes,
                             const std::vector<std::string> _postfixes);
-int destroy_statusbar_handle(StatusBar_handle& statusbar_hanlde);
+int destroy_statusbar_handle(StatusBar_handle& statusbar_handle);
 
 /**
  * \brief Function used for updating a statusbar given its handle. The statusbar

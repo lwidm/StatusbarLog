@@ -37,7 +37,6 @@ cmake --build . -j$(nproc) --config Release
 ```
 
 ## TODO
-- `destroy_statusbar_handle`
 - Terminal width handling (`get_terminal_width`) Truncate statusbar text when wider than terminal
 - Missing Escape code management
    ```cpp
@@ -69,3 +68,5 @@ cmake --build . -j$(nproc) --config Release
 - no wrap protection in `handle_ID_count`
 - Make usable as git submodule and cmake module
 
+## TODO unittest
+- destroying of statusbar (all error codes)

@@ -2,9 +2,12 @@
 
 #include "StatusbarLog.h"
 
+#include <algorithm>
 #include <array>
 #include <cassert>
 #include <cmath>
+#include <cstdint>
+#include <limits>
 #include <cstddef>
 #include <iomanip>
 #include <iostream>
@@ -61,6 +64,18 @@ void _move_cursor_up(int move) {
   std::cout << std::flush;
 }
 
+// Clear entire current line
+void clear_line() {
+    std::cout << "\033[2K";
+}
+
+// More robust version with cursor positioning
+void clear_current_line() {
+    std::cout << "\r"      // Return to line start
+              << "\033[2K" // Clear entire line
+              << std::flush;
+}
+
 /**
  * \brief Function used only by that StatusbarLog module to draw a single status
  * bar at a certain position.
@@ -88,11 +103,12 @@ void _move_cursor_up(int move) {
  */
 int _draw_statusbar_component(const double percent,
                               const unsigned int bar_width,
-                              const std::string prefix,
-                              const std::string postfix,
+                              const std::string& prefix,
+                              const std::string& postfix,
                               std::size_t& spinner_idx, const int move) {
   static const std::array<char, 4> spinner = {'|', '/', '-', '\\'};
-  char spin_char = spinner[spinner_idx % spinner.size()];
+  spinner_idx %= spinner.size();
+  char spin_char = spinner[spinner_idx];
 
   const unsigned int fill =
       std::floor((percent * static_cast<double>(bar_width)) / 100.0);
@@ -112,9 +128,9 @@ int _draw_statusbar_component(const double percent,
   oss << std::fixed << std::setprecision(2) << std::setw(6) << percent;
   oss << postfix;
   _move_cursor_up(move);
+  clear_current_line();
   std::cout << oss.str() << std::flush;
   _move_cursor_up(-move);
-  spinner_idx++;
 
   return 0;
 }
@@ -207,9 +223,9 @@ int create_statusbar_handle(StatusBar_handle& statusbar_handle,
         _postfixes,  spin_idxs,  handle_ID_count};
   } else {
     statusbar_handle.idx = statusbar_registry.size();
-    statusbar_registry.emplace_back(StatusBar{percentages, _positions, _bar_sizes,
-                                    _prefixes, _postfixes, spin_idxs,
-                                    handle_ID_count});
+    statusbar_registry.emplace_back(StatusBar{percentages, _positions,
+                                              _bar_sizes, _prefixes, _postfixes,
+                                              spin_idxs, handle_ID_count});
   }
   statusbar_handle.ID = handle_ID_count;
   statusbar_handle.valid = true;
@@ -224,13 +240,67 @@ int create_statusbar_handle(StatusBar_handle& statusbar_handle,
   return 0;
 }
 
+int destroy_statusbar_handle(StatusBar_handle& statusbar_handle) {
+  if (!statusbar_handle.valid) {
+    LOG_ERR(FILENAME,
+            "Attempt to destroy already Invalid handle! (idx: %zu, ID: %u)",
+            statusbar_handle.idx, statusbar_handle.ID);
+    return -1;
+  }
+
+  if (statusbar_handle.idx >= statusbar_registry.size()) {
+    LOG_ERR(FILENAME, "Handle index %zu out of bounds (max %zu)",
+            statusbar_handle.idx, statusbar_registry.size());
+    return -2;
+  }
+
+  StatusBar& target = statusbar_registry[statusbar_handle.idx];
+
+  if (target.ID != statusbar_handle.ID) {
+    LOG_ERR(FILENAME, "ID mismatch: handle %u vs registry %u",
+            statusbar_handle.ID, target.ID);
+    return -3;
+  }
+
+  for (std::size_t i = 0; i < target.positions.size(); i++) {
+    _move_cursor_up(target.positions[i]);
+    clear_current_line();
+    _move_cursor_up(-target.positions[i]);
+  }
+  std::cout.flush();
+  
+  target.percentages.clear();
+  target.positions.clear();
+  target.bar_sizes.clear();
+
+  for (std::string& str : target.prefixes) {
+    std::fill(str.begin(), str.end(), '\0');
+  }
+  for (std::string& str : target.postfixes) {
+    std::fill(str.begin(), str.end(), '\0');
+  }
+  target.prefixes.clear();
+  target.postfixes.clear();
+
+  target.ID = 0;
+  target.spin_idxs.clear();
+
+  statusbar_free_handles.push_back(statusbar_handle);
+
+  statusbar_handle.valid = false;
+  statusbar_handle.ID = 0;
+  statusbar_handle.idx = SIZE_MAX;
+
+  return 0;
+}
+
 int update_statusbar(StatusBar_handle& statusbar_handle, const std::size_t idx,
                      const double percent) {
   if (!statusbar_handle.valid) {
     LOG_ERR(FILENAME, "Invalid hanldes cannot be updated!");
     return -1;
   }
-  StatusBar statusbar = statusbar_registry[statusbar_handle.idx];
+  StatusBar& statusbar = statusbar_registry[statusbar_handle.idx];
   if (statusbar_handle.ID != statusbar.ID) {
     LOG_ERR(FILENAME, "Handle and statusbar IDs do not match! Got %d and %d",
             statusbar_handle.ID, statusbar.ID);
@@ -243,6 +313,7 @@ int update_statusbar(StatusBar_handle& statusbar_handle, const std::size_t idx,
   }
 
   statusbar.percentages[idx] = percent;
+  statusbar.spin_idxs[idx] = statusbar.spin_idxs[idx] + 1;
   _draw_statusbar_component(percent, statusbar.bar_sizes[idx],
                             statusbar.prefixes[idx], statusbar.postfixes[idx],
                             statusbar.spin_idxs[idx], statusbar.positions[idx]);
