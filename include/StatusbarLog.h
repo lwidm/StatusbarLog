@@ -59,38 +59,12 @@ typedef enum {
 #endif  // !LOG_LEVEL
 
 namespace StatusbarLog {
-/**
- * \struct StatusBar
- * \brief Represents a multi-component status bar with progress indicators.
- *
- * A status bar can contain multiple stacked bars, each with:
- * - A position (vertical order).
- * - A width (number of characters).
- * - Prefix/postfix text.
- * - A progress percentage.
- * - A spinner animation index.
- */
-// clang-format off
-typedef struct {
-  std::vector<double> percentages;      ///< Progress percentages (0-100) for each bar.
-  std::vector<unsigned int> positions;  ///< Vertical positions (1=topmost).
-  std::vector<unsigned int> bar_sizes;  ///< Total width (characters) of each bar.
-  std::vector<std::string> prefixes;    ///< Text displayed before each bar.
-  std::vector<std::string> postfixes;   ///< Text displayed after each bar.
-  std::vector<std::size_t> spin_idxs;   ///< Spinner animation indices.
-} StatusBar;
-// clang-format on
 
-/**
- * \brief Global registry of active status bars.
- *
- * Add all StatusBar pointers here to ensure log messages print above status
- * bars.
- *
- * \warning Remove pointers when their StatusBar is destroyed to avoid dangling
- * references.
- */
-extern std::vector<StatusBar*> g_statusbar_registry;
+typedef struct {
+  std::size_t idx;
+  unsigned int ID;
+  bool valid;
+} StatusBar_handle;
 
 /**
  * \brief \brief Logs a message if its level ≤ LOG_LEVEL
@@ -154,17 +128,18 @@ int log(const std::string& filename, const std::string& fmt,
 #pragma GCC diagnostic pop
 
 /**
- * \brief Initializes a StatusBar and prints its initial state.
+ * \brief Initializes a StatusBar, updates its handle and prints its initial
+ * state.
  *
- * This function takes an empty statusbar struct and populates it with the other
- * input parameters. Additionally it sets all percentages to 0 and sets the
- * spinner-indices to 0.
+ * This function takes an empty statusbar_handle struct and populate its
+ * corresponding statusbar with the other input parameters. Additionally it sets
+ * all percentages to 0 and sets the spinner-indices to 0.
  *
  * Example of a statusbar:
  *  "prefix1 string"[########/       ] 50% "postfix1 string"
  *  "prefix2 string"[#/        ] 10% "postfix2 string"
  *
- * \param[out] statusbar Struct to initialize.
+ * \param[out] statusbar_handle Struct to initialize.
  * \param[in] _positions Vertical positions (1=topmost) of each bar. For e.g. if
  * you want two bars stacked on top of each other you would pass {2, 1} (2: top
  * bar, 1: lower bar).
@@ -180,19 +155,21 @@ int log(const std::string& filename, const std::string& fmt,
  * \see StatusBar: The statusbar struct.
  * \see update_statusbar: Updating a statusbar
  */
-int create_statusbar(StatusBar& statusbar,
-                     const std::vector<unsigned int> _positions,
-                     const std::vector<unsigned int> _bar_sizes,
-                     const std::vector<std::string> _prefixes,
-                     const std::vector<std::string> _postfixes);
+int create_statusbar_handle(StatusBar_handle& statusbar,
+                            const std::vector<unsigned int> _positions,
+                            const std::vector<unsigned int> _bar_sizes,
+                            const std::vector<std::string> _prefixes,
+                            const std::vector<std::string> _postfixes);
+int destroy_statusbar_handle(StatusBar_handle& statusbar_hanlde);
 
 /**
- * \brief Function used for updating a statusbar. The statusbar can consist of
- * multiple "bars" of different sizes and different post-, and prefixes.
+ * \brief Function used for updating a statusbar given its handle. The statusbar
+ * can consist of multiple "bars" of different sizes and different post-, and
+ * prefixes.
  *
- * This Function takes a StatusBar struct and 'updates' it by printing the bar
- * given a new percentage. The statusbar can consist of multiple bars which
- * is why an index has to be passed. This function moves the cursor to the
+ * This Function takes a StatusBar_handle struct and 'updates' it by printing
+ * the bar given a new percentage. The statusbar can consist of multiple bars
+ * which is why an index has to be passed. This function moves the cursor to the
  * correct location in the terminal corresponding to the index, clears the row
  * and prints an updated bar.
  *
@@ -201,7 +178,7 @@ int create_statusbar(StatusBar& statusbar,
  *  "prefix2 string"[#/        ] 10% "postfix2 string"
  *
  *
- * \param[in, out] statusbar Statusbar to update.
+ * \param[in, out] statusbar_handle Statusbar to update.
  * \param[in] idx Index of the bar component (0-based).
  * \param[in] percent New progress percentage (0-100).
  * updated.
@@ -212,7 +189,7 @@ int create_statusbar(StatusBar& statusbar,
  * \see StatusBar: The statusbar struct.
  * \see g_statusbar_registry: Global statusbar registry.
  */
-int update_statusbar(StatusBar& statusbar, const std::size_t idx,
+int update_statusbar(StatusBar_handle& statusbar, const std::size_t idx,
                      const double percent);
 
 }  // namespace StatusbarLog
