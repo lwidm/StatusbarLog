@@ -196,7 +196,7 @@ int create_statusbar_handle(StatusBar_handle& statusbar_handle,
   handle_ID_count++;
   const std::size_t num_bars = _positions.size();
   const std::vector<double> percentages(num_bars, 0.0);
-  const std::vector<std::size_t> spin_idxs(num_bars, 0.0);
+  const std::vector<std::size_t> spin_idxs(num_bars, 0);
 
   if (!statusbar_free_handles.empty()) {
     StatusBar_handle free_handle = statusbar_free_handles.back();
