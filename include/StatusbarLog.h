@@ -3,6 +3,13 @@
 #ifndef STATUSBARLOG_H
 #define STATUSBARLOG_H
 
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <sys/ioctl.h>
+#include <unistd.h>
+#endif
+
 #include <cstdarg>
 #include <cstddef>
 #include <cstdio>

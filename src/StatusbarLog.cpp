@@ -70,7 +70,7 @@ void clear_line() {
 }
 
 // More robust version with cursor positioning
-void clear_current_line() {
+void _clear_current_line() {
     std::cout << "\r"      // Return to line start
               << "\033[2K" // Clear entire line
               << std::flush;
@@ -128,7 +128,7 @@ int _draw_statusbar_component(const double percent,
   oss << std::fixed << std::setprecision(2) << std::setw(6) << percent;
   oss << postfix;
   _move_cursor_up(move);
-  clear_current_line();
+  _clear_current_line();
   std::cout << oss.str() << std::flush;
   _move_cursor_up(-move);
 
@@ -264,7 +264,7 @@ int destroy_statusbar_handle(StatusBar_handle& statusbar_handle) {
 
   for (std::size_t i = 0; i < target.positions.size(); i++) {
     _move_cursor_up(target.positions[i]);
-    clear_current_line();
+    _clear_current_line();
     _move_cursor_up(-target.positions[i]);
   }
   std::cout.flush();
