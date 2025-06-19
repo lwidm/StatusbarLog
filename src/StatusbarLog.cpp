@@ -1,17 +1,29 @@
 // -- StatusbarLog/src/StatusbarLog.cpp
 
-#include "StatusbarLog.h"
+#include <asm-generic/ioctls.h>
+
+#include <sstream>
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <sys/ioctl.h>
+#include <unistd.h>
+#endif
 
 #include <algorithm>
 #include <array>
 #include <cassert>
+#include <chrono>
 #include <cmath>
-#include <cstdint>
-#include <limits>
 #include <cstddef>
+#include <cstdint>
 #include <iomanip>
 #include <iostream>
 #include <ostream>
+#include <thread>
+#include <vector>
+
+#include "StatusbarLog.h"
 
 #define FILENAME "StatusbarLog.cpp"
 
@@ -25,11 +37,14 @@ namespace {
  * \brief Represents a multi-component status bar with progress indicators.
  *
  * A status bar can contain multiple stacked bars, each with:
- * - A position (vertical order).
- * - A width (number of characters).
- * - Prefix/postfix text.
- * - A progress percentage.
- * - A spinner animation index.
+ * - Progress percentages (0-100) for each bar.
+ * - Vertical positions (1=topmost).
+ * - Total width (characters) of each bar.
+ * - Text displayed before each bar.
+ * - Text displayed after each bar.
+ * - Spinner animation indices.
+ * - Indicator whether error already has been reported
+ * - unique ID corresponding to the handle
  */
 // clang-format off
 typedef struct {
@@ -39,6 +54,7 @@ typedef struct {
   std::vector<std::string> prefixes;    ///< Text displayed before each bar.
   std::vector<std::string> postfixes;   ///< Text displayed after each bar.
   std::vector<std::size_t> spin_idxs;   ///< Spinner animation indices.
+  bool error_reported;                  ///< Indicator whether error already has been reported
   unsigned int ID;                      ///< unique ID corresponding to the handle
 } StatusBar;
 // clang-format on
@@ -64,16 +80,51 @@ void _move_cursor_up(int move) {
   std::cout << std::flush;
 }
 
-// Clear entire current line
-void clear_line() {
-    std::cout << "\033[2K";
+/**
+ * \brief Gets terminal width in columns.
+ *
+ * \param[out] width Receives terminal width. Defaults to 80 on failure.
+ *
+ * \return 0 on success
+ * \return -1 (Windows) or -2 (Unix) on failure
+ *
+ */
+int _get_terminal_width(int& width) {
+  width = 80;  // Default value
+
+#ifdef _WIN32
+  HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+  if (hConsole != INVALID_HANDLE_VALUE) {
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    if (GetConsoleScreenBufferInfo(hConsole, &csbi)) {
+      width = csbi.srWindow.Right - csbi.srWindow.Left + 1;
+    } else {
+      return -1;
+    }
+  }
+#else
+  winsize w;
+  if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &w) == 0) {
+    width = w.ws_col;
+  } else {
+    return -2;
+  }
+#endif
+  return 0;
 }
+
+void _save_cursor_position();
+void _restore_cursor_position();
+void _clear_to_end_of_line();
+
+// Clear entire current line
+void clear_line() { std::cout << "\033[2K"; }
 
 // More robust version with cursor positioning
 void _clear_current_line() {
-    std::cout << "\r"      // Return to line start
-              << "\033[2K" // Clear entire line
-              << std::flush;
+  std::cout << "\r"       // Return to line start
+            << "\033[2K"  // Clear entire line
+            << std::flush;
 }
 
 /**
@@ -100,12 +151,23 @@ void _clear_current_line() {
  *
  * \details Using the spinner_idx the spinner character can cycle through { |,
  * /, -, \ } on each update.
+ *
+ * \return Returns 0 on success, or one of these error/warning codes:
+ *         -  0: Success (no errors)
+ *         - -1: Terminal width detection failed (Windows)
+ *         - -2: Terminal width detection failed (Linux)
+ *         - -3: Truncantion was needed (bar exeeds terminal width)
+ *         - -4: Both terminal width detection failed (Window) AND truncation
+ * was needed
+ *         - -5: Both terminal width detection failed (Linux) AND truncation was
+ * needed
  */
 int _draw_statusbar_component(const double percent,
                               const unsigned int bar_width,
                               const std::string& prefix,
                               const std::string& postfix,
                               std::size_t& spinner_idx, const int move) {
+  int err = 0;
   static const std::array<char, 4> spinner = {'|', '/', '-', '\\'};
   spinner_idx %= spinner.size();
   char spin_char = spinner[spinner_idx];
@@ -127,12 +189,32 @@ int _draw_statusbar_component(const double percent,
   oss << "] ";
   oss << std::fixed << std::setprecision(2) << std::setw(6) << percent;
   oss << postfix;
+  std::string status_str = oss.str();
+
+  int term_width;
+  err = _get_terminal_width(term_width);
+
+  if (status_str.length() > static_cast<size_t>(term_width)) {
+    status_str = status_str.substr(0, term_width);
+    switch (err) {
+      case 0:
+        err = -3;
+        break;
+      case -1:
+        err = -4;
+        break;
+      case -2:
+        err = -5;
+        break;
+    }
+  }
+
   _move_cursor_up(move);
   _clear_current_line();
-  std::cout << oss.str() << std::flush;
+  std::cout << status_str << std::flush;
   _move_cursor_up(-move);
 
-  return 0;
+  return err;
 }
 
 }  // namespace
@@ -219,13 +301,13 @@ int create_statusbar_handle(StatusBar_handle& statusbar_handle,
     statusbar_free_handles.pop_back();
     statusbar_handle.idx = free_handle.idx;
     statusbar_registry[statusbar_handle.idx] = {
-        percentages, _positions, _bar_sizes,     _prefixes,
-        _postfixes,  spin_idxs,  handle_ID_count};
+        percentages, _positions, _bar_sizes, _prefixes,
+        _postfixes,  spin_idxs,  false,      handle_ID_count};
   } else {
     statusbar_handle.idx = statusbar_registry.size();
-    statusbar_registry.emplace_back(StatusBar{percentages, _positions,
-                                              _bar_sizes, _prefixes, _postfixes,
-                                              spin_idxs, handle_ID_count});
+    statusbar_registry.emplace_back(
+        StatusBar{percentages, _positions, _bar_sizes, _prefixes, _postfixes,
+                  spin_idxs, false, handle_ID_count});
   }
   statusbar_handle.ID = handle_ID_count;
   statusbar_handle.valid = true;
@@ -268,7 +350,7 @@ int destroy_statusbar_handle(StatusBar_handle& statusbar_handle) {
     _move_cursor_up(-target.positions[i]);
   }
   std::cout.flush();
-  
+
   target.percentages.clear();
   target.positions.clear();
   target.bar_sizes.clear();
@@ -314,9 +396,38 @@ int update_statusbar(StatusBar_handle& statusbar_handle, const std::size_t idx,
 
   statusbar.percentages[idx] = percent;
   statusbar.spin_idxs[idx] = statusbar.spin_idxs[idx] + 1;
-  _draw_statusbar_component(percent, statusbar.bar_sizes[idx],
-                            statusbar.prefixes[idx], statusbar.postfixes[idx],
-                            statusbar.spin_idxs[idx], statusbar.positions[idx]);
+  int bar_error_code = _draw_statusbar_component(
+      percent, statusbar.bar_sizes[idx], statusbar.prefixes[idx],
+      statusbar.postfixes[idx], statusbar.spin_idxs[idx],
+      statusbar.positions[idx]);
+
+  if (bar_error_code < 0 && !statusbar.error_reported) {
+    statusbar.error_reported = true;
+    std::stringstream oss;
+    switch (bar_error_code) {
+      case -1:
+        oss << "Terminal width detection failed (Windows)";
+        break;
+      case -2:
+        oss << "Terminal width detection failed (Linux)";
+        break;
+      case -3:
+        oss << "Truncating was needed";
+        break;
+      case -4:
+        oss << "Terminal width detection failed (Windows) and truncation was "
+               "needed";
+        break;
+      case -5:
+        oss << "Terminal width detection failed (Linux) and truncation was "
+               "needed";
+        break;
+    }
+    oss << " on statusbar with ID %zu at bar idx %zu!\n";
+
+    log(FILENAME, oss.str(), LOG_LEVEL_ERR, statusbar.ID, idx);
+  }
+
   return 0;
 }
 

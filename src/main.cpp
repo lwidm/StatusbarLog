@@ -24,7 +24,7 @@ int main() {
   std::cout << "\n\n";
   err = StatusbarLog::create_statusbar_handle(
       h, {2, 1},                                     // <-- Postions
-      {20, 10},                                                // <-- Bar widths
+      {20, 1000},                                                // <-- Bar widths
       {"first:  ", "second: "},                                // <-- prefixes
       {" -- 15 total steps", "           -- 100 total steps"}  // <-- postfixes
   );
