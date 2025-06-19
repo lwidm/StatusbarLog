@@ -1,9 +1,11 @@
 #include <cstddef>
 #include <string>
 #include <vector>
-#define LOG_LEVEL LOG_LEVEL_INF
 #include <iostream>
 #include <thread>
+#include <string>
+
+#define LOG_LEVEL LOG_LEVEL_INF
 
 #include "StatusbarLog.h"
 
@@ -37,7 +39,7 @@ int main() {
   std::cout << "\n\n";
   err = StatusbarLog::create_statusbar_handle(
       h, {2, 1},                                               // <-- Postions
-      {20, 1000},                                              // <-- Bar widths
+      {20, 10},                                              // <-- Bar widths
       {"first:  ", "second: "},                                // <-- prefixes
       {" -- 15 total steps", "           -- 100 total steps"}  // <-- postfixes
   );
@@ -50,8 +52,11 @@ int main() {
     double percent = static_cast<double>(i) / total_steps1 * 100.0;
     StatusbarLog::update_statusbar(h, 0, percent);
     if (i % 10 == 0) {
-      LOG_INF("main.cpp", "10 Ticks reached\n");
+      LOG_INF(FILENAME, "10 Ticks reached");
     }
+    // if (i % 8 == 0 && i != 0) {
+    //   LOG_INF(FILENAME, "Very long message %s", std::string(1000, 'H').c_str());
+    // }
 
     // Simulate work:
     for (std::size_t j = 0; j <= total_steps2; ++j) {

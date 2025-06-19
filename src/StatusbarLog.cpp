@@ -1,8 +1,5 @@
 // -- StatusbarLog/src/StatusbarLog.cpp
 
-#include <asm-generic/ioctls.h>
-
-#include <sstream>
 #ifdef _WIN32
 #include <windows.h>
 #else
@@ -179,7 +176,7 @@ int _draw_statusbar_component(const double percent,
   err = _get_terminal_width(term_width);
 
   if (status_str.length() > static_cast<size_t>(term_width)) {
-    status_str = status_str.substr(0, term_width);
+    status_str = status_str.substr(0, term_width - 1);
     switch (err) {
       case 0:
         err = -3;
@@ -203,28 +200,27 @@ int _draw_statusbar_component(const double percent,
 
 }  // namespace
 
-
-
-
-void save_cursor_position(){
-  std::cout << "\033[s" << std::flush; // ANSI escape code to save cursor position
+void save_cursor_position() {
+  std::cout << "\033[s"
+            << std::flush;  // ANSI escape code to save cursor position
 }
 
-void restore_cursor_position(){
-  std::cout << "\033[u" << std::flush; // ANSI escape code to restore cursor position
+void restore_cursor_position() {
+  std::cout << "\033[u"
+            << std::flush;  // ANSI escape code to restore cursor position
 }
 
-void clear_to_end_of_line(){
-  std::cout << "\033[0K" << std::flush; // ANSI escape code to clear to end of line
+void clear_to_end_of_line() {
+  std::cout << "\033[0K"
+            << std::flush;  // ANSI escape code to clear to end of line
 }
 
-void clear_from_start_of_line(){
-  std::cout << "\033[1K" << std::flush; // ANSI escape code to clear to end of line
+void clear_from_start_of_line() {
+  std::cout << "\033[1K"
+            << std::flush;  // ANSI escape code to clear to end of line
 }
 
-void clear_line() {
-  std::cout << "\033[2K" << std::flush;
-}
+void clear_line() { std::cout << "\033[2K" << std::flush; }
 
 void clear_current_line() {
   std::cout << "\r"       // Return to line start
@@ -232,9 +228,8 @@ void clear_current_line() {
             << std::flush;
 }
 
-
-int log(const std::string& filename, const std::string& fmt,
-        const Log_level log_level, ...) {
+int log(const Log_level log_level, const std::string& filename, const char* fmt,
+        ...) {
   if (log_level > LOG_LEVEL) return 0;
   const bool statusbars_active = !statusbar_registry.empty();
 
@@ -262,11 +257,15 @@ int log(const std::string& filename, const std::string& fmt,
   }
 
   va_list args;
+  va_list args_copy;
   _move_cursor_up(move);
   if (statusbars_active) printf("\r\033[2K\r");
-  va_start(args, log_level);
-  printf("%s [%s]: ", prefix, filename.c_str());
-  vprintf(fmt.c_str(), args);
+  va_start(args, fmt);
+  va_copy(args_copy, args);
+  const int size = std::vsnprintf(nullptr, 0, fmt, args_copy);
+  std::vector<char> buffer(size + 1);
+  std::vsnprintf(buffer.data(), buffer.size(), fmt, args);
+  printf("%s [%s]: %s\n", prefix, filename.c_str(), buffer.data());
   _move_cursor_up(-move);
   va_end(args);
 
@@ -281,10 +280,7 @@ int log(const std::string& filename, const std::string& fmt,
                                   statusbar_registry[i].positions[j]);
       }
     }
-  } else {
-    printf("\n");
   }
-
   return 0;
 }
 
@@ -417,29 +413,27 @@ int update_statusbar(StatusBar_handle& statusbar_handle, const std::size_t idx,
 
   if (bar_error_code < 0 && !statusbar.error_reported) {
     statusbar.error_reported = true;
-    std::stringstream oss;
+    const char* why;
     switch (bar_error_code) {
       case -1:
-        oss << "Terminal width detection failed (Windows)";
+        why = "Terminal width detection failed (Windows)";
         break;
       case -2:
-        oss << "Terminal width detection failed (Linux)";
+        why = "Terminal width detection failed (Linux)";
         break;
       case -3:
-        oss << "Truncating was needed";
+        why = "Truncating was needed";
         break;
       case -4:
-        oss << "Terminal width detection failed (Windows) and truncation was "
+        why = "Terminal width detection failed (Windows) and truncation was "
                "needed";
         break;
       case -5:
-        oss << "Terminal width detection failed (Linux) and truncation was "
+        why = "Terminal width detection failed (Linux) and truncation was "
                "needed";
         break;
     }
-    oss << " on statusbar with ID %zu at bar idx %zu!\n";
-
-    log(FILENAME, oss.str(), LOG_LEVEL_ERR, statusbar.ID, idx);
+    LOG_ERR(FILENAME, "%s on statusbar with ID %u at bar idx %zu!", why, statusbar.ID, idx);
   }
 
   return 0;

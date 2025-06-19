@@ -37,9 +37,6 @@ cmake --build . -j$(nproc) --config Release
 ```
 
 ## TODO
-- Log message Truncation: No bound checking for log messages
-- No message length limiting
-- Multi line log handling: Current implementation fails to calculate total lines used by multi-line logging, properly redraw statusbar after multi-line log.
 - Handle validation (no rebust validation):
    ```cpp
    bool is_valid_handle(const StatusBar_handle& h) {
@@ -61,6 +58,7 @@ cmake --build . -j$(nproc) --config Release
 - no wrap protection in `handle_ID_count`
 - Make usable as git submodule and cmake module
 - Use a constant representing sucess (STATUSBARLOG_SUCCESS := 0)
+- Let log messages and statusbars take up arbitrary streams
 
 ## TODO unittest
 - destroying of statusbar (all error codes)

@@ -108,10 +108,10 @@ void clear_current_line();
 /**
  * \brief \brief Logs a message if its level ≤ LOG_LEVEL
  *
+ * \param[in] log_level Severity level of this message.
  * \param[in] filename Source filename or tag (will be printed in log message,
  * should be the origin of the log message).
  * \param[in] fmt printf-style format string.
- * \param[in] log_level Severity level of this message.
  * \param[in] ... Additional format arguments.
  *
  * \return 0 on success, non-zero on formatting error. (Currently always 0, no
@@ -123,8 +123,7 @@ void clear_current_line();
  * \see StatusbarLog::log_LEVEL: Macro to set the global logging threshold.
  * \see print_err: Function for printing error messages -> \todo
  */
-int log(const std::string& filename, const std::string& fmt,
-        Log_level log_level, ...);
+int log(Log_level log_level, const std::string& filename, const char* fmt, ...);
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wgnu-zero-variadic-macro-arguments"
@@ -136,7 +135,7 @@ int log(const std::string& filename, const std::string& fmt,
  *\see StatusbarLog::log: General logging function
  */
 #define LOG_ERR(filename, fmt, ...) \
-  StatusbarLog::log(filename, fmt, LOG_LEVEL_ERR, ##__VA_ARGS__)
+  StatusbarLog::log(LOG_LEVEL_ERR, filename, fmt, ##__VA_ARGS__)
 
 /**
  * \def LOG_WRN
@@ -145,7 +144,7 @@ int log(const std::string& filename, const std::string& fmt,
  *\see StatusbarLog::log: General logging function
  */
 #define LOG_WRN(filename, fmt, ...) \
-  StatusbarLog::log(filename, fmt, LOG_LEVEL_WRN, ##__VA_ARGS__)
+  StatusbarLog::log(LOG_LEVEL_WRN, filename, fmt, ##__VA_ARGS__)
 
 /**
  * \def LOG_INF
@@ -154,7 +153,7 @@ int log(const std::string& filename, const std::string& fmt,
  *\see StatusbarLog::log: General logging function
  */
 #define LOG_INF(filename, fmt, ...) \
-  StatusbarLog::log(filename, fmt, LOG_LEVEL_INF, ##__VA_ARGS__)
+  StatusbarLog::log(LOG_LEVEL_INF, filename, fmt, ##__VA_ARGS__)
 
 /**
  * \def LOG_DBG
@@ -163,7 +162,7 @@ int log(const std::string& filename, const std::string& fmt,
  *\see StatusbarLog::log: General logging function
  */
 #define LOG_DBG(filename, fmt, ...) \
-  StatusbarLog::log(filename, fmt, LOG_LEVEL_DBG, ##__VA_ARGS__)
+  StatusbarLog::log(LOG_LEVEL_DBG, filename, fmt, ##__VA_ARGS__)
 #pragma GCC diagnostic pop
 
 /**
