@@ -37,12 +37,6 @@ cmake --build . -j$(nproc) --config Release
 ```
 
 ## TODO
-- Missing Escape code management
-   ```cpp
-   void save_cursor_position();
-   void restore_cursor_position();
-   void clear_to_end_of_line();
-   ```
 - Log message Truncation: No bound checking for log messages
 - No message length limiting
 - Multi line log handling: Current implementation fails to calculate total lines used by multi-line logging, properly redraw statusbar after multi-line log.

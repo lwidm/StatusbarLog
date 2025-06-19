@@ -9,7 +9,20 @@
 
 #define FILENAME "main.cpp"
 
+void print_with_cleanup() {
+  std::cout << "Start to be kept <- " << std::flush;;
+  StatusbarLog::save_cursor_position();
+  std::cout << "Temporary message that might be long" << std::flush;;
+  std::this_thread::sleep_for(std::chrono::seconds(2));
+
+  StatusbarLog::restore_cursor_position();
+  StatusbarLog::clear_to_end_of_line();
+  std::cout << "Clean message" << std::endl;
+  std::this_thread::sleep_for(std::chrono::milliseconds(500));
+}
+
 int main() {
+  print_with_cleanup();
   LOG_INF(FILENAME, "Starting test...");
   LOG_INF(FILENAME, "Starting test...");
   LOG_INF(FILENAME, "Starting test...");
@@ -23,8 +36,8 @@ int main() {
 
   std::cout << "\n\n";
   err = StatusbarLog::create_statusbar_handle(
-      h, {2, 1},                                     // <-- Postions
-      {20, 1000},                                                // <-- Bar widths
+      h, {2, 1},                                               // <-- Postions
+      {20, 1000},                                              // <-- Bar widths
       {"first:  ", "second: "},                                // <-- prefixes
       {" -- 15 total steps", "           -- 100 total steps"}  // <-- postfixes
   );
@@ -48,7 +61,7 @@ int main() {
     }
   }
 
-  err = StatusbarLog::destroy_statusbar_handle(h); 
+  err = StatusbarLog::destroy_statusbar_handle(h);
   if (err != 0) {
     LOG_ERR(FILENAME, "Failed to destroy statusbar. Errorcode %d", err);
     return err;

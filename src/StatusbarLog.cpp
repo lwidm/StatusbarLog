@@ -13,14 +13,12 @@
 #include <algorithm>
 #include <array>
 #include <cassert>
-#include <chrono>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <iomanip>
 #include <iostream>
 #include <ostream>
-#include <thread>
 #include <vector>
 
 #include "StatusbarLog.h"
@@ -113,20 +111,6 @@ int _get_terminal_width(int& width) {
   return 0;
 }
 
-void _save_cursor_position();
-void _restore_cursor_position();
-void _clear_to_end_of_line();
-
-// Clear entire current line
-void clear_line() { std::cout << "\033[2K"; }
-
-// More robust version with cursor positioning
-void _clear_current_line() {
-  std::cout << "\r"       // Return to line start
-            << "\033[2K"  // Clear entire line
-            << std::flush;
-}
-
 /**
  * \brief Function used only by that StatusbarLog module to draw a single status
  * bar at a certain position.
@@ -210,7 +194,7 @@ int _draw_statusbar_component(const double percent,
   }
 
   _move_cursor_up(move);
-  _clear_current_line();
+  clear_current_line();
   std::cout << status_str << std::flush;
   _move_cursor_up(-move);
 
@@ -218,6 +202,36 @@ int _draw_statusbar_component(const double percent,
 }
 
 }  // namespace
+
+
+
+
+void save_cursor_position(){
+  std::cout << "\033[s" << std::flush; // ANSI escape code to save cursor position
+}
+
+void restore_cursor_position(){
+  std::cout << "\033[u" << std::flush; // ANSI escape code to restore cursor position
+}
+
+void clear_to_end_of_line(){
+  std::cout << "\033[0K" << std::flush; // ANSI escape code to clear to end of line
+}
+
+void clear_from_start_of_line(){
+  std::cout << "\033[1K" << std::flush; // ANSI escape code to clear to end of line
+}
+
+void clear_line() {
+  std::cout << "\033[2K" << std::flush;
+}
+
+void clear_current_line() {
+  std::cout << "\r"       // Return to line start
+            << "\033[2K"  // Clear entire line
+            << std::flush;
+}
+
 
 int log(const std::string& filename, const std::string& fmt,
         const Log_level log_level, ...) {
@@ -346,7 +360,7 @@ int destroy_statusbar_handle(StatusBar_handle& statusbar_handle) {
 
   for (std::size_t i = 0; i < target.positions.size(); i++) {
     _move_cursor_up(target.positions[i]);
-    _clear_current_line();
+    clear_current_line();
     _move_cursor_up(-target.positions[i]);
   }
   std::cout.flush();

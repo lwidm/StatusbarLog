@@ -73,6 +73,38 @@ typedef struct {
   bool valid;
 } StatusBar_handle;
 
+
+
+/**
+ * \brief Saves the current cursor position in the terminal
+ */
+void save_cursor_position();
+
+/**
+ * \brief Restores the previously saved cursor position in the terminal
+ */
+void restore_cursor_position();
+
+/**
+ * \brief Clears from the current cursor position to the end of the line
+ */
+void clear_to_end_of_line();
+
+/**
+ * \brief Clears from the current cursor position to the end of the line
+ */
+void clear_from_start_of_line();
+
+/**
+ * \brief Clear entire current line
+ */
+void clear_line();
+
+/**
+ * \brief More robust version with cursor positioning
+ */
+void clear_current_line();
+
 /**
  * \brief \brief Logs a message if its level ≤ LOG_LEVEL
  *
