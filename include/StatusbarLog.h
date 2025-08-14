@@ -186,18 +186,49 @@ int log(Log_level log_level, const std::string& filename, const char* fmt, ...);
  * \param[in] _prefixes Text before each bar.
  * \param[in] _postfixes Text before each bar.
  *
- * \warning Add the StatusBar* to g_statusbar_registry after creation.
- * \warning Remove from g_statusbar_registry before destruction.
+ * \return Returns 0 on success, or one of these error/warning codes:
+ *         -  0: Success (no errors)
+ *         - -1: Failed to create status bar handle
  *
- * \see g_statusbar_registry: Global statusbar registry.
+ * \warning Don't forget to destroy the statusbar_handle after use.
+ *
+ * \see statusbar_registry: Global statusbar registry.
  * \see StatusBar: The statusbar struct.
+ * \see statusbar_registry: The registry for statusbar struct in use.
+ * \see statusbar_free_handles: The registry for free statusbar handles.
  * \see update_statusbar: Updating a statusbar
+ * \see destroy_statusbar_handle: Destroying statusbar_handle after use.
  */
 int create_statusbar_handle(StatusBar_handle& statusbar,
                             const std::vector<unsigned int> _positions,
                             const std::vector<unsigned int> _bar_sizes,
                             const std::vector<std::string> _prefixes,
                             const std::vector<std::string> _postfixes);
+
+/**
+ * \brief Destorys a StatusBar
+ *
+ * This function takes a StatusBar_handle, clears its content, adds it
+ * to thestatusbar_free_handles registry and frees its position in the
+ * statusbar_registry.
+ *
+ *
+ * \param[in, out] statusbar_handle Struct to destroy.
+ *
+ * \return Returns 0 on success, or one of these error/warning codes:
+ *         -  0: Success (no errors)
+ *         - -1: Invalid handle passed (valid flag set to false)
+ *         - -2: Invalid handle passed (index out of registry bounds)
+ *         - -3: Invalid handle passed (IDs don't match)
+ *         - -4: Invalid handle passed (Other error)
+ *
+ * \see statusbar_registry: Global statusbar registry.
+ * \see StatusBar: The statusbar struct.
+ * \see statusbar_registry: The registry for statusbar struct in use.
+ * \see statusbar_free_handles: The registry for free statusbar handles.
+ * \see update_statusbar: Updating a statusbar
+ * \see create_statusbar_handle: Creating new statusbar handles.
+ */
 int destroy_statusbar_handle(StatusBar_handle& statusbar_handle);
 
 /**

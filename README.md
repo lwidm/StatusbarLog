@@ -37,13 +37,6 @@ cmake --build . -j$(nproc) --config Release
 ```
 
 ## TODO
-- Handle validation (no rebust validation):
-   ```cpp
-   bool is_valid_handle(const StatusBar_handle& h) {
-        return h.idx < statusbar_registry.size() && 
-        statusbar_registry[h.idx].ID == h.ID;
-   }
-   ```
 - Thread safety: No mutexes for `statusbar_registry`, `statusbar_free_handles`, `handle_ID_count`
 - Sanitise string before logging to not include control characters (maybe excluding \n)
 - Unbounded vector growth on: `statusbar_registry`, log message length, Status bar text
@@ -59,6 +52,11 @@ cmake --build . -j$(nproc) --config Release
 - Make usable as git submodule and cmake module
 - Use a constant representing sucess (STATUSBARLOG_SUCCESS := 0)
 - Let log messages and statusbars take up arbitrary streams
+- Optionally don't force flushing after every status message or every statusbarupdate
 
 ## TODO unittest
 - destroying of statusbar (all error codes)
+- out of bounds `spin_idx`, log message length, status bar text, `statusbar_registry`
+- Mutexes for `statusbar_registry`, `statusbar_free_handles`, `handle_ID_count`
+- Thread safety (test race conditions)
+- Invalid handles (in update_statusbar and destroy_statusbar)

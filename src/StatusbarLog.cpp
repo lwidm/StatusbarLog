@@ -109,6 +109,93 @@ int _get_terminal_width(int& width) {
 }
 
 /**
+ * \brief Check if the argument is a valid statusbar handle
+ *
+ * This functions performs a test on a StatusBar_handle and returns 0 if
+ * it is a valid handle and a negative number otherwise
+ *
+ * \param[in] StatusBar_handle struct to be checked for validity
+ *
+ * \return Returns 0 if the handle is valid, or one of these status codes:
+ *         -  0: Valid handle
+ *         - -1: Invalid handle: Valid flag of handle set to false
+ *         - -2: Invalid handle: Handle index out of bounds in
+ * `statusbar_registry`
+ *         - -3: Invalid handle: Handle IDs don't match between handle struct
+ * and registry
+ *
+ * \see _is_valid_handle: Verbose version of this function
+ */
+int _is_valid_handle(const StatusBar_handle& statusbar_handle) {
+  const std::size_t idx = statusbar_handle.idx;
+
+  if (!statusbar_handle.valid) {
+    return -1;
+  }
+
+  if (statusbar_handle.idx >= statusbar_registry.size()) {
+    return -2;
+  }
+  if (statusbar_handle.ID != statusbar_registry[idx].ID) {
+    return -3;
+  }
+  return 0;
+}
+
+/**
+ * \brief Check if the argument is a valid statusbar handle and prints an error
+ * message.
+ *
+ * This functions performs a test on a StatusBar_handle and returns 0 if
+ * it is a valid handle and a negative number otherwise. Same as
+ * _is_valid_handle but also prints an error message and returns the target
+ * StatusBar
+ *
+ * \param[in] StatusBar_handle struct to be checked for validity
+ *
+ * \return Returns 0 if the handle is valid, or one of these status codes:
+ *         -  0: Valid handle
+ *         - -1: Invalid handle: Valid flag of handle set to false
+ *         - -2: Invalid handle: Handle index out of bounds in
+ * `statusbar_registry`
+ *         - -3: Invalid handle: Handle IDs don't match between handle struct
+ * and registry
+ *
+ * \see _is_valid_handle: Non verbose version of this function
+ */
+int _is_valid_handle_verbose(const StatusBar_handle& statusbar_handle) {
+  const int is_valid_handle = _is_valid_handle(statusbar_handle);
+  if (is_valid_handle == -1) {
+    LOG_WRN(FILENAME,
+            "Invalid handle: Valid flag set to false (idx: %zu, ID: %u)",
+            statusbar_handle.idx, statusbar_handle.ID);
+    return -1;
+  }
+
+  if (is_valid_handle == -2) {
+    LOG_WRN(FILENAME,
+            "Invalid Handle: Handle index %zu out of bounds (max %zu)",
+            statusbar_handle.idx, statusbar_registry.size());
+    return -2;
+  }
+
+  StatusBar& target = statusbar_registry[statusbar_handle.idx];
+
+  if (is_valid_handle == -3) {
+    LOG_WRN(FILENAME, "Invalid Handle: ID mismatch: handle %u vs registry %u",
+            statusbar_handle.ID, target.ID);
+    return -3;
+  }
+
+  if (is_valid_handle != 0) {
+    LOG_WRN(FILENAME, "Invalid Handle: Errorcode not handled!");
+    return -4;
+  }
+
+  return 0;
+}
+
+/**
  * \brief Function used only by that StatusbarLog module to draw a single status
  * bar at a certain position.
  *
@@ -333,26 +420,12 @@ int create_statusbar_handle(StatusBar_handle& statusbar_handle,
 }
 
 int destroy_statusbar_handle(StatusBar_handle& statusbar_handle) {
-  if (!statusbar_handle.valid) {
-    LOG_ERR(FILENAME,
-            "Attempt to destroy already Invalid handle! (idx: %zu, ID: %u)",
-            statusbar_handle.idx, statusbar_handle.ID);
-    return -1;
+  const int err = _is_valid_handle_verbose(statusbar_handle);
+  if (err != 0) {
+    LOG_ERR(FILENAME, "Failed to destory statusbar_handle!");
+    return err;
   }
-
-  if (statusbar_handle.idx >= statusbar_registry.size()) {
-    LOG_ERR(FILENAME, "Handle index %zu out of bounds (max %zu)",
-            statusbar_handle.idx, statusbar_registry.size());
-    return -2;
-  }
-
   StatusBar& target = statusbar_registry[statusbar_handle.idx];
-
-  if (target.ID != statusbar_handle.ID) {
-    LOG_ERR(FILENAME, "ID mismatch: handle %u vs registry %u",
-            statusbar_handle.ID, target.ID);
-    return -3;
-  }
 
   for (std::size_t i = 0; i < target.positions.size(); i++) {
     _move_cursor_up(target.positions[i]);
@@ -388,21 +461,12 @@ int destroy_statusbar_handle(StatusBar_handle& statusbar_handle) {
 
 int update_statusbar(StatusBar_handle& statusbar_handle, const std::size_t idx,
                      const double percent) {
-  if (!statusbar_handle.valid) {
-    LOG_ERR(FILENAME, "Invalid hanldes cannot be updated!");
-    return -1;
+  const int err = _is_valid_handle_verbose(statusbar_handle);
+  if (err != 0) {
+    LOG_ERR(FILENAME, "Failed to update statusbar_handle!");
+    return err;
   }
   StatusBar& statusbar = statusbar_registry[statusbar_handle.idx];
-  if (statusbar_handle.ID != statusbar.ID) {
-    LOG_ERR(FILENAME, "Handle and statusbar IDs do not match! Got %d and %d",
-            statusbar_handle.ID, statusbar.ID);
-    return -2;
-  }
-  if (idx >= statusbar.percentages.size()) {
-    LOG_ERR(FILENAME, "Index (%d) out of bounds for given statusbar of size %d",
-            idx, statusbar.percentages.size());
-    return -3;
-  }
 
   statusbar.percentages[idx] = percent;
   statusbar.spin_idxs[idx] = statusbar.spin_idxs[idx] + 1;
@@ -425,15 +489,18 @@ int update_statusbar(StatusBar_handle& statusbar_handle, const std::size_t idx,
         why = "Truncating was needed";
         break;
       case -4:
-        why = "Terminal width detection failed (Windows) and truncation was "
-               "needed";
+        why =
+            "Terminal width detection failed (Windows) and truncation was "
+            "needed";
         break;
       case -5:
-        why = "Terminal width detection failed (Linux) and truncation was "
-               "needed";
+        why =
+            "Terminal width detection failed (Linux) and truncation was "
+            "needed";
         break;
     }
-    LOG_ERR(FILENAME, "%s on statusbar with ID %u at bar idx %zu!", why, statusbar.ID, idx);
+    LOG_ERR(FILENAME, "%s on statusbar with ID %u at bar idx %zu!", why,
+            statusbar.ID, idx);
   }
 
   return 0;
