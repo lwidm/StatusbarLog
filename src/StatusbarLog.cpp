@@ -17,6 +17,7 @@
 #include <iostream>
 #include <ostream>
 #include <vector>
+#include <mutex>
 
 #include "StatusbarLog.h"
 
@@ -54,9 +55,13 @@ typedef struct {
 } StatusBar;
 // clang-format on
 
-std::vector<StatusBar> statusbar_registry;
-std::vector<StatusBar_handle> statusbar_free_handles;
-unsigned int handle_ID_count = 0;
+std::vector<StatusBar> _statusbar_registry;
+std::vector<StatusBar_handle> _statusbar_free_handles;
+unsigned int _handle_ID_count = 0;
+
+static std::mutex _registry_mutex;
+static std::mutex _ID_count_mutex;
+static std::mutex _console_mutex;
 
 /**
  * \brief Function used only by the StatusbarLog module to move the cursor up X
@@ -133,10 +138,10 @@ int _is_valid_handle(const StatusBar_handle& statusbar_handle) {
     return -1;
   }
 
-  if (statusbar_handle.idx >= statusbar_registry.size()) {
+  if (statusbar_handle.idx >= _statusbar_registry.size()) {
     return -2;
   }
-  if (statusbar_handle.ID != statusbar_registry[idx].ID) {
+  if (statusbar_handle.ID != _statusbar_registry[idx].ID) {
     return -3;
   }
   return 0;
@@ -175,11 +180,11 @@ int _is_valid_handle_verbose(const StatusBar_handle& statusbar_handle) {
   if (is_valid_handle == -2) {
     LOG_WRN(FILENAME,
             "Invalid Handle: Handle index %zu out of bounds (max %zu)",
-            statusbar_handle.idx, statusbar_registry.size());
+            statusbar_handle.idx, _statusbar_registry.size());
     return -2;
   }
 
-  StatusBar& target = statusbar_registry[statusbar_handle.idx];
+  StatusBar& target = _statusbar_registry[statusbar_handle.idx];
 
   if (is_valid_handle == -3) {
     LOG_WRN(FILENAME, "Invalid Handle: ID mismatch: handle %u vs registry %u",
@@ -318,7 +323,11 @@ void clear_current_line() {
 int log(const Log_level log_level, const std::string& filename, const char* fmt,
         ...) {
   if (log_level > LOG_LEVEL) return 0;
-  const bool statusbars_active = !statusbar_registry.empty();
+  std::lock_guard<std::mutex> console_lock(_console_mutex);
+  std::lock_guard<std::mutex> registry_lock(_registry_mutex);
+  // std::lock_guard<std::mutex> ID_count_lock(_ID_count_mutex);
+
+  const bool statusbars_active = !_statusbar_registry.empty();
 
   const char* prefix = "";
   // clang-format off
@@ -333,9 +342,9 @@ int log(const Log_level log_level, const std::string& filename, const char* fmt,
 
   int move = 0;
   if (statusbars_active) {
-    for (std::size_t i = 0; i < statusbar_registry.size(); ++i) {
-      for (std::size_t j = 0; j < statusbar_registry[i].positions.size(); ++j) {
-        int current_pos = statusbar_registry[i].positions[j];
+    for (std::size_t i = 0; i < _statusbar_registry.size(); ++i) {
+      for (std::size_t j = 0; j < _statusbar_registry[i].positions.size(); ++j) {
+        int current_pos = _statusbar_registry[i].positions[j];
         if (current_pos > move) {
           move = current_pos;
         }
@@ -357,14 +366,14 @@ int log(const Log_level log_level, const std::string& filename, const char* fmt,
   va_end(args);
 
   if (statusbars_active) {
-    for (std::size_t i = 0; i < statusbar_registry.size(); ++i) {
-      for (std::size_t j = 0; j < statusbar_registry[i].positions.size(); ++j) {
-        _draw_statusbar_component(statusbar_registry[i].percentages[j],
-                                  statusbar_registry[i].bar_sizes[j],
-                                  statusbar_registry[i].prefixes[j],
-                                  statusbar_registry[i].postfixes[j],
-                                  statusbar_registry[i].spin_idxs[j],
-                                  statusbar_registry[i].positions[j]);
+    for (std::size_t i = 0; i < _statusbar_registry.size(); ++i) {
+      for (std::size_t j = 0; j < _statusbar_registry[i].positions.size(); ++j) {
+        _draw_statusbar_component(_statusbar_registry[i].percentages[j],
+                                  _statusbar_registry[i].bar_sizes[j],
+                                  _statusbar_registry[i].prefixes[j],
+                                  _statusbar_registry[i].postfixes[j],
+                                  _statusbar_registry[i].spin_idxs[j],
+                                  _statusbar_registry[i].positions[j]);
       }
     }
   }
@@ -388,44 +397,53 @@ int create_statusbar_handle(StatusBar_handle& statusbar_handle,
     return -1;
   }
 
-  handle_ID_count++;
+  std::lock_guard<std::mutex> console_lock(_console_mutex);
+  std::lock_guard<std::mutex> registry_lock(_registry_mutex);
+  std::lock_guard<std::mutex> ID_count_lock(_ID_count_mutex);
+
+  _handle_ID_count++;
   const std::size_t num_bars = _positions.size();
   const std::vector<double> percentages(num_bars, 0.0);
   const std::vector<std::size_t> spin_idxs(num_bars, 0);
 
-  if (!statusbar_free_handles.empty()) {
-    StatusBar_handle free_handle = statusbar_free_handles.back();
-    statusbar_free_handles.pop_back();
+  if (!_statusbar_free_handles.empty()) {
+    StatusBar_handle free_handle = _statusbar_free_handles.back();
+    _statusbar_free_handles.pop_back();
     statusbar_handle.idx = free_handle.idx;
-    statusbar_registry[statusbar_handle.idx] = {
+    _statusbar_registry[statusbar_handle.idx] = {
         percentages, _positions, _bar_sizes, _prefixes,
-        _postfixes,  spin_idxs,  false,      handle_ID_count};
+        _postfixes,  spin_idxs,  false,      _handle_ID_count};
   } else {
-    statusbar_handle.idx = statusbar_registry.size();
-    statusbar_registry.emplace_back(
+    statusbar_handle.idx = _statusbar_registry.size();
+    _statusbar_registry.emplace_back(
         StatusBar{percentages, _positions, _bar_sizes, _prefixes, _postfixes,
-                  spin_idxs, false, handle_ID_count});
+                  spin_idxs, false, _handle_ID_count});
   }
-  statusbar_handle.ID = handle_ID_count;
+  statusbar_handle.ID = _handle_ID_count;
   statusbar_handle.valid = true;
   for (std::size_t idx = 0; idx < num_bars; idx++) {
     _draw_statusbar_component(
-        0.0, statusbar_registry[statusbar_handle.idx].bar_sizes[idx],
-        statusbar_registry[statusbar_handle.idx].prefixes[idx],
-        statusbar_registry[statusbar_handle.idx].postfixes[idx],
-        statusbar_registry[statusbar_handle.idx].spin_idxs[idx],
-        statusbar_registry[statusbar_handle.idx].positions[idx]);
+        0.0, _statusbar_registry[statusbar_handle.idx].bar_sizes[idx],
+        _statusbar_registry[statusbar_handle.idx].prefixes[idx],
+        _statusbar_registry[statusbar_handle.idx].postfixes[idx],
+        _statusbar_registry[statusbar_handle.idx].spin_idxs[idx],
+        _statusbar_registry[statusbar_handle.idx].positions[idx]);
   }
   return 0;
 }
 
 int destroy_statusbar_handle(StatusBar_handle& statusbar_handle) {
+
+  std::lock_guard<std::mutex> console_lock(_console_mutex);
+  std::lock_guard<std::mutex> registry_lock(_registry_mutex);
+  // std::lock_guard<std::mutex> ID_count_lock(_ID_count_mutex);
+
   const int err = _is_valid_handle_verbose(statusbar_handle);
   if (err != 0) {
     LOG_ERR(FILENAME, "Failed to destory statusbar_handle!");
     return err;
   }
-  StatusBar& target = statusbar_registry[statusbar_handle.idx];
+  StatusBar& target = _statusbar_registry[statusbar_handle.idx];
 
   for (std::size_t i = 0; i < target.positions.size(); i++) {
     _move_cursor_up(target.positions[i]);
@@ -450,7 +468,7 @@ int destroy_statusbar_handle(StatusBar_handle& statusbar_handle) {
   target.ID = 0;
   target.spin_idxs.clear();
 
-  statusbar_free_handles.push_back(statusbar_handle);
+  _statusbar_free_handles.push_back(statusbar_handle);
 
   statusbar_handle.valid = false;
   statusbar_handle.ID = 0;
@@ -461,12 +479,17 @@ int destroy_statusbar_handle(StatusBar_handle& statusbar_handle) {
 
 int update_statusbar(StatusBar_handle& statusbar_handle, const std::size_t idx,
                      const double percent) {
+
+  std::lock_guard<std::mutex> console_lock(_console_mutex);
+  std::lock_guard<std::mutex> registry_lock(_registry_mutex);
+  // std::lock_guard<std::mutex> ID_count_lock(_ID_count_mutex);
+
   const int err = _is_valid_handle_verbose(statusbar_handle);
   if (err != 0) {
     LOG_ERR(FILENAME, "Failed to update statusbar_handle!");
     return err;
   }
-  StatusBar& statusbar = statusbar_registry[statusbar_handle.idx];
+  StatusBar& statusbar = _statusbar_registry[statusbar_handle.idx];
 
   statusbar.percentages[idx] = percent;
   statusbar.spin_idxs[idx] = statusbar.spin_idxs[idx] + 1;
