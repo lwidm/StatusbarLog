@@ -37,7 +37,6 @@ cmake --build . -j$(nproc) --config Release
 ```
 
 ## TODO
-- Thread safety: No mutexes for `statusbar_registry`, `statusbar_free_handles`, `handle_ID_count`
 - Sanitise string before logging to not include control characters (maybe excluding \n)
 - Unbounded vector growth on: `statusbar_registry`, log message length, Status bar text
 - No bound check in `spin_idx`
