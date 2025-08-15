@@ -458,13 +458,13 @@ int create_statusbar_handle(StatusBar_handle& statusbar_handle,
 
   std::vector<std::string> sanitized_prefixes;
   sanitized_prefixes.reserve(_prefixes.size());
-  for (std::string _prefix : _prefixes) {
+  for (const std::string& _prefix : _prefixes) {
     sanitized_prefixes.push_back(_sanitize_string(_prefix));
   }
 
   std::vector<std::string> sanitized_postfixes;
   sanitized_prefixes.reserve(_postfixes.size());
-  for (std::string _postfix : _postfixes) {
+  for (const std::string& _postfix : _postfixes) {
     sanitized_postfixes.push_back(_sanitize_string(_postfix));
   }
 
