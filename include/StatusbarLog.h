@@ -16,6 +16,14 @@
 #include <string>
 #include <vector>
 
+#define MAX_ACTIVE_HANDLES 100
+#define MAX_FREE_HANDLES 100
+#define MAX_LOG_LENGTH 4096
+#define MAX_FILENAME_LENGTH 256
+#define MAX_PREFIX_LENGTH 80
+#define MAX_POSTFIX_LENGTH 80
+#define MAX_BAR_WIDTH 200
+
 /**
  * \enum Log_level
  * \brief Defines log levels for categorizing message importance.
@@ -72,8 +80,6 @@ typedef struct {
   unsigned int ID;
   bool valid;
 } StatusBar_handle;
-
-
 
 /**
  * \brief Saves the current cursor position in the terminal
@@ -188,7 +194,9 @@ int log(Log_level log_level, const std::string& filename, const char* fmt, ...);
  *
  * \return Returns 0 on success, or one of these error/warning codes:
  *         -  0: Success (no errors)
- *         - -1: Failed to create status bar handle
+ *         - -1: Failed to create status bar handle (invalid inputs)
+ *         - -2: Failed to create status bar handle (handle registry exceeds
+ * maximum element limit)
  *
  * \warning Don't forget to destroy the statusbar_handle after use.
  *

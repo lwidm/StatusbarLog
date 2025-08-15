@@ -15,9 +15,9 @@
 #include <cstdint>
 #include <iomanip>
 #include <iostream>
+#include <mutex>
 #include <ostream>
 #include <vector>
-#include <mutex>
 
 #include "StatusbarLog.h"
 
@@ -125,7 +125,7 @@ std::string _sanitize_string_with_newline(const std::string& input) {
   output.reserve(input.size());
   for (char c : input) {
     // Allow for '\n' and '\t' charachters
-    if ( c == '\n' || c == '\t' || (c >= 32 && c <= 126)) {
+    if (c == '\n' || c == '\t' || (c >= 32 && c <= 126)) {
       output += c;
     } else if (static_cast<unsigned char>(c) < 32 || c == 127) {
       output += "�";
@@ -148,7 +148,7 @@ std::string _sanitize_string(const std::string& input) {
   output.reserve(input.size());
   for (char c : input) {
     // Allow for '\n' and '\t' charachters
-    if ( c == '\t' || (c >= 32 && c <= 126)) {
+    if (c == '\t' || (c >= 32 && c <= 126)) {
       output += c;
     } else if (static_cast<unsigned char>(c) < 32 || c == 127) {
       output += "�";
@@ -389,7 +389,8 @@ int log(const Log_level log_level, const std::string& filename, const char* fmt,
   int move = 0;
   if (statusbars_active) {
     for (std::size_t i = 0; i < _statusbar_registry.size(); ++i) {
-      for (std::size_t j = 0; j < _statusbar_registry[i].positions.size(); ++j) {
+      for (std::size_t j = 0; j < _statusbar_registry[i].positions.size();
+           ++j) {
         int current_pos = _statusbar_registry[i].positions[j];
         if (current_pos > move) {
           move = current_pos;
@@ -404,20 +405,26 @@ int log(const Log_level log_level, const std::string& filename, const char* fmt,
   if (statusbars_active) printf("\r\033[2K\r");
   va_start(args, fmt);
   va_copy(args_copy, args);
-  const int size = std::vsnprintf(nullptr, 0, fmt, args_copy);
+  int size = std::vsnprintf(nullptr, 0, fmt, args_copy);
+  size = std::min(size, MAX_LOG_LENGTH);
   std::vector<char> buffer(size + 1);
   std::vsnprintf(buffer.data(), buffer.size(), fmt, args);
   std::string message = _sanitize_string_with_newline(buffer.data());
   va_end(args);
 
   std::string sanitized_filename = _sanitize_string_with_newline(filename);
+  if (sanitized_filename.length() > MAX_FILENAME_LENGTH) {
+    sanitized_filename.resize(MAX_FILENAME_LENGTH - 3);
+    sanitized_filename += "...";
+  }
 
   printf("%s [%s]: %s\n", prefix, sanitized_filename.c_str(), message.c_str());
   _move_cursor_up(-move);
 
   if (statusbars_active) {
     for (std::size_t i = 0; i < _statusbar_registry.size(); ++i) {
-      for (std::size_t j = 0; j < _statusbar_registry[i].positions.size(); ++j) {
+      for (std::size_t j = 0; j < _statusbar_registry[i].positions.size();
+           ++j) {
         _draw_statusbar_component(_statusbar_registry[i].percentages[j],
                                   _statusbar_registry[i].bar_sizes[j],
                                   _statusbar_registry[i].prefixes[j],
@@ -447,6 +454,12 @@ int create_statusbar_handle(StatusBar_handle& statusbar_handle,
     return -1;
   }
 
+  if (_statusbar_registry.size() - _statusbar_free_handles.size() >=
+      MAX_ACTIVE_HANDLES) {
+    LOG_ERR(FILENAME, "Maximum status bars (%zu) reached", MAX_ACTIVE_HANDLES);
+    return -2;
+  }
+
   std::lock_guard<std::mutex> console_lock(_console_mutex);
   std::lock_guard<std::mutex> registry_lock(_registry_mutex);
   std::lock_guard<std::mutex> ID_count_lock(_ID_count_mutex);
@@ -458,28 +471,46 @@ int create_statusbar_handle(StatusBar_handle& statusbar_handle,
 
   std::vector<std::string> sanitized_prefixes;
   sanitized_prefixes.reserve(_prefixes.size());
-  for (const std::string& _prefix : _prefixes) {
+  for (std::string _prefix : _prefixes) {
+    if (_prefix.length() > MAX_PREFIX_LENGTH) {
+      _prefix.resize(MAX_PREFIX_LENGTH - 3);
+      _prefix += "...";
+    }
     sanitized_prefixes.push_back(_sanitize_string(_prefix));
   }
 
   std::vector<std::string> sanitized_postfixes;
   sanitized_prefixes.reserve(_postfixes.size());
-  for (const std::string& _postfix : _postfixes) {
+  for (std::string _postfix : _postfixes) {
+    if (_postfix.length() > MAX_POSTFIX_LENGTH) {
+      _postfix.resize(MAX_POSTFIX_LENGTH - 3);
+      _postfix += "...";
+    }
     sanitized_postfixes.push_back(_sanitize_string(_postfix));
+  }
+
+  std::vector<unsigned int> sanitized_bar_sizes;
+  for (unsigned int bar_size : _bar_sizes) {
+    sanitized_bar_sizes.push_back(std::min<unsigned int>(bar_size, MAX_BAR_WIDTH));
   }
 
   if (!_statusbar_free_handles.empty()) {
     StatusBar_handle free_handle = _statusbar_free_handles.back();
     _statusbar_free_handles.pop_back();
     statusbar_handle.idx = free_handle.idx;
-    _statusbar_registry[statusbar_handle.idx] = {
-        percentages, _positions, _bar_sizes, sanitized_prefixes,
-        sanitized_postfixes,  spin_idxs,  false,      _handle_ID_count};
+    _statusbar_registry[statusbar_handle.idx] = {percentages,
+                                                 _positions,
+                                                 sanitized_bar_sizes,
+                                                 sanitized_prefixes,
+                                                 sanitized_postfixes,
+                                                 spin_idxs,
+                                                 false,
+                                                 _handle_ID_count};
   } else {
     statusbar_handle.idx = _statusbar_registry.size();
-    _statusbar_registry.emplace_back(
-        StatusBar{percentages, _positions, _bar_sizes, sanitized_prefixes, sanitized_postfixes,
-                  spin_idxs, false, _handle_ID_count});
+    _statusbar_registry.emplace_back(StatusBar{
+        percentages, _positions, sanitized_bar_sizes, sanitized_prefixes,
+        sanitized_postfixes, spin_idxs, false, _handle_ID_count});
   }
   statusbar_handle.ID = _handle_ID_count;
   statusbar_handle.valid = true;
@@ -495,7 +526,6 @@ int create_statusbar_handle(StatusBar_handle& statusbar_handle,
 }
 
 int destroy_statusbar_handle(StatusBar_handle& statusbar_handle) {
-
   std::lock_guard<std::mutex> console_lock(_console_mutex);
   std::lock_guard<std::mutex> registry_lock(_registry_mutex);
   // std::lock_guard<std::mutex> ID_count_lock(_ID_count_mutex);
@@ -530,7 +560,9 @@ int destroy_statusbar_handle(StatusBar_handle& statusbar_handle) {
   target.ID = 0;
   target.spin_idxs.clear();
 
-  _statusbar_free_handles.push_back(statusbar_handle);
+  if (_statusbar_free_handles.size() >= MAX_FREE_HANDLES) {
+    _statusbar_free_handles.push_back(statusbar_handle);
+  }
 
   statusbar_handle.valid = false;
   statusbar_handle.ID = 0;
@@ -541,7 +573,6 @@ int destroy_statusbar_handle(StatusBar_handle& statusbar_handle) {
 
 int update_statusbar(StatusBar_handle& statusbar_handle, const std::size_t idx,
                      const double percent) {
-
   std::lock_guard<std::mutex> console_lock(_console_mutex);
   std::lock_guard<std::mutex> registry_lock(_registry_mutex);
   // std::lock_guard<std::mutex> ID_count_lock(_ID_count_mutex);
