@@ -37,16 +37,9 @@ cmake --build . -j$(nproc) --config Release
 ```
 
 ## TODO
-- Sanitise string before logging to not include control characters (maybe excluding \n)
-- Unbounded vector growth on: `statusbar_registry`, log message length, Status bar text
 - No bound check in `spin_idx`
 - No range enforcement in `percent`
 - Thread race conditions: 
-   ```cpp
-   handle_ID_count++;  // Non-atomic increment
-   statusbar_registry.push_back(...);  // Non-locked
-   ```
-- sanitise prefixes and postfixes in statusbar
 - no wrap protection in `handle_ID_count`
 - Make usable as git submodule and cmake module
 - Use a constant representing sucess (STATUSBARLOG_SUCCESS := 0)
@@ -59,3 +52,6 @@ cmake --build . -j$(nproc) --config Release
 - Mutexes for `statusbar_registry`, `statusbar_free_handles`, `handle_ID_count`
 - Thread safety (test race conditions)
 - Invalid handles (in update_statusbar and destroy_statusbar)
+- Test unsanitised strings (in log and prefixes and postfixes)
+- Test bounds of log message, filename, prefix and postfix length
+- Test bounds on statusbar_registry and statusbar_free_handles
