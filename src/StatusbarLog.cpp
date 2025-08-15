@@ -114,6 +114,52 @@ int _get_terminal_width(int& width) {
 }
 
 /**
+ * \brief Sanitize string for use in log function or post- and prefixes
+ * in statusbars
+ *
+ * \brief This functions replaces all control charachters except \n and \t
+ * of an input string.
+ */
+std::string _sanitize_string_with_newline(const std::string& input) {
+  std::string output;
+  output.reserve(input.size());
+  for (char c : input) {
+    // Allow for '\n' and '\t' charachters
+    if ( c == '\n' || c == '\t' || (c >= 32 && c <= 126)) {
+      output += c;
+    } else if (static_cast<unsigned char>(c) < 32 || c == 127) {
+      output += "�";
+    } else {
+      output += c;
+    }
+  }
+  return output;
+}
+
+/**
+ * \brief Sanitize string for use in log function or post- and prefixes
+ * in statusbars
+ *
+ * \brief This functions replaces all control charachters except \t
+ * of an input string.
+ */
+std::string _sanitize_string(const std::string& input) {
+  std::string output;
+  output.reserve(input.size());
+  for (char c : input) {
+    // Allow for '\n' and '\t' charachters
+    if ( c == '\t' || (c >= 32 && c <= 126)) {
+      output += c;
+    } else if (static_cast<unsigned char>(c) < 32 || c == 127) {
+      output += "�";
+    } else {
+      output += c;
+    }
+  }
+  return output;
+}
+
+/**
  * \brief Check if the argument is a valid statusbar handle
  *
  * This functions performs a test on a StatusBar_handle and returns 0 if
@@ -361,9 +407,13 @@ int log(const Log_level log_level, const std::string& filename, const char* fmt,
   const int size = std::vsnprintf(nullptr, 0, fmt, args_copy);
   std::vector<char> buffer(size + 1);
   std::vsnprintf(buffer.data(), buffer.size(), fmt, args);
-  printf("%s [%s]: %s\n", prefix, filename.c_str(), buffer.data());
-  _move_cursor_up(-move);
+  std::string message = _sanitize_string_with_newline(buffer.data());
   va_end(args);
+
+  std::string sanitized_filename = _sanitize_string_with_newline(filename);
+
+  printf("%s [%s]: %s\n", prefix, sanitized_filename.c_str(), message.c_str());
+  _move_cursor_up(-move);
 
   if (statusbars_active) {
     for (std::size_t i = 0; i < _statusbar_registry.size(); ++i) {
@@ -406,17 +456,29 @@ int create_statusbar_handle(StatusBar_handle& statusbar_handle,
   const std::vector<double> percentages(num_bars, 0.0);
   const std::vector<std::size_t> spin_idxs(num_bars, 0);
 
+  std::vector<std::string> sanitized_prefixes;
+  sanitized_prefixes.reserve(_prefixes.size());
+  for (std::string _prefix : _prefixes) {
+    sanitized_prefixes.push_back(_sanitize_string(_prefix));
+  }
+
+  std::vector<std::string> sanitized_postfixes;
+  sanitized_prefixes.reserve(_postfixes.size());
+  for (std::string _postfix : _postfixes) {
+    sanitized_postfixes.push_back(_sanitize_string(_postfix));
+  }
+
   if (!_statusbar_free_handles.empty()) {
     StatusBar_handle free_handle = _statusbar_free_handles.back();
     _statusbar_free_handles.pop_back();
     statusbar_handle.idx = free_handle.idx;
     _statusbar_registry[statusbar_handle.idx] = {
-        percentages, _positions, _bar_sizes, _prefixes,
-        _postfixes,  spin_idxs,  false,      _handle_ID_count};
+        percentages, _positions, _bar_sizes, sanitized_prefixes,
+        sanitized_postfixes,  spin_idxs,  false,      _handle_ID_count};
   } else {
     statusbar_handle.idx = _statusbar_registry.size();
     _statusbar_registry.emplace_back(
-        StatusBar{percentages, _positions, _bar_sizes, _prefixes, _postfixes,
+        StatusBar{percentages, _positions, _bar_sizes, sanitized_prefixes, sanitized_postfixes,
                   spin_idxs, false, _handle_ID_count});
   }
   statusbar_handle.ID = _handle_ID_count;
