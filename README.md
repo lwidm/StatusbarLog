@@ -37,12 +37,8 @@ cmake --build . -j$(nproc) --config Release
 ```
 
 ## TODO
-- No bound check in `spin_idx`
-- No range enforcement in `percent`
-- Thread race conditions: 
-- no wrap protection in `handle_ID_count`
 - Make usable as git submodule and cmake module
-- Use a constant representing sucess (STATUSBARLOG_SUCCESS := 0)
+- Use a constant representing success (STATUSBARLOG_SUCCESS := 0)
 - Let log messages and statusbars take up arbitrary streams
 - Optionally don't force flushing after every status message or every statusbarupdate
 

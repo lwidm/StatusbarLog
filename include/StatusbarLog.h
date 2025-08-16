@@ -260,6 +260,14 @@ int destroy_statusbar_handle(StatusBar_handle& statusbar_handle);
  * \param[in] percent New progress percentage (0-100).
  * updated.
  *
+ * \return Returns 0 on success, or one of these error/warning codes:
+ *         -  0: Success (no errors)
+ *         - -1: Invalid handle passed (valid flag set to false)
+ *         - -2: Invalid handle passed (index out of registry bounds)
+ *         - -3: Invalid handle passed (IDs don't match)
+ *         - -4: Invalid handle passed (Other error)
+ *         - -5: Invalid percentage passed
+ *
  * \details The spinner character cycles through { |, /, -, \ } on each update.
  *
  * \see create_statusbar: Creating/Initializing a statusbar.
