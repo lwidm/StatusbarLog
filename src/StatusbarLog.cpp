@@ -279,6 +279,7 @@ int _is_valid_handle_verbose(const StatusBar_handle& statusbar_handle) {
  *         - -4: Both terminal width detection failed (Window) AND truncation
  * was needed
  *         - -5: Both terminal width detection failed (Linux) AND truncation was
+ *         - -6: Invalid percentage given
  * needed
  */
 int _draw_statusbar_component(const double percent,
@@ -286,6 +287,12 @@ int _draw_statusbar_component(const double percent,
                               const std::string& prefix,
                               const std::string& postfix,
                               std::size_t& spinner_idx, const int move) {
+
+  if (percent > 100.0 || percent < 0.0) {
+    LOG_ERR(FILENAME, "Failed to update statusbar: Invalid percentage.");
+    return -5;
+  }
+
   int err = 0;
   static const std::array<char, 4> spinner = {'|', '/', '-', '\\'};
   spinner_idx %= spinner.size();
@@ -369,8 +376,8 @@ void clear_current_line() {
 int log(const Log_level log_level, const std::string& filename, const char* fmt,
         ...) {
   if (log_level > LOG_LEVEL) return 0;
-  std::lock_guard<std::mutex> console_lock(_console_mutex);
-  std::lock_guard<std::mutex> registry_lock(_registry_mutex);
+  std::unique_lock<std::mutex> console_lock(_console_mutex);
+  std::unique_lock<std::mutex> registry_lock(_registry_mutex);
   // std::lock_guard<std::mutex> ID_count_lock(_ID_count_mutex);
 
   const bool statusbars_active = !_statusbar_registry.empty();
@@ -446,7 +453,8 @@ int create_statusbar_handle(StatusBar_handle& statusbar_handle,
       _bar_sizes.size() != _prefixes.size() ||
       _prefixes.size() != _positions.size()) {
     LOG_ERR(FILENAME,
-            "The vecotors '_positions', '_bar_sizes', '_prefixes' and "
+            "Failed to create statusbar_hanlde The vecotors '_positions', "
+            "'_bar_sizes', '_prefixes' and "
             "'_postfixes' must have the same size! Got: '_positions': %d, "
             "'_bar_sizes': %d, '_prefixes': %d, '_postfixes': %d.",
             _positions.size(), _bar_sizes.size(), _prefixes.size(),
@@ -456,7 +464,10 @@ int create_statusbar_handle(StatusBar_handle& statusbar_handle,
 
   if (_statusbar_registry.size() - _statusbar_free_handles.size() >=
       MAX_ACTIVE_HANDLES) {
-    LOG_ERR(FILENAME, "Maximum status bars (%zu) reached", MAX_ACTIVE_HANDLES);
+    LOG_ERR(
+        FILENAME,
+        "Failed to create statusbar handle. Maximum status bars (%zu) reached",
+        MAX_ACTIVE_HANDLES);
     return -2;
   }
 
@@ -471,27 +482,27 @@ int create_statusbar_handle(StatusBar_handle& statusbar_handle,
 
   std::vector<std::string> sanitized_prefixes;
   sanitized_prefixes.reserve(_prefixes.size());
-  for (std::string _prefix : _prefixes) {
+  std::vector<std::string> sanitized_postfixes;
+  sanitized_prefixes.reserve(_postfixes.size());
+  std::vector<unsigned int> sanitized_bar_sizes;
+  sanitized_bar_sizes.reserve(_bar_sizes.size());
+  for (std::size_t i = 0; i < _prefixes.size(); ++i) {
+    std::string _prefix = _prefixes[i];
     if (_prefix.length() > MAX_PREFIX_LENGTH) {
       _prefix.resize(MAX_PREFIX_LENGTH - 3);
       _prefix += "...";
     }
     sanitized_prefixes.push_back(_sanitize_string(_prefix));
-  }
 
-  std::vector<std::string> sanitized_postfixes;
-  sanitized_prefixes.reserve(_postfixes.size());
-  for (std::string _postfix : _postfixes) {
+    std::string _postfix = _postfixes[i];
     if (_postfix.length() > MAX_POSTFIX_LENGTH) {
       _postfix.resize(MAX_POSTFIX_LENGTH - 3);
       _postfix += "...";
     }
     sanitized_postfixes.push_back(_sanitize_string(_postfix));
-  }
 
-  std::vector<unsigned int> sanitized_bar_sizes;
-  for (unsigned int bar_size : _bar_sizes) {
-    sanitized_bar_sizes.push_back(std::min<unsigned int>(bar_size, MAX_BAR_WIDTH));
+    sanitized_bar_sizes.push_back(
+        std::min<unsigned int>(_bar_sizes[i], MAX_BAR_WIDTH));
   }
 
   if (!_statusbar_free_handles.empty()) {
@@ -526,12 +537,14 @@ int create_statusbar_handle(StatusBar_handle& statusbar_handle,
 }
 
 int destroy_statusbar_handle(StatusBar_handle& statusbar_handle) {
-  std::lock_guard<std::mutex> console_lock(_console_mutex);
-  std::lock_guard<std::mutex> registry_lock(_registry_mutex);
+  std::unique_lock<std::mutex> console_lock(_console_mutex);
+  std::unique_lock<std::mutex> registry_lock(_registry_mutex);
   // std::lock_guard<std::mutex> ID_count_lock(_ID_count_mutex);
 
   const int err = _is_valid_handle_verbose(statusbar_handle);
   if (err != 0) {
+    console_lock.unlock();
+    registry_lock.unlock();
     LOG_ERR(FILENAME, "Failed to destory statusbar_handle!");
     return err;
   }
@@ -573,15 +586,27 @@ int destroy_statusbar_handle(StatusBar_handle& statusbar_handle) {
 
 int update_statusbar(StatusBar_handle& statusbar_handle, const std::size_t idx,
                      const double percent) {
-  std::lock_guard<std::mutex> console_lock(_console_mutex);
-  std::lock_guard<std::mutex> registry_lock(_registry_mutex);
+
+  std::unique_lock<std::mutex> console_lock(_console_mutex);
+  std::unique_lock<std::mutex> registry_lock(_registry_mutex);
+
   // std::lock_guard<std::mutex> ID_count_lock(_ID_count_mutex);
 
   const int err = _is_valid_handle_verbose(statusbar_handle);
   if (err != 0) {
-    LOG_ERR(FILENAME, "Failed to update statusbar_handle!");
+    console_lock.unlock();
+    registry_lock.unlock();
+    LOG_ERR(FILENAME, "Failed to update statusbar: Invalid handle.");
     return err;
   }
+
+  if (percent > 100.0 || percent < 0.0) {
+    console_lock.unlock();
+    registry_lock.unlock();
+    LOG_ERR(FILENAME, "Failed to update statusbar: Invalid percentage.");
+    return -5;
+  }
+
   StatusBar& statusbar = _statusbar_registry[statusbar_handle.idx];
 
   statusbar.percentages[idx] = percent;
