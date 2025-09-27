@@ -24,6 +24,11 @@
 #define MAX_POSTFIX_LENGTH 80
 #define MAX_BAR_WIDTH 200
 
+#undef STATUSBARLOG_NO_AUTO_FLUSH 
+
+// Define to disable automatic flushing (improves performance but may delay output)
+#define STATUSBARLOG_SUCCESS 0
+
 /**
  * \enum Log_level
  * \brief Defines log levels for categorizing message importance.
@@ -112,6 +117,13 @@ void clear_line();
 void clear_current_line();
 
 /**
+ * \brief Manually flush the output buffer
+ *
+ * Useful when STATUSBARLOG_NO_AUTO_FLUSH is defined to force output
+ */
+void flush_output();
+
+/**
  * \brief \brief Logs a message if its level ≤ LOG_LEVEL
  *
  * \param[in] log_level Severity level of this message.
@@ -120,8 +132,8 @@ void clear_current_line();
  * \param[in] fmt printf-style format string.
  * \param[in] ... Additional format arguments.
  *
- * \return 0 on success, non-zero on formatting error. (Currently always 0, no
- * error checking)
+ * \return STATUSBARLOG_SUCCESS (i.e. 0) on success, non-zero on formatting
+ * error. (Currently always STATUSBARLOG_SUCCESS, no error checking)
  *
  * \note Logging temporarily moves status bars down to avoid visual glitches.
  *
@@ -192,8 +204,9 @@ int log(Log_level log_level, const std::string& filename, const char* fmt, ...);
  * \param[in] _prefixes Text before each bar.
  * \param[in] _postfixes Text before each bar.
  *
- * \return Returns 0 on success, or one of these error/warning codes:
- *         -  0: Success (no errors)
+ * \return Returns STATUSBARLOG_SUCCESS (i.e. 0) on success, or one of these
+ * error/warning codes:
+ *         -  STATUSBARLOG_SUCCESS (i.e. 0): Success (no errors)
  *         - -1: Failed to create status bar handle (invalid inputs)
  *         - -2: Failed to create status bar handle (handle registry exceeds
  * maximum element limit)
@@ -223,8 +236,9 @@ int create_statusbar_handle(StatusBar_handle& statusbar,
  *
  * \param[in, out] statusbar_handle Struct to destroy.
  *
- * \return Returns 0 on success, or one of these error/warning codes:
- *         -  0: Success (no errors)
+ * \return Returns STATUSBARLOG_SUCCESS (i.e. 0) on success, or one of these
+ * error/warning codes:
+ *         -  STATUSBARLOG_SUCCESS (i.e. 0): Success (no errors)
  *         - -1: Invalid handle passed (valid flag set to false)
  *         - -2: Invalid handle passed (index out of registry bounds)
  *         - -3: Invalid handle passed (IDs don't match)
@@ -260,8 +274,9 @@ int destroy_statusbar_handle(StatusBar_handle& statusbar_handle);
  * \param[in] percent New progress percentage (0-100).
  * updated.
  *
- * \return Returns 0 on success, or one of these error/warning codes:
- *         -  0: Success (no errors)
+ * \return Returns STATUSBARLOG_SUCCESS (i.e. 0) on success, or one of these
+ * error/warning codes:
+ *         -  STATUSBARLOG_SUCCESS (i.e. 0): Success (no errors)
  *         - -1: Invalid handle passed (valid flag set to false)
  *         - -2: Invalid handle passed (index out of registry bounds)
  *         - -3: Invalid handle passed (IDs don't match)

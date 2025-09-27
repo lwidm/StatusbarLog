@@ -63,7 +63,7 @@ int main() {
       LOG_INF(FILENAME, "10 Ticks reached");
     }
     if (i % 3 == 0 && i != 0) {
-      StatusbarLog::update_statusbar(h, 0, 100.1);
+      // StatusbarLog::update_statusbar(h, 0, 100.1);
       // StatusbarLog::update_statusbar(h, 0, -0.1);
     }
 
