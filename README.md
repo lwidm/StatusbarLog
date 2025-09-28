@@ -38,9 +38,11 @@ cmake --build . -j$(nproc) --config Release
 
 ## TODO
 - Make usable as git submodule and cmake module
-- Use a constant representing success (STATUSBARLOG_SUCCESS := 0)
 - Let log messages and statusbars take up arbitrary streams
 - Optionally don't force flushing after every status message or every statusbarupdate
+- Cross platform compatibility
+    - Windows
+    - Linux
 
 ## TODO unittest
 - destroying of statusbar (all error codes)

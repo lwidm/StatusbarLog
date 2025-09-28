@@ -1,3 +1,5 @@
+# -- StatusbarLog/CmakeLists.txt
+
 cmake_minimum_required(VERSION 3.24)
 project(statusbarlog)
 
@@ -57,28 +59,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(COMMON_FLAGS -O1 -Wall -Wextra -Wpedantic -Wno-unused-command-line-argument
                  -Wformat)
 
-# Add Cmake
-include(FetchContent)
-FetchContent_Declare(
-  googletest
-  URL https://github.com/google/googletest/archive/03597a01ee50ed33e9dfd640b249b4be3799d395.zip
-)
-
-# Only set gtest_force_shared_crt on Windows
-if(WIN32)
-  set(gtest_force_shared_crt
-      ON
-      CACHE BOOL "" FORCE)
-endif()
-
-FetchContent_MakeAvailable(googletest)
-
 # Add the source files.
-set(SRC_FILES main.cpp StatusbarLog.cpp)
+set(SRC_FILES StatusbarLog.cpp)
 list(TRANSFORM SRC_FILES PREPEND "${CMAKE_CURRENT_SOURCE_DIR}/src/")
 
-# Build the executable
-add_executable(${PROJECT_NAME} ${SRC_FILES})
+# Build the library
+add_library(${PROJECT_NAME} ${SRC_FILES})
 target_compile_options(${PROJECT_NAME} PRIVATE ${COMMON_FLAGS})
 target_include_directories(${PROJECT_NAME}
                            PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
@@ -91,3 +77,12 @@ add_custom_command(
     ${CMAKE_COMMAND} -E copy_if_different
     "${CMAKE_BINARY_DIR}/compile_commands.json"
     "${CMAKE_CURRENT_SOURCE_DIR}/compile_commands.json")
+
+
+enable_testing()
+
+# Add tests subdirectory (conditionally, so it doesn't break when used as submodule)
+option(BUILD_TESTS "Build tests" ON)
+if(BUILD_TESTS)
+    add_subdirectory(tests)
+endif()
