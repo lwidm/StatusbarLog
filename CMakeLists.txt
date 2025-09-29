@@ -1,88 +1,104 @@
-# -- StatusbarLog/CmakeLists.txt
+# -- StatusbarLog/CMakeLists.txt
 
-cmake_minimum_required(VERSION 3.24)
-project(statusbarlog)
+cmake_minimum_required(VERSION 3.15)
+project(
+  statusbarlog
+  VERSION 1.0.0
+  LANGUAGES CXX)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-if(NOT CMAKE_C_COMPILER)
-  find_program(CLANG_C clang)
-  message(WARNING " -DCMAKE_C_COMPILER not specified, falling back to clang")
-  if(CLANG_C)
-    message(INFO " Using clang found at ${CLANG_C}")
-    set(CMAKE_C_COMPILER
-        "${CLANG_C}"
-        CACHE STRING "C compiler" FORCE)
-  else()
-    message(WARNING " No clang compiler found, falling back to gcc")
-    find_program(GCC_C gcc)
-    if(GCC_C)
-      message(INFO " Using gcc found at ${GCC_C}")
-      set(CMAKE_C_COMPILER
-          "${GCC_C}"
-          CACHE STRING "C compiler" FORCE)
-    else()
-      message(FATAL_ERROR " No c compiler found")
-    endif()
-  endif()
-else()
-  message(INFO " Using c compiler found at ${CMAKE_C_COMPILER}")
-endif()
-if(NOT CMAKE_CXX_COMPILER)
-  find_program(CLANG_CXX clang++)
-  message(
-    WARNING " -DCMAKE_CXX_COMPILER not specified, falling back to clang++")
-  if(CLANG_CXX)
-    message(INFO " Using clang++ found at ${CLANG_CXX}")
-    set(CMAKE_CXX_COMPILER
-        "${CLANG_CXX}"
-        CACHE STRING "CXX compiler" FORCE)
-  else()
-    message(WARNING " No clang++ compiler found, falling back to g++")
-    find_program(GPP_CXX g++)
-    if(GPP_CXX)
-      message(INFO " Using g++ found at ${GPP_CXX}")
-      set(CMAKE_CXX_COMPILER
-          "${GPP_CXX}"
-          CACHE STRING "CPP compiler" FORCE)
-    else()
-      message(FATAL_ERROR " No c++ compiler found")
-    endif()
-  endif()
-else()
-  message(INFO " Using c++ compiler found at ${CMAKE_CXX_COMPILER}")
+# =============================================================================
+# Configuration Options
+# =============================================================================
+
+option(STATUSBARLOG_INSTALL "Generate installation targets" OFF)
+option(STATUSBARLOG_BUILD_TESTS "Build tests" OFF)
+option(STATUSBARLOG_BUILD_TEST_MAIN "Build main executable for testing" OFF) # (used in StatusbarLog/tests/CMakeLists.txt)
+
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+  set(CMAKE_BUILD_TYPE
+      Release
+      CACHE STRING "Build type" FORCE)
 endif()
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+# =============================================================================
+# Library Target
+# =============================================================================
 
-set(COMMON_FLAGS -O1 -Wall -Wextra -Wpedantic -Wno-unused-command-line-argument
-                 -Wformat)
-
-# Add the source files.
+# Add the library sources
 set(SRC_FILES StatusbarLog.cpp)
 list(TRANSFORM SRC_FILES PREPEND "${CMAKE_CURRENT_SOURCE_DIR}/src/")
 
-# Build the library
+# Create the library
 add_library(${PROJECT_NAME} ${SRC_FILES})
-target_compile_options(${PROJECT_NAME} PRIVATE ${COMMON_FLAGS})
-target_include_directories(${PROJECT_NAME}
-                           PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
-# Add compile_commands.json from build directory
-add_custom_command(
-  TARGET ${PROJECT_NAME}
-  POST_BUILD
-  COMMAND
-    ${CMAKE_COMMAND} -E copy_if_different
-    "${CMAKE_BINARY_DIR}/compile_commands.json"
-    "${CMAKE_CURRENT_SOURCE_DIR}/compile_commands.json")
+# Include directories
+target_include_directories(
+  ${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+                         $<INSTALL_INTERFACE:include>)
 
+# Set c++ standard
+target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
 
-enable_testing()
+# Compiler Flags (PRIVATE to avoid affecting parent projects)
+target_compile_options(
+  ${PROJECT_NAME} PRIVATE $<$<CXX_COMPILER_ID:GNU,CLANG,AppleClang>:-Wall
+                          -Wextra -Wpedantic -Wformat>)
 
-# Add tests subdirectory (conditionally, so it doesn't break when used as submodule)
-option(BUILD_TESTS "Build tests" ON)
-if(BUILD_TESTS)
-    add_subdirectory(tests)
+# Create alias for nicer usage in parent projects
+add_library(StatusbarLog::StatusbarLog ALIAS ${PROJECT_NAME})
+
+# =============================================================================
+# Testing (Optional)
+# =============================================================================
+
+if(STATUSBARLOG_BUILD_TESTS)
+  enable_testing()
+  add_subdirectory(tests)
+endif()
+
+# =============================================================================
+# Installation (Optional)
+# =============================================================================
+
+if(STATUSBARLOG_INSTALL)
+  install(
+    TARGETS ${PROJECT_NAME}
+    ARCHIVE DESTINATION lib
+    LIBRARY DESTINATION lib
+    RUNTIME DESTINATION bin)
+  install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/include/StatusbarLog.h
+          DESTINATION include)
+endif()
+
+# =============================================================================
+# Export for Parent Project
+# =============================================================================
+
+# Exports targets for use by parent project
+export(TARGETS ${PROJECT_NAME}
+       FILE "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake")
+
+# Generate package version file
+include(CMakePackageConfigHelpers)
+write_basic_package_version_file(
+  "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
+  VERSION ${PROJECT_VERSION}
+  COMPATIBILITY SameMajorVersion)
+
+# =============================================================================
+# Copy compile_commands.json (Development conveniece)
+# =============================================================================
+
+# Only do this for the main project, not when used as submodule
+if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
+  add_custom_command(
+    TARGET ${PROJECT_NAME}
+    POST_BUILD
+    COMMAND
+      ${CMAKE_COMMAND} -E copy_if_different
+      "${CMAKE_BINARY_DIR}/compile_commands.json"
+      "${CMAKE_CURRENT_SOURCE_DIR}/compile_commands.json"
+    COMMENT "Copying compile_commands.json to source directory")
 endif()
