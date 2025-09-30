@@ -6,7 +6,7 @@
 
 #define LOG_LEVEL LOG_LEVEL_INF
 
-#include "StatusbarLog.h"
+#include "StatusbarLog/StatusbarLog.h"
 
 #define FILENAME "main.cpp"
 

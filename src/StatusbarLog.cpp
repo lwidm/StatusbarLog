@@ -19,7 +19,7 @@
 #include <ostream>
 #include <vector>
 
-#include "StatusbarLog.h"
+#include "StatusbarLog/StatusbarLog.h"
 
 #define FILENAME "StatusbarLog.cpp"
 

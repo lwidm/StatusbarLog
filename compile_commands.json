@@ -7,9 +7,15 @@
 },
 {
   "directory": "/home/lukas/Documents/StatusbarLog/build/tests",
-  "command": "/usr/bin/clang++  -I/home/lukas/Documents/StatusbarLog/include -isystem /home/lukas/Documents/StatusbarLog/build/_deps/googletest-src/googletest/include -isystem /home/lukas/Documents/StatusbarLog/build/_deps/googletest-src/googletest -O3 -DNDEBUG -o CMakeFiles/statusbarLog_test.dir/src/StatusbarLog_test.cpp.o -c /home/lukas/Documents/StatusbarLog/tests/src/StatusbarLog_test.cpp",
+  "command": "/usr/bin/clang++  -I/home/lukas/Documents/StatusbarLog/include -isystem /home/lukas/Documents/StatusbarLog/build/_deps/googletest-src/googletest/include -isystem /home/lukas/Documents/StatusbarLog/build/_deps/googletest-src/googletest -O3 -DNDEBUG -o CMakeFiles/statusbarlog_test.dir/src/StatusbarLog_test.cpp.o -c /home/lukas/Documents/StatusbarLog/tests/src/StatusbarLog_test.cpp",
   "file": "/home/lukas/Documents/StatusbarLog/tests/src/StatusbarLog_test.cpp",
-  "output": "tests/CMakeFiles/statusbarLog_test.dir/src/StatusbarLog_test.cpp.o"
+  "output": "tests/CMakeFiles/statusbarlog_test.dir/src/StatusbarLog_test.cpp.o"
+},
+{
+  "directory": "/home/lukas/Documents/StatusbarLog/build/tests",
+  "command": "/usr/bin/clang++  -I/home/lukas/Documents/StatusbarLog/include -O3 -DNDEBUG -o CMakeFiles/statusbarlog_main.dir/src/StatusbarLog_main.cpp.o -c /home/lukas/Documents/StatusbarLog/tests/src/StatusbarLog_main.cpp",
+  "file": "/home/lukas/Documents/StatusbarLog/tests/src/StatusbarLog_main.cpp",
+  "output": "tests/CMakeFiles/statusbarlog_main.dir/src/StatusbarLog_main.cpp.o"
 },
 {
   "directory": "/home/lukas/Documents/StatusbarLog/build/_deps/googletest-build/googlemock",
