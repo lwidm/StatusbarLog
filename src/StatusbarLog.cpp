@@ -185,6 +185,7 @@ std::string _sanitize_string(const std::string& input) {
  *         - -2: Invalid handle: Handle index out of bounds in
  * `statusbar_registry`
  *         - -3: Invalid handle: Handle IDs don't match between handle struct
+ *         - -4: Invalid handle: Handle ID is 0 (i.e. invalid)
  * and registry
  *
  * \see _is_valid_handle: Verbose version of this function
@@ -202,6 +203,9 @@ int _is_valid_handle(const StatusBar_handle& statusbar_handle) {
   }
   if (statusbar_handle.ID != _statusbar_registry[idx].ID) {
     return -3;
+  }
+  if (statusbar_handle.ID == 0) {
+    return -4;
   }
   return STATUSBARLOG_SUCCESS;
 }
@@ -224,6 +228,8 @@ int _is_valid_handle(const StatusBar_handle& statusbar_handle) {
  *         - -2: Invalid handle: Handle index out of bounds in
  * `statusbar_registry`
  *         - -3: Invalid handle: Handle IDs don't match between handle struct
+ *         - -4: Invalid handle: Handle ID is 0 (i.e. invalid)
+ *         - -5: Invalid handle: Errorcode not handled
  * and registry
  *
  * \see _is_valid_handle: Non verbose version of this function
@@ -253,8 +259,13 @@ int _is_valid_handle_verbose(const StatusBar_handle& statusbar_handle) {
   }
 
   if (is_valid_handle != STATUSBARLOG_SUCCESS) {
-    LOG_WRN(FILENAME, "Invalid Handle: Errorcode not handled!");
+    LOG_WRN(FILENAME, "Invalid Handle: ID is 0 (i.e. invalid)");
     return -4;
+  }
+
+  if (is_valid_handle != STATUSBARLOG_SUCCESS) {
+    LOG_WRN(FILENAME, "Invalid Handle: Errorcode not handled!");
+    return -5;
   }
 
   return STATUSBARLOG_SUCCESS;
@@ -472,7 +483,7 @@ int create_statusbar_handle(StatusBar_handle& statusbar_handle,
                             const std::vector<std::string> _prefixes,
                             const std::vector<std::string> _postfixes) {
   statusbar_handle.valid = false;
-  statusbar_handle.ID = -1;
+  statusbar_handle.ID = 0;
   if (_positions.size() != _bar_sizes.size() ||
       _bar_sizes.size() != _prefixes.size() ||
       _prefixes.size() != _postfixes.size()) {
@@ -501,6 +512,16 @@ int create_statusbar_handle(StatusBar_handle& statusbar_handle,
   std::lock(console_lock, registry_lock, ID_count_lock);
 
   _handle_ID_count++;
+  if (_handle_ID_count == 0) {
+    console_lock.unlock();
+    registry_lock.unlock();
+    LOG_WRN(FILENAME,
+            "Max number of possible statusbar handle IDs reached, looping back "
+            "to 1");
+    std::lock(console_lock, registry_lock);
+    _handle_ID_count++;
+  }
+
   const std::size_t num_bars = _positions.size();
   const std::vector<double> percentages(num_bars, 0.0);
   const std::vector<std::size_t> spin_idxs(num_bars, 0);
@@ -596,13 +617,12 @@ int destroy_statusbar_handle(StatusBar_handle& statusbar_handle) {
   target.ID = 0;
   target.spin_idxs.clear();
 
-  if (_statusbar_free_handles.size() >= MAX_FREE_HANDLES) {
+  if (_statusbar_free_handles.size() < MAX_FREE_HANDLES) {
     _statusbar_free_handles.push_back(statusbar_handle);
   }
 
   statusbar_handle.valid = false;
   statusbar_handle.ID = 0;
-  statusbar_handle.idx = SIZE_MAX;
 
   return STATUSBARLOG_SUCCESS;
 }

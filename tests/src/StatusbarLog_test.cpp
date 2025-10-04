@@ -142,3 +142,68 @@ TEST(HandleManagement, CreateHandle_InvalidInputSizes) {
         << "Handle should remain invalid after failed creation";
   }
 }
+
+TEST_F(HandleManagementTest, CreateHandle_MaxActiveHandlesLimit) {
+  std::vector<StatusbarLog::StatusBar_handle> handles;
+  bool reached_limit = false;
+
+  for (size_t i = 0; i < MAX_ACTIVE_HANDLES + 5; ++i) {
+    StatusbarLog::StatusBar_handle handle;
+    std::vector<unsigned int> positions = {1};
+    std::vector<unsigned int> bar_sizes = {50};
+    std::vector<std::string> prefixes = {"Test " + std::to_string(i)};
+    std::vector<std::string> postfixes = {"item"};
+
+    int err_code = StatusbarLog::create_statusbar_handle(
+        handle, positions, bar_sizes, prefixes, postfixes);
+
+    if (err_code == STATUSBARLOG_SUCCESS) {
+      // Successfully created - should only happen up to MAX_ACTIVE_HANDLES
+      EXPECT_LE(handles.size(), MAX_ACTIVE_HANDLES - 1)
+          << "Should not create more than " << MAX_ACTIVE_HANDLES << " handles";
+      EXPECT_TRUE(handle.valid);
+      handles.push_back(handle);
+    } else {
+      // Should fail with specific error code
+      EXPECT_EQ(err_code, -2)
+          << "Should return error code -2 when max handles limit reached";
+      EXPECT_FALSE(handle.valid)
+          << "Handle should be invalid when creation fails";
+      reached_limit = true;
+
+      break;
+    }
+  }
+
+  EXPECT_TRUE(reached_limit)
+      << "Should have encountered the maximum handles limit";
+  EXPECT_EQ(handles.size(), MAX_ACTIVE_HANDLES)
+      << "Should have created exactly " << MAX_ACTIVE_HANDLES << " handles";
+
+  // Test that we can still destroy handles and create new ones after cleanup
+  if (!handles.empty()) {
+    // Destroy one handle
+    int err_code = StatusbarLog::destroy_statusbar_handle(handles[0]);
+    EXPECT_EQ(err_code, STATUSBARLOG_SUCCESS);
+    handles.erase(handles.begin());
+
+    // Now we should be able to create one more handle
+    StatusbarLog::StatusBar_handle new_handle;
+    std::vector<unsigned int> positions = {1};
+    std::vector<unsigned int> bar_sizes = {50};
+    std::vector<std::string> prefixes = {"New after destroy"};
+    std::vector<std::string> postfixes = {"works"};
+
+    err_code = StatusbarLog::create_statusbar_handle(
+        new_handle, positions, bar_sizes, prefixes, postfixes);
+
+    EXPECT_EQ(err_code, STATUSBARLOG_SUCCESS)
+        << "Should be able to create new handle after destroying one";
+    EXPECT_TRUE(new_handle.valid);
+    handles.push_back(new_handle);
+  }
+
+  for (auto& handle : handles) {
+    StatusbarLog::destroy_statusbar_handle(handle);
+  }
+}
