@@ -55,8 +55,8 @@ typedef struct {
 } StatusBar;
 // clang-format on
 
-std::vector<StatusBar> _statusbar_registry;
-std::vector<StatusBar_handle> _statusbar_free_handles;
+std::vector<StatusBar> _statusbar_registry = {};
+std::vector<StatusBar_handle> _statusbar_free_handles = {};
 unsigned int _handle_ID_count = 0;
 
 static std::mutex _registry_mutex;
@@ -196,7 +196,8 @@ int _is_valid_handle(const StatusBar_handle& statusbar_handle) {
     return -1;
   }
 
-  if (statusbar_handle.idx >= _statusbar_registry.size()) {
+  if ((statusbar_handle.idx >= _statusbar_registry.size()) ||
+      (statusbar_handle.idx == SIZE_MAX)) {
     return -2;
   }
   if (statusbar_handle.ID != _statusbar_registry[idx].ID) {
@@ -395,8 +396,9 @@ void clear_current_line() {
 int log(const Log_level log_level, const std::string& filename, const char* fmt,
         ...) {
   if (log_level > LOG_LEVEL) return STATUSBARLOG_SUCCESS;
-  std::unique_lock<std::mutex> console_lock(_console_mutex);
-  std::unique_lock<std::mutex> registry_lock(_registry_mutex);
+  std::unique_lock<std::mutex> console_lock(_console_mutex, std::defer_lock);
+  std::unique_lock<std::mutex> registry_lock(_registry_mutex, std::defer_lock);
+  std::lock(console_lock, registry_lock);
   // std::lock_guard<std::mutex> ID_count_lock(_ID_count_mutex);
 
   const bool statusbars_active = !_statusbar_registry.empty();
@@ -491,9 +493,10 @@ int create_statusbar_handle(StatusBar_handle& statusbar_handle,
     return -2;
   }
 
-  std::lock_guard<std::mutex> console_lock(_console_mutex);
-  std::lock_guard<std::mutex> registry_lock(_registry_mutex);
-  std::lock_guard<std::mutex> ID_count_lock(_ID_count_mutex);
+  std::unique_lock<std::mutex> console_lock(_console_mutex, std::defer_lock);
+  std::unique_lock<std::mutex> registry_lock(_registry_mutex, std::defer_lock);
+  std::unique_lock<std::mutex> ID_count_lock(_ID_count_mutex, std::defer_lock);
+  std::lock(console_lock, registry_lock, ID_count_lock);
 
   _handle_ID_count++;
   const std::size_t num_bars = _positions.size();
@@ -554,14 +557,15 @@ int create_statusbar_handle(StatusBar_handle& statusbar_handle,
 }
 
 int destroy_statusbar_handle(StatusBar_handle& statusbar_handle) {
-  std::unique_lock<std::mutex> console_lock(_console_mutex);
-  std::unique_lock<std::mutex> registry_lock(_registry_mutex);
-  // std::lock_guard<std::mutex> ID_count_lock(_ID_count_mutex);
+  std::unique_lock<std::mutex> console_lock(_console_mutex, std::defer_lock);
+  std::unique_lock<std::mutex> registry_lock(_registry_mutex, std::defer_lock);
+  std::lock(console_lock, registry_lock);
 
-  const int err = _is_valid_handle_verbose(statusbar_handle);
+  const int err = _is_valid_handle(statusbar_handle);
   if (err != STATUSBARLOG_SUCCESS) {
     console_lock.unlock();
     registry_lock.unlock();
+    _is_valid_handle_verbose(statusbar_handle);
     LOG_ERR(FILENAME, "Failed to destory statusbar_handle!");
     return err;
   }
@@ -603,15 +607,17 @@ int destroy_statusbar_handle(StatusBar_handle& statusbar_handle) {
 
 int update_statusbar(StatusBar_handle& statusbar_handle, const std::size_t idx,
                      const double percent) {
-  std::unique_lock<std::mutex> console_lock(_console_mutex);
-  std::unique_lock<std::mutex> registry_lock(_registry_mutex);
+  std::unique_lock<std::mutex> console_lock(_console_mutex, std::defer_lock);
+  std::unique_lock<std::mutex> registry_lock(_registry_mutex, std::defer_lock);
+  std::lock(console_lock, registry_lock);
 
   // std::lock_guard<std::mutex> ID_count_lock(_ID_count_mutex);
 
-  const int err = _is_valid_handle_verbose(statusbar_handle);
+  const int err = _is_valid_handle(statusbar_handle);
   if (err != STATUSBARLOG_SUCCESS) {
     console_lock.unlock();
     registry_lock.unlock();
+    _is_valid_handle_verbose(statusbar_handle);
     LOG_ERR(FILENAME, "Failed to update statusbar: Invalid handle.");
     return err;
   }

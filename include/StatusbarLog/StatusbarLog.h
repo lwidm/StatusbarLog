@@ -220,7 +220,7 @@ int log(Log_level log_level, const std::string& filename, const char* fmt, ...);
  * \see update_statusbar: Updating a statusbar
  * \see destroy_statusbar_handle: Destroying statusbar_handle after use.
  */
-int create_statusbar_handle(StatusBar_handle& statusbar,
+int create_statusbar_handle(StatusBar_handle& statusbar_handle,
                             const std::vector<unsigned int> _positions,
                             const std::vector<unsigned int> _bar_sizes,
                             const std::vector<std::string> _prefixes,
