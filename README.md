@@ -65,8 +65,8 @@ cmake --build . -j$(nproc) --config Release
 ```cpp
 // StatusBar_handle lifecycle
 // TEST(HandleManagement, CreateSingleBarHandle)
-TEST(HandleManagement, CreateMultiBarHandle) 
-TEST(HandleManagement, CreateHandle_InvalidInputSizes)
+// TEST(HandleManagement, CreateMultiBarHandle) 
+// TEST(HandleManagement, CreateHandle_InvalidInputSizes)
 TEST(HandleManagement, CreateHandle_MaxActiveHandlesLimit)
 TEST(HandleManagement, DestroyValidHandle)
 TEST(HandleManagement, DestroyInvalidHandle)

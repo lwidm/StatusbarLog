@@ -471,11 +471,13 @@ int create_statusbar_handle(StatusBar_handle& statusbar_handle,
                             const std::vector<unsigned int> _bar_sizes,
                             const std::vector<std::string> _prefixes,
                             const std::vector<std::string> _postfixes) {
+  statusbar_handle.valid = false;
+  statusbar_handle.ID = -1;
   if (_positions.size() != _bar_sizes.size() ||
       _bar_sizes.size() != _prefixes.size() ||
-      _prefixes.size() != _positions.size()) {
+      _prefixes.size() != _postfixes.size()) {
     LOG_ERR(FILENAME,
-            "Failed to create statusbar_hanlde The vecotors '_positions', "
+            "Failed to create statusbar_handle The vecotors '_positions', "
             "'_bar_sizes', '_prefixes' and "
             "'_postfixes' must have the same size! Got: '_positions': %d, "
             "'_bar_sizes': %d, '_prefixes': %d, '_postfixes': %d.",

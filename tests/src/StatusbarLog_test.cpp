@@ -62,3 +62,83 @@ TEST_F(HandleManagementTest, CreateMultiBarHandle) {
   EXPECT_FALSE(handle.valid)
       << "Handle should be marked as invalid after destruction";
 }
+
+TEST(HandleManagement, CreateHandle_InvalidInputSizes) {
+  StatusbarLog::StatusBar_handle handle;
+
+  // Test Case 1: Positions vector larger than others
+  {
+    std::vector<unsigned int> positions = {1, 2};
+    std::vector<unsigned int> bar_sizes = {50};
+    std::vector<std::string> prefixes = {"Processing"};
+    std::vector<std::string> postfixes = {"items"};
+
+    int err_code = StatusbarLog::create_statusbar_handle(
+        handle, positions, bar_sizes, prefixes, postfixes);
+
+    EXPECT_NE(err_code, STATUSBARLOG_SUCCESS)
+        << "Should fail when positions vector (size " << positions.size()
+        << ") is larger than others (sizes " << bar_sizes.size() << ","
+        << prefixes.size() << "," << postfixes.size() << ")";
+
+    EXPECT_FALSE(handle.valid)
+        << "Handle should remain invalid after failed creation";
+  }
+
+  // Test Case 2: Bar sizes vector larger than others
+  {
+    std::vector<unsigned int> positions = {1};
+    std::vector<unsigned int> bar_sizes = {50, 70};
+    std::vector<std::string> prefixes = {"Processing"};
+    std::vector<std::string> postfixes = {"items"};
+
+    int err_code = StatusbarLog::create_statusbar_handle(
+        handle, positions, bar_sizes, prefixes, postfixes);
+
+    EXPECT_NE(err_code, STATUSBARLOG_SUCCESS)
+        << "Should fail when bar_sizes vector (size " << bar_sizes.size()
+        << ") is larger than others (sizes " << positions.size() << ","
+        << prefixes.size() << "," << postfixes.size() << ")";
+
+    EXPECT_FALSE(handle.valid)
+        << "Handle should remain invalid after failed creation";
+  }
+
+  // Test Case 3: prefixes vector larger than others
+  {
+    std::vector<unsigned int> positions = {1};
+    std::vector<unsigned int> bar_sizes = {50};
+    std::vector<std::string> prefixes = {"Processing", "more"};
+    std::vector<std::string> postfixes = {"items"};
+
+    int err_code = StatusbarLog::create_statusbar_handle(
+        handle, positions, bar_sizes, prefixes, postfixes);
+
+    EXPECT_NE(err_code, STATUSBARLOG_SUCCESS)
+        << "Should fail when prefixes vector (size " << prefixes.size()
+        << ") is larger than others (sizes " << positions.size() << ","
+        << bar_sizes.size() << "," << postfixes.size() << ")";
+
+    EXPECT_FALSE(handle.valid)
+        << "Handle should remain invalid after failed creation";
+  }
+
+  // Test Case 4: postfixes vector larger than others
+  {
+    std::vector<unsigned int> positions = {1};
+    std::vector<unsigned int> bar_sizes = {50};
+    std::vector<std::string> prefixes = {"Processing"};
+    std::vector<std::string> postfixes = {"items", "more"};
+
+    int err_code = StatusbarLog::create_statusbar_handle(
+        handle, positions, bar_sizes, prefixes, postfixes);
+
+    EXPECT_NE(err_code, STATUSBARLOG_SUCCESS)
+        << "Should fail when postfixes vector (size " << postfixes.size()
+        << ") is larger than others (sizes " << positions.size() << ","
+        << bar_sizes.size() << "," << prefixes.size() << ")";
+
+    EXPECT_FALSE(handle.valid)
+        << "Handle should remain invalid after failed creation";
+  }
+}
