@@ -67,10 +67,10 @@ cmake --build . -j$(nproc) --config Release
 // TEST(HandleManagement, CreateSingleBarHandle)
 // TEST(HandleManagement, CreateMultiBarHandle) 
 // TEST(HandleManagement, CreateHandle_InvalidInputSizes)
-TEST(HandleManagement, CreateHandle_MaxActiveHandlesLimit)
-TEST(HandleManagement, DestroyValidHandle)
-TEST(HandleManagement, DestroyInvalidHandle)
-TEST(HandleManagement, DestroyAlreadyDestroyedHandle)
+// TEST(HandleManagement, CreateHandle_MaxActiveHandlesLimit)
+// TEST(HandleManagement, DestroyValidHandle)
+// TEST(HandleManagement, DestroyInvalidHandle)
+// TEST(HandleManagement, DestroyAlreadyDestroyedHandle)
 ```
 
 2. Status Bar Update Tests

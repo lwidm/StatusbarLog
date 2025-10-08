@@ -2,6 +2,7 @@
 
 #include <gtest/gtest.h>
 
+#include <cstddef>
 #include <cstdint>
 #include <vector>
 
@@ -63,7 +64,7 @@ TEST_F(HandleManagementTest, CreateMultiBarHandle) {
       << "Handle should be marked as invalid after destruction";
 }
 
-TEST(HandleManagement, CreateHandle_InvalidInputSizes) {
+TEST_F(HandleManagementTest, CreateHandle_InvalidInputSizes) {
   StatusbarLog::StatusBar_handle handle;
 
   // Test Case 1: Positions vector larger than others
@@ -206,4 +207,84 @@ TEST_F(HandleManagementTest, CreateHandle_MaxActiveHandlesLimit) {
   for (auto& handle : handles) {
     StatusbarLog::destroy_statusbar_handle(handle);
   }
+}
+
+TEST_F(HandleManagementTest, DestroyValidHandle) {
+  StatusbarLog::StatusBar_handle handle;
+  std::vector<unsigned int> positions = {1};
+  std::vector<unsigned int> bar_sizes = {50};
+  std::vector<std::string> prefixes = {"Processing"};
+  std::vector<std::string> postfixes = {"items"};
+
+  int err_code = StatusbarLog::create_statusbar_handle(
+      handle, positions, bar_sizes, prefixes, postfixes);
+
+  EXPECT_EQ(err_code, STATUSBARLOG_SUCCESS)
+      << "create_statusbar_handle should return STATUSBARLOG_SUCCESS";
+
+  err_code = StatusbarLog::destroy_statusbar_handle(handle);
+
+  EXPECT_EQ(err_code, STATUSBARLOG_SUCCESS)
+      << "Should be able to destroy the handle cleanly";
+  EXPECT_FALSE(handle.valid)
+      << "Handle should be marked as invalid after destruction";
+}
+
+TEST_F(HandleManagementTest, DestroyInvalidHandle) {
+  StatusbarLog::StatusBar_handle handle;
+  std::vector<unsigned int> positions = {1};
+  std::vector<unsigned int> bar_sizes = {50};
+  std::vector<std::string> prefixes = {"Processing"};
+  std::vector<std::string> postfixes = {"items"};
+
+  int err_code = StatusbarLog::destroy_statusbar_handle(handle);
+
+  EXPECT_NE(err_code, STATUSBARLOG_SUCCESS)
+      << "Should not be able to destroy a statusbar before it has been created";
+
+  err_code = StatusbarLog::create_statusbar_handle(handle, positions, bar_sizes,
+                                                   prefixes, postfixes);
+  ASSERT_EQ(err_code, STATUSBARLOG_SUCCESS)
+      << "create_statusbar_handle should return STATUSBARLOG_SUCCESS";
+
+  std::size_t tmp_idx = handle.idx;
+  handle.idx = SIZE_MAX;
+
+  err_code = StatusbarLog::destroy_statusbar_handle(handle);
+
+  EXPECT_NE(err_code, STATUSBARLOG_SUCCESS)
+      << "If indexes don't match, destroying statusbars should not be possible";
+
+  handle.idx = tmp_idx;
+  err_code = StatusbarLog::destroy_statusbar_handle(handle);
+
+  EXPECT_EQ(err_code, STATUSBARLOG_SUCCESS)
+      << "Should be able to destroy the handle cleanly";
+  EXPECT_FALSE(handle.valid)
+      << "Handle should be marked as invalid after destruction";
+}
+
+TEST_F(HandleManagementTest, DestroyAlreadyDestroyedHandle) {
+  StatusbarLog::StatusBar_handle handle;
+  std::vector<unsigned int> positions = {1};
+  std::vector<unsigned int> bar_sizes = {50};
+  std::vector<std::string> prefixes = {"Processing"};
+  std::vector<std::string> postfixes = {"items"};
+
+  int err_code = StatusbarLog::create_statusbar_handle(
+      handle, positions, bar_sizes, prefixes, postfixes);
+  ASSERT_EQ(err_code, STATUSBARLOG_SUCCESS)
+      << "create_statusbar_handle should return STATUSBARLOG_SUCCESS";
+
+  err_code = StatusbarLog::destroy_statusbar_handle(handle);
+
+  ASSERT_EQ(err_code, STATUSBARLOG_SUCCESS)
+      << "Should be able to destroy the handle cleanly";
+  EXPECT_FALSE(handle.valid)
+      << "Handle should be marked as invalid after destruction";
+
+  err_code = StatusbarLog::destroy_statusbar_handle(handle);
+
+  EXPECT_NE(err_code, STATUSBARLOG_SUCCESS)
+      << "Should not be able to destroy already destroyed handle";
 }

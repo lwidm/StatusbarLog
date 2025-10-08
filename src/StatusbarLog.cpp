@@ -498,11 +498,11 @@ int create_statusbar_handle(StatusBar_handle& statusbar_handle,
   }
 
   if (_statusbar_registry.size() - _statusbar_free_handles.size() >=
-      MAX_ACTIVE_HANDLES) {
+      MAX_HANDLES) {
     LOG_ERR(
         FILENAME,
         "Failed to create statusbar handle. Maximum status bars (%zu) reached",
-        MAX_ACTIVE_HANDLES);
+        MAX_HANDLES);
     return -2;
   }
 
