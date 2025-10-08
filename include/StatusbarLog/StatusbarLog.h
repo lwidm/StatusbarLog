@@ -1,4 +1,4 @@
-// -- StatusbarLog/include/StatusbarLog.h
+// -- StatusbarLog/include/StatusbarLog/StatusbarLog.h
 
 #ifndef STATUSBARLOG_H
 #define STATUSBARLOG_H
@@ -16,8 +16,7 @@
 #include <string>
 #include <vector>
 
-#define MAX_ACTIVE_HANDLES 100
-#define MAX_FREE_HANDLES 100
+#define MAX_HANDLES 100
 #define MAX_LOG_LENGTH 4096
 #define MAX_FILENAME_LENGTH 256
 #define MAX_PREFIX_LENGTH 80

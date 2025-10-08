@@ -617,9 +617,7 @@ int destroy_statusbar_handle(StatusBar_handle& statusbar_handle) {
   target.ID = 0;
   target.spin_idxs.clear();
 
-  if (_statusbar_free_handles.size() < MAX_FREE_HANDLES) {
-    _statusbar_free_handles.push_back(statusbar_handle);
-  }
+  _statusbar_free_handles.push_back(statusbar_handle);
 
   statusbar_handle.valid = false;
   statusbar_handle.ID = 0;

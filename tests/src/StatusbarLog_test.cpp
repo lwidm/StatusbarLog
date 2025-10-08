@@ -27,8 +27,8 @@ TEST_F(HandleManagementTest, CreateSingleBarHandle) {
       << "Handle should be marked as valid after creation";
   EXPECT_NE(handle.ID, 0) << "Handle should have a non-zero ID assigned";
   EXPECT_LT(handle.ID, SIZE_MAX) << "Handle index should be a valid value";
-  EXPECT_LT(handle.idx, MAX_ACTIVE_HANDLES)
-      << "Handle index should be less than MAX_ACTIVE_HANDLES";
+  EXPECT_LT(handle.idx, MAX_HANDLES)
+      << "Handle index should be less than MAX_HANDLES";
   EXPECT_EQ(StatusbarLog::update_statusbar(handle, 0, 50.0),
             STATUSBARLOG_SUCCESS)
       << "Should be able to update the status bar with valid handle";
@@ -51,8 +51,8 @@ TEST_F(HandleManagementTest, CreateMultiBarHandle) {
 
   EXPECT_NE(handle.ID, 0) << "Handle should have a non-zero ID assigned";
   EXPECT_LT(handle.ID, SIZE_MAX) << "Handle index should be a valid value";
-  EXPECT_LT(handle.idx, MAX_ACTIVE_HANDLES)
-      << "Handle index should be less than MAX_ACTIVE_HANDLES";
+  EXPECT_LT(handle.idx, MAX_HANDLES)
+      << "Handle index should be less than MAX_HANDLES";
   EXPECT_EQ(StatusbarLog::update_statusbar(handle, 0, 50.0),
             STATUSBARLOG_SUCCESS)
       << "Should be able to update the status bar with valid handle";
@@ -147,7 +147,7 @@ TEST_F(HandleManagementTest, CreateHandle_MaxActiveHandlesLimit) {
   std::vector<StatusbarLog::StatusBar_handle> handles;
   bool reached_limit = false;
 
-  for (size_t i = 0; i < MAX_ACTIVE_HANDLES + 5; ++i) {
+  for (size_t i = 0; i < MAX_HANDLES + 5; ++i) {
     StatusbarLog::StatusBar_handle handle;
     std::vector<unsigned int> positions = {1};
     std::vector<unsigned int> bar_sizes = {50};
@@ -158,9 +158,9 @@ TEST_F(HandleManagementTest, CreateHandle_MaxActiveHandlesLimit) {
         handle, positions, bar_sizes, prefixes, postfixes);
 
     if (err_code == STATUSBARLOG_SUCCESS) {
-      // Successfully created - should only happen up to MAX_ACTIVE_HANDLES
-      EXPECT_LE(handles.size(), MAX_ACTIVE_HANDLES - 1)
-          << "Should not create more than " << MAX_ACTIVE_HANDLES << " handles";
+      // Successfully created - should only happen up to MAX_HANDLES
+      EXPECT_LE(handles.size(), MAX_HANDLES - 1)
+          << "Should not create more than " << MAX_HANDLES << " handles";
       EXPECT_TRUE(handle.valid);
       handles.push_back(handle);
     } else {
@@ -177,8 +177,8 @@ TEST_F(HandleManagementTest, CreateHandle_MaxActiveHandlesLimit) {
 
   EXPECT_TRUE(reached_limit)
       << "Should have encountered the maximum handles limit";
-  EXPECT_EQ(handles.size(), MAX_ACTIVE_HANDLES)
-      << "Should have created exactly " << MAX_ACTIVE_HANDLES << " handles";
+  EXPECT_EQ(handles.size(), MAX_HANDLES)
+      << "Should have created exactly " << MAX_HANDLES << " handles";
 
   // Test that we can still destroy handles and create new ones after cleanup
   if (!handles.empty()) {
