@@ -76,7 +76,7 @@ cmake --build . -j$(nproc) --config Release
 2. Status Bar Update Tests
 ```cpp
 // Basic updates
-TEST(StatusBarUpdate, UpdateValidPercentage)
+// TEST(StatusBarUpdate, UpdateValidPercentage)
 TEST(StatusBarUpdate, UpdateMultipleBarsInHandle)
 TEST(StatusBarUpdate, UpdateWithInvalidPercentage_Negative)
 TEST(StatusBarUpdate, UpdateWithInvalidPercentage_Over100)

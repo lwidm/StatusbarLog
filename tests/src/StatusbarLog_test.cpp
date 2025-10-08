@@ -6,6 +6,10 @@
 #include <cstdint>
 #include <vector>
 
+// ==================================================
+// HandleManagementTest
+// ==================================================
+
 class HandleManagementTest : public ::testing::Test {
  protected:
   void SetUp() override {}
@@ -287,4 +291,65 @@ TEST_F(HandleManagementTest, DestroyAlreadyDestroyedHandle) {
 
   EXPECT_NE(err_code, STATUSBARLOG_SUCCESS)
       << "Should not be able to destroy already destroyed handle";
+}
+
+// ==================================================
+// StatusbarUpdateTest
+// ==================================================
+
+class StatusbarUpdateTest : public ::testing::Test {
+ protected:
+  StatusbarLog::StatusBar_handle handle;
+  std::vector<unsigned int> positions;
+  std::vector<unsigned int> bar_sizes;
+  std::vector<std::string> prefixes;
+  std::vector<std::string> postfixes;
+
+  void SetUp() override {
+    this->positions = {1};
+    this->bar_sizes = {50};
+    this->prefixes = {"Processing"};
+    this->postfixes = {"items"};
+
+    int err_code = StatusbarLog::create_statusbar_handle(
+        this->handle, this->positions, this->bar_sizes, this->prefixes,
+        this->postfixes);
+
+    ASSERT_EQ(err_code, STATUSBARLOG_SUCCESS)
+        << "Failed to create statusbar handle in fixture setup";
+    ASSERT_TRUE(handle.valid)
+        << "Handle should be valid after creation in fixture setup";
+  }
+
+  void TearDown() override {
+    // Only destroy if the handle is still valid
+    if (handle.valid) {
+      int err_code = StatusbarLog::destroy_statusbar_handle(handle);
+      EXPECT_EQ(err_code, STATUSBARLOG_SUCCESS)
+          << "Failed to destroy statusbar handle in fixture teardown";
+    }
+  }
+
+  void updateBarAndVerify(size_t bar_index, double percentage) {
+    int err_code =
+        StatusbarLog::update_statusbar(handle, bar_index, percentage);
+    EXPECT_EQ(err_code, STATUSBARLOG_SUCCESS)
+        << "Failed to update bar at index " << bar_index << " with percentage "
+        << percentage;
+  }
+};
+
+TEST_F(StatusbarUpdateTest, UpdateValidPercentage) {
+  updateBarAndVerify(0, 0.0);
+  updateBarAndVerify(0, 25.5);
+  updateBarAndVerify(0, 50.0);
+  updateBarAndVerify(0, 75.0);
+  updateBarAndVerify(0, 100.0);
+}
+
+TEST_F(StatusbarUpdateTest, UpdateBoundaryPercentages) {
+  updateBarAndVerify(0, 0.0);
+  updateBarAndVerify(0, 0.1);
+  updateBarAndVerify(0, 99.9);
+  updateBarAndVerify(0, 100.0);
 }
