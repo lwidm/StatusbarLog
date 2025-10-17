@@ -332,7 +332,7 @@ class StatusbarUpdateTest : public ::testing::Test {
 
   void updateBarAndVerify(size_t bar_index, double percentage) {
     int err_code =
-        StatusbarLog::update_statusbar(handle, bar_index, percentage);
+        StatusbarLog::update_statusbar(this->handle, bar_index, percentage);
     EXPECT_EQ(err_code, STATUSBARLOG_SUCCESS)
         << "Failed to update bar at index " << bar_index << " with percentage "
         << percentage;
@@ -352,4 +352,33 @@ TEST_F(StatusbarUpdateTest, UpdateBoundaryPercentages) {
   updateBarAndVerify(0, 0.1);
   updateBarAndVerify(0, 99.9);
   updateBarAndVerify(0, 100.0);
+}
+
+TEST_F(StatusbarUpdateTest, UpdateMultipleBarsInHandle) {
+  int err = StatusbarLog::destroy_statusbar_handle(this->handle);
+  ASSERT_EQ(err, STATUSBARLOG_SUCCESS) << "Failed to destroy statusbar handle "
+                                          "in UpdateMultipleBarsInHandle test";
+
+  this->positions = {2, 1};
+  this->bar_sizes = {50, 25};
+  this->prefixes = {"second", "first"};
+  this->postfixes = {"items", "things"};
+
+  int err_code = StatusbarLog::create_statusbar_handle(
+      this->handle, this->positions, this->bar_sizes, this->prefixes,
+      this->postfixes);
+
+  ASSERT_EQ(err_code, STATUSBARLOG_SUCCESS)
+      << "Failed to create multiple statusbars in UpdateMultipleBarsInHandle "
+         "test";
+
+  updateBarAndVerify(0, 0.0);
+  updateBarAndVerify(1, 0.0);
+  updateBarAndVerify(0, 25.5);
+  updateBarAndVerify(0, 50.0);
+  updateBarAndVerify(1, 50.0);
+  updateBarAndVerify(0, 75.0);
+  updateBarAndVerify(1, 75.0);
+  updateBarAndVerify(0, 100.0);
+  updateBarAndVerify(1, 100.0);
 }
