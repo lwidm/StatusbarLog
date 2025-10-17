@@ -337,6 +337,13 @@ class StatusbarUpdateTest : public ::testing::Test {
         << "Failed to update bar at index " << bar_index << " with percentage "
         << percentage;
   }
+  void updateBarAndVerifyFailure(size_t bar_index, double percentage) {
+    int err_code =
+        StatusbarLog::update_statusbar(this->handle, bar_index, percentage);
+    EXPECT_NE(err_code, STATUSBARLOG_SUCCESS)
+        << "Should have failed to update bar with index " << bar_index
+        << " with percentage " << percentage;
+  }
 };
 
 TEST_F(StatusbarUpdateTest, UpdateValidPercentage) {
@@ -381,4 +388,33 @@ TEST_F(StatusbarUpdateTest, UpdateMultipleBarsInHandle) {
   updateBarAndVerify(1, 75.0);
   updateBarAndVerify(0, 100.0);
   updateBarAndVerify(1, 100.0);
+}
+
+TEST_F(StatusbarUpdateTest, InvalidUpdates) {
+  updateBarAndVerifyFailure(0, -1.0);
+  updateBarAndVerifyFailure(0, 101.0);
+  updateBarAndVerifyFailure(1, 100.0);
+
+  StatusbarLog::StatusBar_handle handle2;
+  std::vector<unsigned int> positions2 = {1};
+  std::vector<unsigned int> bar_sizes2 = {50};
+  std::vector<std::string> prefixes2 = {"Processing"};
+  std::vector<std::string> postfixes2 = {"items"};
+
+  int err_code = StatusbarLog::create_statusbar_handle(
+      handle2, positions2, bar_sizes2, prefixes2, postfixes2);
+  ASSERT_EQ(err_code, STATUSBARLOG_SUCCESS)
+      << "create_statusbar_handle should return STATUSBARLOG_SUCCESS";
+
+  err_code = StatusbarLog::destroy_statusbar_handle(handle2);
+
+  ASSERT_EQ(err_code, STATUSBARLOG_SUCCESS)
+      << "Should be able to destroy the handle cleanly";
+  EXPECT_FALSE(handle2.valid)
+      << "Handle should be marked as invalid after destruction";
+
+  err_code = StatusbarLog::update_statusbar(handle2, 0, 20);
+
+  EXPECT_NE(err_code, STATUSBARLOG_SUCCESS)
+      << "Should not be able to destroy already destroyed handle";
 }

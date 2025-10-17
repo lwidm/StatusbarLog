@@ -651,6 +651,13 @@ int update_statusbar(StatusBar_handle& statusbar_handle, const std::size_t idx,
 
   StatusBar& statusbar = _statusbar_registry[statusbar_handle.idx];
 
+  if (idx >= statusbar.percentages.size()){
+    console_lock.unlock();
+    registry_lock.unlock();
+    LOG_ERR(FILENAME, "Failed to update statusbar: Invalid bar index.");
+    return -6;
+  }
+
   statusbar.percentages[idx] = percent;
   statusbar.spin_idxs[idx] = statusbar.spin_idxs[idx] + 1;
   int bar_error_code = _draw_statusbar_component(

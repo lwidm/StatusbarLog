@@ -281,6 +281,7 @@ int destroy_statusbar_handle(StatusBar_handle& statusbar_handle);
  *         - -3: Invalid handle passed (IDs don't match)
  *         - -4: Invalid handle passed (Other error)
  *         - -5: Invalid percentage passed
+ *         - -6: Invalid bar index passed
  *
  * \details The spinner character cycles through { |, /, -, \ } on each update.
  *
