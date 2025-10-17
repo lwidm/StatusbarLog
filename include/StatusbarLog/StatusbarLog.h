@@ -23,9 +23,10 @@
 #define MAX_POSTFIX_LENGTH 80
 #define MAX_BAR_WIDTH 200
 
-#undef STATUSBARLOG_NO_AUTO_FLUSH 
+#undef STATUSBARLOG_NO_AUTO_FLUSH
 
-// Define to disable automatic flushing (improves performance but may delay output)
+// Define to disable automatic flushing (improves performance but may delay
+// output)
 #define STATUSBARLOG_SUCCESS 0
 
 /**

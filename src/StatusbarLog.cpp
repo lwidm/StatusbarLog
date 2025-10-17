@@ -651,7 +651,7 @@ int update_statusbar(StatusBar_handle& statusbar_handle, const std::size_t idx,
 
   StatusBar& statusbar = _statusbar_registry[statusbar_handle.idx];
 
-  if (idx >= statusbar.percentages.size()){
+  if (idx >= statusbar.percentages.size()) {
     console_lock.unlock();
     registry_lock.unlock();
     LOG_ERR(FILENAME, "Failed to update statusbar: Invalid bar index.");

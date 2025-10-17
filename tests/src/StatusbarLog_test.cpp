@@ -468,11 +468,11 @@ TEST(StatusbarValidations, IsValidHandle) {
       << "Failed to create statusbar handle";
   ASSERT_TRUE(handle2.valid) << "Handle should be valid after creation";
 
-  handle.valid = false; 
+  handle.valid = false;
   err_code = StatusbarLog::destroy_statusbar_handle(handle);
   EXPECT_EQ(err_code, -1);
 
-  handle.valid = true; 
+  handle.valid = true;
   int idx_backup = handle.idx;
   handle.idx = SIZE_MAX;
   err_code = StatusbarLog::destroy_statusbar_handle(handle);
@@ -482,7 +482,7 @@ TEST(StatusbarValidations, IsValidHandle) {
   err_code = StatusbarLog::destroy_statusbar_handle(handle);
   EXPECT_EQ(err_code, -2);
 
-  handle.idx = idx_backup+1;
+  handle.idx = idx_backup + 1;
   err_code = StatusbarLog::destroy_statusbar_handle(handle);
   EXPECT_EQ(err_code, -3);
 
