@@ -60,39 +60,6 @@ cmake --build . -j$(nproc) --config Release
 - Test bounds on statusbar_registry and statusbar_free_handles
 
 ### TEST PRIORITY LIST
-**HIGH PRIORITY - Core Functionality**
-1 Handle Management Tests
-```cpp
-// StatusBar_handle lifecycle
-// TEST(HandleManagement, CreateSingleBarHandle)
-// TEST(HandleManagement, CreateMultiBarHandle) 
-// TEST(HandleManagement, CreateHandle_InvalidInputSizes)
-// TEST(HandleManagement, CreateHandle_MaxActiveHandlesLimit)
-// TEST(HandleManagement, DestroyValidHandle)
-// TEST(HandleManagement, DestroyInvalidHandle)
-// TEST(HandleManagement, DestroyAlreadyDestroyedHandle)
-```
-
-2. Status Bar Update Tests
-```cpp
-// Basic updates
-// TEST(StatusBarUpdate, UpdateValidPercentage)
-TEST(StatusBarUpdate, UpdateMultipleBarsInHandle)
-TEST(StatusBarUpdate, UpdateWithInvalidPercentage_Negative)
-TEST(StatusBarUpdate, UpdateWithInvalidPercentage_Over100)
-TEST(StatusBarUpdate, UpdateWithInvalidIndex)
-TEST(StatusBarUpdate, UpdateWithInvalidHandle)
-```
-
-3. Validation Function Tests
-```cpp
-// Internal validation logic
-TEST(Validation, IsValidHandle_ValidCase)
-TEST(Validation, IsValidHandle_InvalidFlag)
-TEST(Validation, IsValidHandle_IndexOutOfBounds)
-TEST(Validation, IsValidHandle_IDMismatch)
-TEST(Validation, IsValidHandleVerbose_AllErrorCases)
-```
 
 **MEDIUM PRIORITY - String & Utility Functions**
 4. String Sanitization Tests 

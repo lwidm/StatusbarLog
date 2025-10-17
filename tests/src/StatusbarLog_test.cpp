@@ -418,3 +418,89 @@ TEST_F(StatusbarUpdateTest, InvalidUpdates) {
   EXPECT_NE(err_code, STATUSBARLOG_SUCCESS)
       << "Should not be able to destroy already destroyed handle";
 }
+
+// ==================================================
+// StatusbarValidations
+// ==================================================
+
+class StatusbarValidations : public ::testing::Test {
+ protected:
+  StatusbarLog::StatusBar_handle handle;
+  std::vector<unsigned int> positions;
+  std::vector<unsigned int> bar_sizes;
+  std::vector<std::string> prefixes;
+  std::vector<std::string> postfixes;
+
+  void SetUp() override {
+    this->positions = {1};
+    this->bar_sizes = {50};
+    this->prefixes = {"Processing"};
+    this->postfixes = {"items"};
+
+    int err_code = StatusbarLog::create_statusbar_handle(
+        this->handle, this->positions, this->bar_sizes, this->prefixes,
+        this->postfixes);
+
+    ASSERT_EQ(err_code, STATUSBARLOG_SUCCESS)
+        << "Failed to create statusbar handle in fixture setup";
+    ASSERT_TRUE(handle.valid)
+        << "Handle should be valid after creation in fixture setup";
+  }
+};
+
+TEST(StatusbarValidations, IsValidHandle) {
+  StatusbarLog::StatusBar_handle handle;
+  StatusbarLog::StatusBar_handle handle2;
+  std::vector<unsigned int> positions = {1};
+  std::vector<unsigned int> bar_sizes = {50};
+  std::vector<std::string> prefixes = {"Processing"};
+  std::vector<std::string> postfixes = {"items"};
+
+  int err_code = StatusbarLog::create_statusbar_handle(
+      handle, positions, bar_sizes, prefixes, postfixes);
+  ASSERT_EQ(err_code, STATUSBARLOG_SUCCESS)
+      << "Failed to create statusbar handle";
+  ASSERT_TRUE(handle.valid) << "Handle should be valid after creation";
+
+  err_code = StatusbarLog::create_statusbar_handle(
+      handle2, positions, bar_sizes, prefixes, postfixes);
+  ASSERT_EQ(err_code, STATUSBARLOG_SUCCESS)
+      << "Failed to create statusbar handle";
+  ASSERT_TRUE(handle2.valid) << "Handle should be valid after creation";
+
+  handle.valid = false; 
+  err_code = StatusbarLog::destroy_statusbar_handle(handle);
+  EXPECT_EQ(err_code, -1);
+
+  handle.valid = true; 
+  int idx_backup = handle.idx;
+  handle.idx = SIZE_MAX;
+  err_code = StatusbarLog::destroy_statusbar_handle(handle);
+  EXPECT_EQ(err_code, -2);
+
+  handle.idx = 99999;
+  err_code = StatusbarLog::destroy_statusbar_handle(handle);
+  EXPECT_EQ(err_code, -2);
+
+  handle.idx = idx_backup+1;
+  err_code = StatusbarLog::destroy_statusbar_handle(handle);
+  EXPECT_EQ(err_code, -3);
+
+  handle.idx = idx_backup;
+  int ID_backup = handle.ID;
+  handle.ID = handle2.ID;
+  err_code = StatusbarLog::destroy_statusbar_handle(handle);
+  EXPECT_EQ(err_code, -3);
+
+  handle.ID = ID_backup + 1;
+  err_code = StatusbarLog::destroy_statusbar_handle(handle);
+  EXPECT_EQ(err_code, -3);
+
+  // BUG : Cant test err_code -4
+
+  handle.ID = ID_backup;
+  err_code = StatusbarLog::destroy_statusbar_handle(handle);
+  EXPECT_EQ(err_code, STATUSBARLOG_SUCCESS);
+  err_code = StatusbarLog::destroy_statusbar_handle(handle2);
+  EXPECT_EQ(err_code, STATUSBARLOG_SUCCESS);
+}
