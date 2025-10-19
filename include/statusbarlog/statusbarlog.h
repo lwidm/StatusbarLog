@@ -17,17 +17,17 @@
 
 namespace statusbar_log {
 
-#define MAX_HANDLES 100
-#define MAX_LOG_LENGTH 4096
-#define MAX_FILENAME_LENGTH 256
-#define MAX_PREFIX_LENGTH 80
-#define MAX_POSTFIX_LENGTH 80
-#define MAX_BAR_WIDTH 200
-#define STATUSBARLOG_SUCCESS 0
+constexpr unsigned int kMaxHandles = 100;
+constexpr unsigned int kMaxLogLength = 4096;
+constexpr unsigned int kMaxFilenameLength = 256;
+constexpr unsigned int kMaxPrefixLength = 80;
+constexpr unsigned int kMaxPostfixLength = 80;
+constexpr unsigned int kMaxBarWidth = 200;
+constexpr int kStatusbarLogSuccess = 0;
 
 /// Define to disable automatic flushing (improves performance but may delay
 /// output)
-#undef STATUSBARLOG_NO_AUTO_FLUSH
+constexpr bool kStatusbarLogNoAutoFlush = false;
 
 /**
  * \enum LogLevel
@@ -117,7 +117,7 @@ void ClearCurrentLine();
 /**
  * \brief Manually flush the output buffer
  *
- * Useful when STATUSBARLOG_NO_AUTO_FLUSH is defined to force output
+ * Useful when statusbar_log::kStatusbarLogNoAutoFlush is defined to force output
  */
 void FlushOutput();
 
@@ -130,8 +130,8 @@ void FlushOutput();
  * \param[in] fmt printf-style format string.
  * \param[in] ... Additional format arguments.
  *
- * \return STATUSBARLOG_SUCCESS (i.e. 0) on success, non-zero on formatting
- * error. (Currently always STATUSBARLOG_SUCCESS, no error checking)
+ * \return statusbar_log::kStatusbarLogSuccess (i.e. 0) on success, non-zero on formatting
+ * error. (Currently always statusbar_log::kStatusbarLogSuccess, no error checking)
  *
  * \note Logging temporarily moves status bars down to avoid visual glitches.
  *
@@ -202,9 +202,9 @@ int Log(LogLevel log_level, const std::string& filename, const char* fmt, ...);
  * \param[in] _prefixes Text before each bar.
  * \param[in] _postfixes Text before each bar.
  *
- * \return Returns STATUSBARLOG_SUCCESS (i.e. 0) on success, or one of these
+ * \return Returns statusbar_log::kStatusbarLogSuccess (i.e. 0) on success, or one of these
  * error/warning codes:
- *         -  STATUSBARLOG_SUCCESS (i.e. 0): Success (no errors)
+ *         -  statusbar_log::kStatusbarLogSuccess (i.e. 0): Success (no errors)
  *         - -1: Failed to create status bar handle (invalid inputs)
  *         - -2: Failed to create status bar handle (handle registry exceeds
  * maximum element limit)
@@ -218,10 +218,10 @@ int Log(LogLevel log_level, const std::string& filename, const char* fmt, ...);
  * \see DestroyStatusbarHandle: Destroying statusbar_handle after use.
  */
 int CreateStatusbarHandle(StatusbarHandle& statusbar_handle,
-                            const std::vector<unsigned int> _positions,
-                            const std::vector<unsigned int> _bar_sizes,
-                            const std::vector<std::string> _prefixes,
-                            const std::vector<std::string> _postfixes);
+                          const std::vector<unsigned int> _positions,
+                          const std::vector<unsigned int> _bar_sizes,
+                          const std::vector<std::string> _prefixes,
+                          const std::vector<std::string> _postfixes);
 
 /**
  * \brief Destorys a Statusbar
@@ -233,9 +233,9 @@ int CreateStatusbarHandle(StatusbarHandle& statusbar_handle,
  *
  * \param[in, out] statusbar_handle Struct to destroy.
  *
- * \return Returns STATUSBARLOG_SUCCESS (i.e. 0) on success, or one of these
+ * \return Returns statusbar_log::kStatusbarLogSuccess (i.e. 0) on success, or one of these
  * error/warning codes:
- *         -  STATUSBARLOG_SUCCESS (i.e. 0): Success (no errors)
+ *         -  statusbar_log::kStatusbarLogSuccess (i.e. 0): Success (no errors)
  *         - -1: Invalid handle passed (valid flag set to false)
  *         - -2: Invalid handle passed (index out of registry bounds)
  *         - -3: Invalid handle passed (IDs don't match)
@@ -270,9 +270,9 @@ int DestroyStatusbarHandle(StatusbarHandle& statusbar_handle);
  * \param[in] percent New progress percentage (0-100).
  * updated.
  *
- * \return Returns STATUSBARLOG_SUCCESS (i.e. 0) on success, or one of these
+ * \return Returns statusbar_log::kStatusbarLogSuccess (i.e. 0) on success, or one of these
  * error/warning codes:
- *         -  STATUSBARLOG_SUCCESS (i.e. 0): Success (no errors)
+ *         -  statusbar_log::kStatusbarLogSuccess (i.e. 0): Success (no errors)
  *         - -1: Invalid handle passed (valid flag set to false)
  *         - -2: Invalid handle passed (index out of registry bounds)
  *         - -3: Invalid handle passed (IDs don't match)
@@ -287,7 +287,7 @@ int DestroyStatusbarHandle(StatusbarHandle& statusbar_handle);
  * \see _statusbar_registry: Global statusbar registry.
  */
 int UpdateStatusbar(StatusbarHandle& statusbar, const std::size_t idx,
-                     const double percent);
+                    const double percent);
 
 }  // namespace statusbar_log
 
