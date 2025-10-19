@@ -36,13 +36,13 @@ namespace statusbar_log {
  * Messages below the minimum log level (LOG_LEVEL) are ignored.
  *
  * Levels:
- * - \c LOG_LEVEL_OFF: No logging
- * - \c LOG_LEVEL_ERR: Logs errors to the console with the prefix "ERROR" (using
+ * - \c kLogLevelOff: No logging
+ * - \c kLogLevelErr: Logs errors to the console with the prefix "ERROR" (using
  *the `print_err` <- \todo function)
- * - \c LOG_LEVEL_WRN: Logs warnings to the console with the prefix "WARNING".
- * - \c LOG_LEVEL_INF: Logs informational messages to the console with the
+ * - \c kLogLevelWrn: Logs warnings to the console with the prefix "WARNING".
+ * - \c kLogLevelInf: Logs informational messages to the console with the
  *prefix "INFO".
- * - \c LOG_LEVEL_DBG: Logs debug messages to the console with the prefix
+ * - \c kLogLevelDbg: Logs debug messages to the console with the prefix
  *"DEBUG".
  *
  *\see statusbar_log::log: Actual function used for creating log messages.
@@ -51,11 +51,11 @@ namespace statusbar_log {
  */
 // clang-format off
 typedef enum {
-  LOG_LEVEL_OFF = 0, ///< No logging
-  LOG_LEVEL_ERR, ///< Logs errors to the console with the prefix "ERROR" (using the `print_err` <- \todo function)
-  LOG_LEVEL_WRN, ///< Logs warnings to the console with the prefix "WARNING".
-  LOG_LEVEL_INF, ///< Logs informational messages to the console with the prefix "INFO".
-  LOG_LEVEL_DBG, ///< Logs debug messages to the console with the prefix "DEBUG".
+  kLogLevelOff = 0, ///< No logging
+  kLogLevelErr, ///< Logs errors to the console with the prefix "ERROR" (using the `print_err` <- \todo function)
+  kLogLevelWrn, ///< Logs warnings to the console with the prefix "WARNING".
+  kLogLevelInf, ///< Logs informational messages to the console with the prefix "INFO".
+  kLogLevelDbg, ///< Logs debug messages to the console with the prefix "DEBUG".
 } Log_level;
 // clang-format on
 
@@ -64,18 +64,18 @@ typedef enum {
  * \brief Sets the global logging verbosity threshold.
  *
  * Only messages with a log level ≤ LOG_LEVEL are printed. Default:
- *LOG_LEVEL_DBG (all messages enabled).el can be adjusted to control the
+ *kLogLevelDbg (all messages enabled).el can be adjusted to control the
  *verbosity of logging output.
  * Example:
  * \code
- * #define LOG_LEVEL LOG_LEVEL_INF  // Show errors, warnings, and info.
+ * #define LOG_LEVEL kLogLevelInf  // Show errors, warnings, and info.
  * \endcode
  *
  * \see statusbar_log::log: Actual function used for creating log messages.
  * \see statusbar_log::log_level: Enum containing all log levels.
  */
 #ifndef LOG_LEVEL
-#define LOG_LEVEL LOG_LEVEL_DBG
+#define LOG_LEVEL kLogLevelDbg
 #endif  // !LOG_LEVEL
 
 typedef struct {
@@ -151,7 +151,7 @@ int log(Log_level log_level, const std::string& filename, const char* fmt, ...);
  *\see statusbar_log::log: General logging function
  */
 #define LOG_ERR(filename, fmt, ...) \
-  statusbar_log::log(statusbar_log::LOG_LEVEL_ERR, filename, fmt, ##__VA_ARGS__)
+  statusbar_log::log(statusbar_log::kLogLevelErr, filename, fmt, ##__VA_ARGS__)
 
 /**
  * \def LOG_WRN
@@ -160,7 +160,7 @@ int log(Log_level log_level, const std::string& filename, const char* fmt, ...);
  *\see statusbar_log::log: General logging function
  */
 #define LOG_WRN(filename, fmt, ...) \
-  statusbar_log::log(statusbar_log::LOG_LEVEL_WRN, filename, fmt, ##__VA_ARGS__)
+  statusbar_log::log(statusbar_log::kLogLevelWrn, filename, fmt, ##__VA_ARGS__)
 
 /**
  * \def LOG_INF
@@ -169,7 +169,7 @@ int log(Log_level log_level, const std::string& filename, const char* fmt, ...);
  *\see statusbar_log::log: General logging function
  */
 #define LOG_INF(filename, fmt, ...) \
-  statusbar_log::log(statusbar_log::LOG_LEVEL_INF, filename, fmt, ##__VA_ARGS__)
+  statusbar_log::log(statusbar_log::kLogLevelInf, filename, fmt, ##__VA_ARGS__)
 
 /**
  * \def LOG_DBG
@@ -178,7 +178,7 @@ int log(Log_level log_level, const std::string& filename, const char* fmt, ...);
  *\see statusbar_log::log: General logging function
  */
 #define LOG_DBG(filename, fmt, ...) \
-  statusbar_log::log(statusbar_log::LOG_LEVEL_DBG, filename, fmt, ##__VA_ARGS__)
+  statusbar_log::log(statusbar_log::kLogLevelDbg, filename, fmt, ##__VA_ARGS__)
 #pragma GCC diagnostic pop
 
 /**

@@ -419,10 +419,10 @@ int log(const Log_level log_level, const std::string& filename, const char* fmt,
   const char* prefix = "";
   // clang-format off
   switch(log_level){
-    case LOG_LEVEL_ERR: prefix = "ERROR"; break;
-    case LOG_LEVEL_WRN: prefix = "WARNING"; break;
-    case LOG_LEVEL_INF: prefix = "INFO"; break;
-    case LOG_LEVEL_DBG: prefix = "DEBUG"; break;
+    case kLogLevelErr: prefix = "ERROR"; break;
+    case kLogLevelWrn: prefix = "WARNING"; break;
+    case kLogLevelInf: prefix = "INFO"; break;
+    case kLogLevelDbg: prefix = "DEBUG"; break;
     default: break;
   }
   // clang-format on

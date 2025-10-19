@@ -6,7 +6,7 @@
 #include <thread>
 #include <vector>
 
-#define LOG_LEVEL LOG_LEVEL_INF
+#define LOG_LEVEL statusbar_log::kLogLevelInf
 
 #include "StatusbarLog/StatusbarLog.h"
 
