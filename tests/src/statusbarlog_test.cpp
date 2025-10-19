@@ -1,5 +1,5 @@
-// -- StatusbarLog/test/src/StatusbarLog_test.cpp
-#include "StatusbarLog/StatusbarLog.h"
+// -- statusbarlog/test/src/statusbarlog_test.cpp
+#include "statusbarlog/statusbarlog.h"
 
 #include <gtest/gtest.h>
 
@@ -18,7 +18,7 @@ class HandleManagementTest : public ::testing::Test {
 };
 
 TEST_F(HandleManagementTest, CreateSingleBarHandle) {
-  statusbar_log::StatusBar_handle handle;
+  statusbar_log::StatusbarHandle handle;
   std::vector<unsigned int> positions = {1};
   std::vector<unsigned int> bar_sizes = {50};
   std::vector<std::string> prefixes = {"Processing"};
@@ -31,8 +31,8 @@ TEST_F(HandleManagementTest, CreateSingleBarHandle) {
       << "create_statusbar_handle should return STATUSBARLOG_SUCCESS";
   EXPECT_TRUE(handle.valid)
       << "Handle should be marked as valid after creation";
-  EXPECT_NE(handle.ID, 0) << "Handle should have a non-zero ID assigned";
-  EXPECT_LT(handle.ID, SIZE_MAX) << "Handle index should be a valid value";
+  EXPECT_NE(handle.id, 0) << "Handle should have a non-zero ID assigned";
+  EXPECT_LT(handle.id, SIZE_MAX) << "Handle index should be a valid value";
   EXPECT_LT(handle.idx, MAX_HANDLES)
       << "Handle index should be less than MAX_HANDLES";
   EXPECT_EQ(statusbar_log::update_statusbar(handle, 0, 50.0),
@@ -46,7 +46,7 @@ TEST_F(HandleManagementTest, CreateSingleBarHandle) {
 }
 
 TEST_F(HandleManagementTest, CreateMultiBarHandle) {
-  statusbar_log::StatusBar_handle handle;
+  statusbar_log::StatusbarHandle handle;
   std::vector<unsigned int> positions = {2, 1};
   std::vector<unsigned int> bar_sizes = {20, 10};
   std::vector<std::string> prefixes = {"first", "second"};
@@ -55,8 +55,8 @@ TEST_F(HandleManagementTest, CreateMultiBarHandle) {
   int err_code = statusbar_log::create_statusbar_handle(
       handle, positions, bar_sizes, prefixes, postfixes);
 
-  EXPECT_NE(handle.ID, 0) << "Handle should have a non-zero ID assigned";
-  EXPECT_LT(handle.ID, SIZE_MAX) << "Handle index should be a valid value";
+  EXPECT_NE(handle.id, 0) << "Handle should have a non-zero ID assigned";
+  EXPECT_LT(handle.id, SIZE_MAX) << "Handle index should be a valid value";
   EXPECT_LT(handle.idx, MAX_HANDLES)
       << "Handle index should be less than MAX_HANDLES";
   EXPECT_EQ(statusbar_log::update_statusbar(handle, 0, 50.0),
@@ -70,7 +70,7 @@ TEST_F(HandleManagementTest, CreateMultiBarHandle) {
 }
 
 TEST_F(HandleManagementTest, CreateHandle_InvalidInputSizes) {
-  statusbar_log::StatusBar_handle handle;
+  statusbar_log::StatusbarHandle handle;
 
   // Test Case 1: Positions vector larger than others
   {
@@ -150,11 +150,11 @@ TEST_F(HandleManagementTest, CreateHandle_InvalidInputSizes) {
 }
 
 TEST_F(HandleManagementTest, CreateHandle_MaxActiveHandlesLimit) {
-  std::vector<statusbar_log::StatusBar_handle> handles;
+  std::vector<statusbar_log::StatusbarHandle> handles;
   bool reached_limit = false;
 
   for (size_t i = 0; i < MAX_HANDLES + 5; ++i) {
-    statusbar_log::StatusBar_handle handle;
+    statusbar_log::StatusbarHandle handle;
     std::vector<unsigned int> positions = {1};
     std::vector<unsigned int> bar_sizes = {50};
     std::vector<std::string> prefixes = {"Test " + std::to_string(i)};
@@ -194,7 +194,7 @@ TEST_F(HandleManagementTest, CreateHandle_MaxActiveHandlesLimit) {
     handles.erase(handles.begin());
 
     // Now we should be able to create one more handle
-    statusbar_log::StatusBar_handle new_handle;
+    statusbar_log::StatusbarHandle new_handle;
     std::vector<unsigned int> positions = {1};
     std::vector<unsigned int> bar_sizes = {50};
     std::vector<std::string> prefixes = {"New after destroy"};
@@ -215,7 +215,7 @@ TEST_F(HandleManagementTest, CreateHandle_MaxActiveHandlesLimit) {
 }
 
 TEST_F(HandleManagementTest, DestroyValidHandle) {
-  statusbar_log::StatusBar_handle handle;
+  statusbar_log::StatusbarHandle handle;
   std::vector<unsigned int> positions = {1};
   std::vector<unsigned int> bar_sizes = {50};
   std::vector<std::string> prefixes = {"Processing"};
@@ -236,7 +236,7 @@ TEST_F(HandleManagementTest, DestroyValidHandle) {
 }
 
 TEST_F(HandleManagementTest, DestroyInvalidHandle) {
-  statusbar_log::StatusBar_handle handle;
+  statusbar_log::StatusbarHandle handle;
   std::vector<unsigned int> positions = {1};
   std::vector<unsigned int> bar_sizes = {50};
   std::vector<std::string> prefixes = {"Processing"};
@@ -270,7 +270,7 @@ TEST_F(HandleManagementTest, DestroyInvalidHandle) {
 }
 
 TEST_F(HandleManagementTest, DestroyAlreadyDestroyedHandle) {
-  statusbar_log::StatusBar_handle handle;
+  statusbar_log::StatusbarHandle handle;
   std::vector<unsigned int> positions = {1};
   std::vector<unsigned int> bar_sizes = {50};
   std::vector<std::string> prefixes = {"Processing"};
@@ -300,7 +300,7 @@ TEST_F(HandleManagementTest, DestroyAlreadyDestroyedHandle) {
 
 class StatusbarUpdateTest : public ::testing::Test {
  protected:
-  statusbar_log::StatusBar_handle handle;
+  statusbar_log::StatusbarHandle handle;
   std::vector<unsigned int> positions;
   std::vector<unsigned int> bar_sizes;
   std::vector<std::string> prefixes;
@@ -396,7 +396,7 @@ TEST_F(StatusbarUpdateTest, InvalidUpdates) {
   updateBarAndVerifyFailure(0, 101.0);
   updateBarAndVerifyFailure(1, 100.0);
 
-  statusbar_log::StatusBar_handle handle2;
+  statusbar_log::StatusbarHandle handle2;
   std::vector<unsigned int> positions2 = {1};
   std::vector<unsigned int> bar_sizes2 = {50};
   std::vector<std::string> prefixes2 = {"Processing"};
@@ -426,7 +426,7 @@ TEST_F(StatusbarUpdateTest, InvalidUpdates) {
 
 class StatusbarValidations : public ::testing::Test {
  protected:
-  statusbar_log::StatusBar_handle handle;
+  statusbar_log::StatusbarHandle handle;
   std::vector<unsigned int> positions;
   std::vector<unsigned int> bar_sizes;
   std::vector<std::string> prefixes;
@@ -450,8 +450,8 @@ class StatusbarValidations : public ::testing::Test {
 };
 
 TEST(StatusbarValidations, IsValidHandle) {
-  statusbar_log::StatusBar_handle handle;
-  statusbar_log::StatusBar_handle handle2;
+  statusbar_log::StatusbarHandle handle;
+  statusbar_log::StatusbarHandle handle2;
   std::vector<unsigned int> positions = {1};
   std::vector<unsigned int> bar_sizes = {50};
   std::vector<std::string> prefixes = {"Processing"};
@@ -488,18 +488,18 @@ TEST(StatusbarValidations, IsValidHandle) {
   EXPECT_EQ(err_code, -3);
 
   handle.idx = idx_backup;
-  int ID_backup = handle.ID;
-  handle.ID = handle2.ID;
+  int ID_backup = handle.id;
+  handle.id = handle2.id;
   err_code = statusbar_log::destroy_statusbar_handle(handle);
   EXPECT_EQ(err_code, -3);
 
-  handle.ID = ID_backup + 1;
+  handle.id = ID_backup + 1;
   err_code = statusbar_log::destroy_statusbar_handle(handle);
   EXPECT_EQ(err_code, -3);
 
   // BUG : Cant test err_code -4
 
-  handle.ID = ID_backup;
+  handle.id = ID_backup;
   err_code = statusbar_log::destroy_statusbar_handle(handle);
   EXPECT_EQ(err_code, STATUSBARLOG_SUCCESS);
   err_code = statusbar_log::destroy_statusbar_handle(handle2);

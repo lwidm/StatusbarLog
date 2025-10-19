@@ -1,4 +1,4 @@
-// -- StatusbarLog/test/src/StatusbarLog_main.cpp
+// -- statusbarlog/test/src/statusbarlog_main.cpp
 
 #include <cstddef>
 #include <iostream>
@@ -8,7 +8,7 @@
 
 #define LOG_LEVEL statusbar_log::kLogLevelInf
 
-#include "StatusbarLog/StatusbarLog.h"
+#include "statusbarlog/statusbarlog.h"
 
 #define FILENAME "main.cpp"
 
@@ -44,7 +44,7 @@ int main() {
   const int total_steps1 = 15;
   const int total_steps2 = 100;
 
-  statusbar_log::StatusBar_handle h;
+  statusbar_log::StatusbarHandle h;
 
   std::cout << "\n\n";
   err = statusbar_log::create_statusbar_handle(

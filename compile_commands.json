@@ -1,44 +1,44 @@
 [
 {
-  "directory": "/home/lukas/Documents/StatusbarLog/build",
-  "command": "/usr/bin/clang++  -I/home/lukas/Documents/StatusbarLog/include -O3 -DNDEBUG -std=gnu++20 -std=c++20 -o CMakeFiles/statusbarlog.dir/src/StatusbarLog.cpp.o -c /home/lukas/Documents/StatusbarLog/src/StatusbarLog.cpp",
-  "file": "/home/lukas/Documents/StatusbarLog/src/StatusbarLog.cpp",
-  "output": "CMakeFiles/statusbarlog.dir/src/StatusbarLog.cpp.o"
+  "directory": "/home/lukas/Documents/statusbarlog/build",
+  "command": "/usr/bin/clang++  -I/home/lukas/Documents/statusbarlog/include -O3 -DNDEBUG -std=gnu++20 -std=c++20 -o CMakeFiles/statusbarlog.dir/src/statusbarlog.cpp.o -c /home/lukas/Documents/statusbarlog/src/statusbarlog.cpp",
+  "file": "/home/lukas/Documents/statusbarlog/src/statusbarlog.cpp",
+  "output": "CMakeFiles/statusbarlog.dir/src/statusbarlog.cpp.o"
 },
 {
-  "directory": "/home/lukas/Documents/StatusbarLog/build/tests",
-  "command": "/usr/bin/clang++  -I/home/lukas/Documents/StatusbarLog/include -isystem /home/lukas/Documents/StatusbarLog/build/_deps/googletest-src/googletest/include -isystem /home/lukas/Documents/StatusbarLog/build/_deps/googletest-src/googletest -O3 -DNDEBUG -std=gnu++20 -std=c++20 -o CMakeFiles/statusbarlog_test.dir/src/StatusbarLog_test.cpp.o -c /home/lukas/Documents/StatusbarLog/tests/src/StatusbarLog_test.cpp",
-  "file": "/home/lukas/Documents/StatusbarLog/tests/src/StatusbarLog_test.cpp",
-  "output": "tests/CMakeFiles/statusbarlog_test.dir/src/StatusbarLog_test.cpp.o"
+  "directory": "/home/lukas/Documents/statusbarlog/build/tests",
+  "command": "/usr/bin/clang++  -I/home/lukas/Documents/statusbarlog/include -isystem /home/lukas/Documents/statusbarlog/build/_deps/googletest-src/googletest/include -isystem /home/lukas/Documents/statusbarlog/build/_deps/googletest-src/googletest -O3 -DNDEBUG -std=gnu++20 -std=c++20 -o CMakeFiles/statusbarlog_test.dir/src/statusbarlog_test.cpp.o -c /home/lukas/Documents/statusbarlog/tests/src/statusbarlog_test.cpp",
+  "file": "/home/lukas/Documents/statusbarlog/tests/src/statusbarlog_test.cpp",
+  "output": "tests/CMakeFiles/statusbarlog_test.dir/src/statusbarlog_test.cpp.o"
 },
 {
-  "directory": "/home/lukas/Documents/StatusbarLog/build/tests",
-  "command": "/usr/bin/clang++  -I/home/lukas/Documents/StatusbarLog/include -O3 -DNDEBUG -std=gnu++20 -o CMakeFiles/statusbarlog_main.dir/src/StatusbarLog_main.cpp.o -c /home/lukas/Documents/StatusbarLog/tests/src/StatusbarLog_main.cpp",
-  "file": "/home/lukas/Documents/StatusbarLog/tests/src/StatusbarLog_main.cpp",
-  "output": "tests/CMakeFiles/statusbarlog_main.dir/src/StatusbarLog_main.cpp.o"
+  "directory": "/home/lukas/Documents/statusbarlog/build/tests",
+  "command": "/usr/bin/clang++  -I/home/lukas/Documents/statusbarlog/include -O3 -DNDEBUG -std=gnu++20 -o CMakeFiles/statusbarlog_main.dir/src/statusbarlog_main.cpp.o -c /home/lukas/Documents/statusbarlog/tests/src/statusbarlog_main.cpp",
+  "file": "/home/lukas/Documents/statusbarlog/tests/src/statusbarlog_main.cpp",
+  "output": "tests/CMakeFiles/statusbarlog_main.dir/src/statusbarlog_main.cpp.o"
 },
 {
-  "directory": "/home/lukas/Documents/StatusbarLog/build/_deps/googletest-build/googlemock",
-  "command": "/usr/bin/clang++  -I/home/lukas/Documents/StatusbarLog/build/_deps/googletest-src/googlemock/include -I/home/lukas/Documents/StatusbarLog/build/_deps/googletest-src/googlemock -isystem /home/lukas/Documents/StatusbarLog/build/_deps/googletest-src/googletest/include -isystem /home/lukas/Documents/StatusbarLog/build/_deps/googletest-src/googletest -O3 -DNDEBUG -Wall -Wshadow -Wconversion -DGTEST_HAS_PTHREAD=1 -fexceptions -W -Wpointer-arith -Wreturn-type -Wcast-qual -Wwrite-strings -Wswitch -Wunused-parameter -Wcast-align -Wchar-subscripts -Winline -Wredundant-decls -o CMakeFiles/gmock.dir/src/gmock-all.cc.o -c /home/lukas/Documents/StatusbarLog/build/_deps/googletest-src/googlemock/src/gmock-all.cc",
-  "file": "/home/lukas/Documents/StatusbarLog/build/_deps/googletest-src/googlemock/src/gmock-all.cc",
+  "directory": "/home/lukas/Documents/statusbarlog/build/_deps/googletest-build/googlemock",
+  "command": "/usr/bin/clang++  -I/home/lukas/Documents/statusbarlog/build/_deps/googletest-src/googlemock/include -I/home/lukas/Documents/statusbarlog/build/_deps/googletest-src/googlemock -isystem /home/lukas/Documents/statusbarlog/build/_deps/googletest-src/googletest/include -isystem /home/lukas/Documents/statusbarlog/build/_deps/googletest-src/googletest -O3 -DNDEBUG -Wall -Wshadow -Wconversion -DGTEST_HAS_PTHREAD=1 -fexceptions -W -Wpointer-arith -Wreturn-type -Wcast-qual -Wwrite-strings -Wswitch -Wunused-parameter -Wcast-align -Wchar-subscripts -Winline -Wredundant-decls -o CMakeFiles/gmock.dir/src/gmock-all.cc.o -c /home/lukas/Documents/statusbarlog/build/_deps/googletest-src/googlemock/src/gmock-all.cc",
+  "file": "/home/lukas/Documents/statusbarlog/build/_deps/googletest-src/googlemock/src/gmock-all.cc",
   "output": "_deps/googletest-build/googlemock/CMakeFiles/gmock.dir/src/gmock-all.cc.o"
 },
 {
-  "directory": "/home/lukas/Documents/StatusbarLog/build/_deps/googletest-build/googlemock",
-  "command": "/usr/bin/clang++  -isystem /home/lukas/Documents/StatusbarLog/build/_deps/googletest-src/googlemock/include -isystem /home/lukas/Documents/StatusbarLog/build/_deps/googletest-src/googlemock -isystem /home/lukas/Documents/StatusbarLog/build/_deps/googletest-src/googletest/include -isystem /home/lukas/Documents/StatusbarLog/build/_deps/googletest-src/googletest -O3 -DNDEBUG -Wall -Wshadow -Wconversion -DGTEST_HAS_PTHREAD=1 -fexceptions -W -Wpointer-arith -Wreturn-type -Wcast-qual -Wwrite-strings -Wswitch -Wunused-parameter -Wcast-align -Wchar-subscripts -Winline -Wredundant-decls -o CMakeFiles/gmock_main.dir/src/gmock_main.cc.o -c /home/lukas/Documents/StatusbarLog/build/_deps/googletest-src/googlemock/src/gmock_main.cc",
-  "file": "/home/lukas/Documents/StatusbarLog/build/_deps/googletest-src/googlemock/src/gmock_main.cc",
+  "directory": "/home/lukas/Documents/statusbarlog/build/_deps/googletest-build/googlemock",
+  "command": "/usr/bin/clang++  -isystem /home/lukas/Documents/statusbarlog/build/_deps/googletest-src/googlemock/include -isystem /home/lukas/Documents/statusbarlog/build/_deps/googletest-src/googlemock -isystem /home/lukas/Documents/statusbarlog/build/_deps/googletest-src/googletest/include -isystem /home/lukas/Documents/statusbarlog/build/_deps/googletest-src/googletest -O3 -DNDEBUG -Wall -Wshadow -Wconversion -DGTEST_HAS_PTHREAD=1 -fexceptions -W -Wpointer-arith -Wreturn-type -Wcast-qual -Wwrite-strings -Wswitch -Wunused-parameter -Wcast-align -Wchar-subscripts -Winline -Wredundant-decls -o CMakeFiles/gmock_main.dir/src/gmock_main.cc.o -c /home/lukas/Documents/statusbarlog/build/_deps/googletest-src/googlemock/src/gmock_main.cc",
+  "file": "/home/lukas/Documents/statusbarlog/build/_deps/googletest-src/googlemock/src/gmock_main.cc",
   "output": "_deps/googletest-build/googlemock/CMakeFiles/gmock_main.dir/src/gmock_main.cc.o"
 },
 {
-  "directory": "/home/lukas/Documents/StatusbarLog/build/_deps/googletest-build/googletest",
-  "command": "/usr/bin/clang++  -I/home/lukas/Documents/StatusbarLog/build/_deps/googletest-src/googletest/include -I/home/lukas/Documents/StatusbarLog/build/_deps/googletest-src/googletest -O3 -DNDEBUG -Wall -Wshadow -Wconversion -DGTEST_HAS_PTHREAD=1 -fexceptions -W -Wpointer-arith -Wreturn-type -Wcast-qual -Wwrite-strings -Wswitch -Wunused-parameter -Wcast-align -Wchar-subscripts -Winline -Wredundant-decls -o CMakeFiles/gtest.dir/src/gtest-all.cc.o -c /home/lukas/Documents/StatusbarLog/build/_deps/googletest-src/googletest/src/gtest-all.cc",
-  "file": "/home/lukas/Documents/StatusbarLog/build/_deps/googletest-src/googletest/src/gtest-all.cc",
+  "directory": "/home/lukas/Documents/statusbarlog/build/_deps/googletest-build/googletest",
+  "command": "/usr/bin/clang++  -I/home/lukas/Documents/statusbarlog/build/_deps/googletest-src/googletest/include -I/home/lukas/Documents/statusbarlog/build/_deps/googletest-src/googletest -O3 -DNDEBUG -Wall -Wshadow -Wconversion -DGTEST_HAS_PTHREAD=1 -fexceptions -W -Wpointer-arith -Wreturn-type -Wcast-qual -Wwrite-strings -Wswitch -Wunused-parameter -Wcast-align -Wchar-subscripts -Winline -Wredundant-decls -o CMakeFiles/gtest.dir/src/gtest-all.cc.o -c /home/lukas/Documents/statusbarlog/build/_deps/googletest-src/googletest/src/gtest-all.cc",
+  "file": "/home/lukas/Documents/statusbarlog/build/_deps/googletest-src/googletest/src/gtest-all.cc",
   "output": "_deps/googletest-build/googletest/CMakeFiles/gtest.dir/src/gtest-all.cc.o"
 },
 {
-  "directory": "/home/lukas/Documents/StatusbarLog/build/_deps/googletest-build/googletest",
-  "command": "/usr/bin/clang++  -isystem /home/lukas/Documents/StatusbarLog/build/_deps/googletest-src/googletest/include -isystem /home/lukas/Documents/StatusbarLog/build/_deps/googletest-src/googletest -O3 -DNDEBUG -Wall -Wshadow -Wconversion -DGTEST_HAS_PTHREAD=1 -fexceptions -W -Wpointer-arith -Wreturn-type -Wcast-qual -Wwrite-strings -Wswitch -Wunused-parameter -Wcast-align -Wchar-subscripts -Winline -Wredundant-decls -o CMakeFiles/gtest_main.dir/src/gtest_main.cc.o -c /home/lukas/Documents/StatusbarLog/build/_deps/googletest-src/googletest/src/gtest_main.cc",
-  "file": "/home/lukas/Documents/StatusbarLog/build/_deps/googletest-src/googletest/src/gtest_main.cc",
+  "directory": "/home/lukas/Documents/statusbarlog/build/_deps/googletest-build/googletest",
+  "command": "/usr/bin/clang++  -isystem /home/lukas/Documents/statusbarlog/build/_deps/googletest-src/googletest/include -isystem /home/lukas/Documents/statusbarlog/build/_deps/googletest-src/googletest -O3 -DNDEBUG -Wall -Wshadow -Wconversion -DGTEST_HAS_PTHREAD=1 -fexceptions -W -Wpointer-arith -Wreturn-type -Wcast-qual -Wwrite-strings -Wswitch -Wunused-parameter -Wcast-align -Wchar-subscripts -Winline -Wredundant-decls -o CMakeFiles/gtest_main.dir/src/gtest_main.cc.o -c /home/lukas/Documents/statusbarlog/build/_deps/googletest-src/googletest/src/gtest_main.cc",
+  "file": "/home/lukas/Documents/statusbarlog/build/_deps/googletest-src/googletest/src/gtest_main.cc",
   "output": "_deps/googletest-build/googletest/CMakeFiles/gtest_main.dir/src/gtest_main.cc.o"
 }
 ]

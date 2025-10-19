@@ -1,4 +1,4 @@
-// -- StatusbarLog/include/StatusbarLog/StatusbarLog.h
+// -- statusbarlog/include/statusbarlog/statusbarlog.h
 
 #ifndef STATUSBARLOG_STATUSBARLOG_H_
 #define STATUSBARLOG_STATUSBARLOG_H_
@@ -30,7 +30,7 @@ namespace statusbar_log {
 #undef STATUSBARLOG_NO_AUTO_FLUSH
 
 /**
- * \enum Log_level
+ * \enum LogLevel
  * \brief Defines log levels for categorizing message importance.
  *
  * Messages below the minimum log level (LOG_LEVEL) are ignored.
@@ -56,7 +56,7 @@ typedef enum {
   kLogLevelWrn, ///< Logs warnings to the console with the prefix "WARNING".
   kLogLevelInf, ///< Logs informational messages to the console with the prefix "INFO".
   kLogLevelDbg, ///< Logs debug messages to the console with the prefix "DEBUG".
-} Log_level;
+} LogLevel;
 // clang-format on
 
 /**
@@ -80,9 +80,9 @@ typedef enum {
 
 typedef struct {
   std::size_t idx;
-  unsigned int ID;
+  unsigned int id;
   bool valid;
-} StatusBar_handle;
+} StatusbarHandle;
 
 /**
  * \brief Saves the current cursor position in the terminal
@@ -139,7 +139,7 @@ void flush_output();
  * \see statusbar_log::log_LEVEL: Macro to set the global logging threshold.
  * \see print_err: Function for printing error messages -> \todo
  */
-int log(Log_level log_level, const std::string& filename, const char* fmt, ...);
+int log(LogLevel log_level, const std::string& filename, const char* fmt, ...);
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wgnu-zero-variadic-macro-arguments"
@@ -218,7 +218,7 @@ int log(Log_level log_level, const std::string& filename, const char* fmt, ...);
  * \see update_statusbar: Updating a statusbar
  * \see destroy_statusbar_handle: Destroying statusbar_handle after use.
  */
-int create_statusbar_handle(StatusBar_handle& statusbar_handle,
+int create_statusbar_handle(StatusbarHandle& statusbar_handle,
                             const std::vector<unsigned int> _positions,
                             const std::vector<unsigned int> _bar_sizes,
                             const std::vector<std::string> _prefixes,
@@ -227,7 +227,7 @@ int create_statusbar_handle(StatusBar_handle& statusbar_handle,
 /**
  * \brief Destorys a StatusBar
  *
- * This function takes a StatusBar_handle, clears its content, adds it
+ * This function takes a StatusbarHandle, clears its content, adds it
  * to thestatusbar_free_handles registry and frees its position in the
  * statusbar_registry.
  *
@@ -249,14 +249,14 @@ int create_statusbar_handle(StatusBar_handle& statusbar_handle,
  * \see update_statusbar: Updating a statusbar
  * \see create_statusbar_handle: Creating new statusbar handles.
  */
-int destroy_statusbar_handle(StatusBar_handle& statusbar_handle);
+int destroy_statusbar_handle(StatusbarHandle& statusbar_handle);
 
 /**
  * \brief Function used for updating a statusbar given its handle. The statusbar
  * can consist of multiple "bars" of different sizes and different post-, and
  * prefixes.
  *
- * This Function takes a StatusBar_handle struct and 'updates' it by printing
+ * This Function takes a StatusbarHandle struct and 'updates' it by printing
  * the bar given a new percentage. The statusbar can consist of multiple bars
  * which is why an index has to be passed. This function moves the cursor to the
  * correct location in the terminal corresponding to the index, clears the row
@@ -288,7 +288,7 @@ int destroy_statusbar_handle(StatusBar_handle& statusbar_handle);
  * \see StatusBar: The statusbar struct.
  * \see g_statusbar_registry: Global statusbar registry.
  */
-int update_statusbar(StatusBar_handle& statusbar, const std::size_t idx,
+int update_statusbar(StatusbarHandle& statusbar, const std::size_t idx,
                      const double percent);
 
 }  // namespace statusbar_log

@@ -1,4 +1,4 @@
-# -- StatusbarLog/tests/CMakeLists.txt
+# -- statusbarLog/tests/CMakeLists.txt
 
 # =============================================================================
 # Google Test
@@ -20,7 +20,7 @@ endif()
 FetchContent_MakeAvailable(googletest)
 
 add_executable(${PROJECT_NAME}_test
-               ${CMAKE_CURRENT_SOURCE_DIR}/src/StatusbarLog_test.cpp)
+               ${CMAKE_CURRENT_SOURCE_DIR}/src/statusbarlog_test.cpp)
 
 target_compile_features(${PROJECT_NAME}_test PUBLIC cxx_std_20)
 target_compile_options(
@@ -39,6 +39,6 @@ gtest_discover_tests(${PROJECT_NAME}_test)
 
 if(STATUSBARLOG_BUILD_TEST_MAIN)
   add_executable(${PROJECT_NAME}_main
-                 ${CMAKE_CURRENT_SOURCE_DIR}/src/StatusbarLog_main.cpp)
+                 ${CMAKE_CURRENT_SOURCE_DIR}/src/statusbarlog_main.cpp)
   target_link_libraries(${PROJECT_NAME}_main PRIVATE ${PROJECT_NAME})
 endif()

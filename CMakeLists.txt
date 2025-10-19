@@ -1,4 +1,4 @@
-# -- StatusbarLog/CMakeLists.txt
+# -- statusbarlog/CMakeLists.txt
 
 cmake_minimum_required(VERSION 3.15)
 project(
@@ -14,7 +14,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 option(STATUSBARLOG_INSTALL "Generate installation targets" OFF)
 option(STATUSBARLOG_BUILD_TESTS "Build tests" OFF)
-option(STATUSBARLOG_BUILD_TEST_MAIN "Build main executable for testing" OFF) # (used in StatusbarLog/tests/CMakeLists.txt)
+option(STATUSBARLOG_BUILD_TEST_MAIN "Build main executable for testing" OFF) # (used in statusbarlog/tests/CMakeLists.txt)
 
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   set(CMAKE_BUILD_TYPE
@@ -27,7 +27,7 @@ endif()
 # =============================================================================
 
 # Add the library sources
-set(SRC_FILES StatusbarLog.cpp)
+set(SRC_FILES statusbarlog.cpp)
 list(TRANSFORM SRC_FILES PREPEND "${CMAKE_CURRENT_SOURCE_DIR}/src/")
 
 # Create the library

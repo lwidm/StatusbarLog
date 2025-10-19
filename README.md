@@ -52,7 +52,7 @@ cmake --build . -j$(nproc) --config Release
 ## TODO unittest
 - destroying of statusbar (all error codes)
 - out of bounds `spin_idx`, log message length, status bar text, `statusbar_registry`
-- Mutexes for `statusbar_registry`, `statusbar_free_handles`, `handle_ID_count`
+- Mutexes for `statusbar_registry`, `statusbar_free_handles`, `handle.id_count`
 - Thread safety (test race conditions)
 - Invalid handles (in update_statusbar and destroy_statusbar)
 - Test unsanitised strings (in log and prefixes and postfixes)

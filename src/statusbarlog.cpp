@@ -1,5 +1,6 @@
-// -- StatusbarLog/src/StatusbarLog.cpp
-#include "StatusbarLog/StatusbarLog.h"
+// -- statusbarlog/src/statusbarlog.cpp
+//
+#include "statusbarlog/statusbarlog.h"
 
 #ifdef _WIN32
 #include <windows.h>
@@ -58,7 +59,7 @@ typedef struct {
 // clang-format on
 
 std::vector<StatusBar> _statusbar_registry = {};
-std::vector<StatusBar_handle> _statusbar_free_handles = {};
+std::vector<StatusbarHandle> _statusbar_free_handles = {};
 unsigned int _handle_ID_count = 0;
 
 static std::mutex _registry_mutex;
@@ -174,11 +175,11 @@ std::string _sanitize_string(const std::string& input) {
 /**
  * \brief Check if the argument is a valid statusbar handle
  *
- * This functions performs a test on a StatusBar_handle and returns
+ * This functions performs a test on a StatusbarHandle and returns
  * STATUSBARLOG_SUCCESS (i.e. 0) if it is a valid handle and a negative number
  * otherwise
  *
- * \param[in] StatusBar_handle struct to be checked for validity
+ * \param[in] StatusbarHandle struct to be checked for validity
  *
  * \return Returns STATUSBARLOG_SUCCESS (i.e. 0) if the handle is valid, or one
  * of these status codes:
@@ -192,7 +193,7 @@ std::string _sanitize_string(const std::string& input) {
  *
  * \see _is_valid_handle: Verbose version of this function
  */
-int _is_valid_handle(const StatusBar_handle& statusbar_handle) {
+int _is_valid_handle(const StatusbarHandle& statusbar_handle) {
   const std::size_t idx = statusbar_handle.idx;
 
   if (!statusbar_handle.valid) {
@@ -203,10 +204,10 @@ int _is_valid_handle(const StatusBar_handle& statusbar_handle) {
       (statusbar_handle.idx == SIZE_MAX)) {
     return -2;
   }
-  if (statusbar_handle.ID != _statusbar_registry[idx].ID) {
+  if (statusbar_handle.id != _statusbar_registry[idx].ID) {
     return -3;
   }
-  if (statusbar_handle.ID == 0) {
+  if (statusbar_handle.id == 0) {
     return -4;
   }
   return STATUSBARLOG_SUCCESS;
@@ -216,12 +217,12 @@ int _is_valid_handle(const StatusBar_handle& statusbar_handle) {
  * \brief Check if the argument is a valid statusbar handle and prints an error
  * message.
  *
- * This functions performs a test on a StatusBar_handle and returns
+ * This functions performs a test on a StatusbarHandle and returns
  * STATUSBARLOG_SUCCESS (i.e. 0) if it is a valid handle and a negative number
  * otherwise. Same as _is_valid_handle but also prints an error message and
  * returns the target StatusBar
  *
- * \param[in] StatusBar_handle struct to be checked for validity
+ * \param[in] StatusbarHandle struct to be checked for validity
  *
  * \return Returns STATUSBARLOG_SUCCESS (i.e. 0) if the handle is valid, or one
  * of these status codes:
@@ -236,12 +237,12 @@ int _is_valid_handle(const StatusBar_handle& statusbar_handle) {
  *
  * \see _is_valid_handle: Non verbose version of this function
  */
-int _is_valid_handle_verbose(const StatusBar_handle& statusbar_handle) {
+int _is_valid_handle_verbose(const StatusbarHandle& statusbar_handle) {
   const int is_valid_handle = _is_valid_handle(statusbar_handle);
   if (is_valid_handle == -1) {
     LOG_WRN(FILENAME,
             "Invalid handle: Valid flag set to false (idx: %zu, ID: %u)",
-            statusbar_handle.idx, statusbar_handle.ID);
+            statusbar_handle.idx, statusbar_handle.id);
     return -1;
   }
 
@@ -256,7 +257,7 @@ int _is_valid_handle_verbose(const StatusBar_handle& statusbar_handle) {
 
   if (is_valid_handle == -3) {
     LOG_WRN(FILENAME, "Invalid Handle: ID mismatch: handle %u vs registry %u",
-            statusbar_handle.ID, target.ID);
+            statusbar_handle.id, target.ID);
     return -3;
   }
 
@@ -406,7 +407,7 @@ void clear_current_line() {
   _conditional_flush();
 }
 
-int log(const Log_level log_level, const std::string& filename, const char* fmt,
+int log(const LogLevel log_level, const std::string& filename, const char* fmt,
         ...) {
   if (log_level > LOG_LEVEL) return STATUSBARLOG_SUCCESS;
   std::unique_lock<std::mutex> console_lock(_console_mutex, std::defer_lock);
@@ -479,13 +480,13 @@ int log(const Log_level log_level, const std::string& filename, const char* fmt,
   return STATUSBARLOG_SUCCESS;
 }
 
-int create_statusbar_handle(StatusBar_handle& statusbar_handle,
+int create_statusbar_handle(StatusbarHandle& statusbar_handle,
                             const std::vector<unsigned int> _positions,
                             const std::vector<unsigned int> _bar_sizes,
                             const std::vector<std::string> _prefixes,
                             const std::vector<std::string> _postfixes) {
   statusbar_handle.valid = false;
-  statusbar_handle.ID = 0;
+  statusbar_handle.id = 0;
   if (_positions.size() != _bar_sizes.size() ||
       _bar_sizes.size() != _prefixes.size() ||
       _prefixes.size() != _postfixes.size()) {
@@ -518,7 +519,7 @@ int create_statusbar_handle(StatusBar_handle& statusbar_handle,
     console_lock.unlock();
     registry_lock.unlock();
     LOG_WRN(FILENAME,
-            "Max number of possible statusbar handle IDs reached, looping back "
+            "Max number of possible statusbar handle.ids reached, looping back "
             "to 1");
     std::lock(console_lock, registry_lock);
     _handle_ID_count++;
@@ -554,7 +555,7 @@ int create_statusbar_handle(StatusBar_handle& statusbar_handle,
   }
 
   if (!_statusbar_free_handles.empty()) {
-    StatusBar_handle free_handle = _statusbar_free_handles.back();
+    StatusbarHandle free_handle = _statusbar_free_handles.back();
     _statusbar_free_handles.pop_back();
     statusbar_handle.idx = free_handle.idx;
     _statusbar_registry[statusbar_handle.idx] = {
@@ -568,7 +569,7 @@ int create_statusbar_handle(StatusBar_handle& statusbar_handle,
         percentages, _positions, sanitized_bar_sizes, sanitized_prefixes,
         sanitized_postfixes, spin_idxs, _handle_ID_count, false});
   }
-  statusbar_handle.ID = _handle_ID_count;
+  statusbar_handle.id = _handle_ID_count;
   statusbar_handle.valid = true;
   for (std::size_t idx = 0; idx < num_bars; idx++) {
     _draw_statusbar_component(
@@ -581,7 +582,7 @@ int create_statusbar_handle(StatusBar_handle& statusbar_handle,
   return STATUSBARLOG_SUCCESS;
 }
 
-int destroy_statusbar_handle(StatusBar_handle& statusbar_handle) {
+int destroy_statusbar_handle(StatusbarHandle& statusbar_handle) {
   std::unique_lock<std::mutex> console_lock(_console_mutex, std::defer_lock);
   std::unique_lock<std::mutex> registry_lock(_registry_mutex, std::defer_lock);
   std::lock(console_lock, registry_lock);
@@ -622,12 +623,12 @@ int destroy_statusbar_handle(StatusBar_handle& statusbar_handle) {
   _statusbar_free_handles.push_back(statusbar_handle);
 
   statusbar_handle.valid = false;
-  statusbar_handle.ID = 0;
+  statusbar_handle.id = 0;
 
   return STATUSBARLOG_SUCCESS;
 }
 
-int update_statusbar(StatusBar_handle& statusbar_handle, const std::size_t idx,
+int update_statusbar(StatusbarHandle& statusbar_handle, const std::size_t idx,
                      const double percent) {
   std::unique_lock<std::mutex> console_lock(_console_mutex, std::defer_lock);
   std::unique_lock<std::mutex> registry_lock(_registry_mutex, std::defer_lock);

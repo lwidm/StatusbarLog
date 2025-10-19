@@ -28,7 +28,7 @@ LOG_INF(FILENAME, "Starting test...");
 ```
 3. **StatusBar setup**:
   ```cpp
-statusbar_log::StatusBar_handle handle;
+statusbar_log::StatusbarHandle handle;
 std::vector<unsigned int> positions = {2, 1};
 std::vector<unsigned int> bar_sizes = {20, 10};
 std::vector<std::string> prefixes = {"first", "second"};
