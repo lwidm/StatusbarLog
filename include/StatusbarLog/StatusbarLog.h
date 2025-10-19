@@ -1,7 +1,7 @@
 // -- StatusbarLog/include/StatusbarLog/StatusbarLog.h
 
-#ifndef STATUSBARLOG_H
-#define STATUSBARLOG_H
+#ifndef STATUSBARLOG_STATUSBARLOG_H_
+#define STATUSBARLOG_STATUSBARLOG_H_
 
 #ifdef _WIN32
 #include <windows.h>
@@ -10,7 +10,6 @@
 #include <unistd.h>
 #endif
 
-#include <cstdarg>
 #include <cstddef>
 #include <cstdio>
 #include <string>
@@ -295,4 +294,4 @@ int update_statusbar(StatusBar_handle& statusbar, const std::size_t idx,
 
 }  // namespace StatusbarLog
 
-#endif  // !STATUSBARLOG_H
+#endif  // !STATUSBARLOG_STATUSBARLOG_H_

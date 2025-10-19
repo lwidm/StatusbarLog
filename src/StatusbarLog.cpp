@@ -1,4 +1,5 @@
 // -- StatusbarLog/src/StatusbarLog.cpp
+#include "StatusbarLog/StatusbarLog.h"
 
 #ifdef _WIN32
 #include <windows.h>
@@ -13,13 +14,13 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <cstdio>
 #include <iomanip>
 #include <iostream>
 #include <mutex>
 #include <ostream>
+#include <string>
 #include <vector>
-
-#include "StatusbarLog/StatusbarLog.h"
 
 #define FILENAME "StatusbarLog.cpp"
 

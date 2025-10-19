@@ -1,3 +1,4 @@
+// -- StatusbarLog/test/src/StatusbarLog_test.cpp
 #include "StatusbarLog/StatusbarLog.h"
 
 #include <gtest/gtest.h>

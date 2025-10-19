@@ -1,3 +1,5 @@
+// -- StatusbarLog/test/src/StatusbarLog_main.cpp
+
 #include <cstddef>
 #include <iostream>
 #include <string>
