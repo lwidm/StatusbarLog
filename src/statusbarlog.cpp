@@ -1,5 +1,5 @@
 // -- statusbarlog/src/statusbarlog.cpp
-//
+
 #include "statusbarlog/statusbarlog.h"
 
 #ifdef _WIN32
@@ -24,7 +24,7 @@
 #include <string>
 #include <vector>
 
-#define FILENAME "StatusbarLog.cpp"
+const std::string kFilename = "StatusbarLog.cpp";
 
 namespace statusbar_log {
 
@@ -240,14 +240,14 @@ int _IsValidHandle(const StatusbarHandle& statusbar_handle) {
 int _IsValidHandleVerbose(const StatusbarHandle& statusbar_handle) {
   const int is_valid_handle = _IsValidHandle(statusbar_handle);
   if (is_valid_handle == -1) {
-    LogWrn(FILENAME,
+    LogWrn(kFilename,
             "Invalid handle: Valid flag set to false (idx: %zu, ID: %u)",
             statusbar_handle.idx, statusbar_handle.id);
     return -1;
   }
 
   if (is_valid_handle == -2) {
-    LogWrn(FILENAME,
+    LogWrn(kFilename,
             "Invalid Handle: Handle index %zu out of bounds (max %zu)",
             statusbar_handle.idx, _statusbar_registry.size());
     return -2;
@@ -256,18 +256,18 @@ int _IsValidHandleVerbose(const StatusbarHandle& statusbar_handle) {
   Statusbar& target = _statusbar_registry[statusbar_handle.idx];
 
   if (is_valid_handle == -3) {
-    LogWrn(FILENAME, "Invalid Handle: ID mismatch: handle %u vs registry %u",
+    LogWrn(kFilename, "Invalid Handle: ID mismatch: handle %u vs registry %u",
             statusbar_handle.id, target.id);
     return -3;
   }
 
   if (is_valid_handle != kStatusbarLogSuccess) {
-    LogWrn(FILENAME, "Invalid Handle: ID is 0 (i.e. invalid)");
+    LogWrn(kFilename, "Invalid Handle: ID is 0 (i.e. invalid)");
     return -4;
   }
 
   if (is_valid_handle != kStatusbarLogSuccess) {
-    LogWrn(FILENAME, "Invalid Handle: Errorcode not handled!");
+    LogWrn(kFilename, "Invalid Handle: Errorcode not handled!");
     return -5;
   }
 
@@ -316,7 +316,7 @@ int _DrawStatusbarComponent(const double percent, const unsigned int bar_width,
                             const std::string& postfix,
                             std::size_t& spinner_idx, const int move) {
   if (percent > 100.0 || percent < 0.0) {
-    LogErr(FILENAME, "Failed to update statusbar: Invalid percentage.");
+    LogErr(kFilename, "Failed to update statusbar: Invalid percentage.");
     return -5;
   }
 
@@ -489,7 +489,7 @@ int CreateStatusbarHandle(StatusbarHandle& statusbar_handle,
   if (_positions.size() != _bar_sizes.size() ||
       _bar_sizes.size() != _prefixes.size() ||
       _prefixes.size() != _postfixes.size()) {
-    LogErr(FILENAME,
+    LogErr(kFilename,
             "Failed to create statusbar_handle The vecotors '_positions', "
             "'_bar_sizes', '_prefixes' and "
             "'_postfixes' must have the same size! Got: '_positions': %d, "
@@ -502,7 +502,7 @@ int CreateStatusbarHandle(StatusbarHandle& statusbar_handle,
   if (_statusbar_registry.size() - _statusbar_free_handles.size() >=
       kMaxHandles) {
     LogErr(
-        FILENAME,
+        kFilename,
         "Failed to create statusbar handle. Maximum status bars (%zu) reached",
         statusbar_log::kMaxHandles);
     return -2;
@@ -517,7 +517,7 @@ int CreateStatusbarHandle(StatusbarHandle& statusbar_handle,
   if (_handle_id_count == 0) {
     console_lock.unlock();
     registry_lock.unlock();
-    LogWrn(FILENAME,
+    LogWrn(kFilename,
             "Max number of possible statusbar handle.ids reached, looping back "
             "to 1");
     std::lock(console_lock, registry_lock);
@@ -591,7 +591,7 @@ int DestroyStatusbarHandle(StatusbarHandle& statusbar_handle) {
     console_lock.unlock();
     registry_lock.unlock();
     _IsValidHandleVerbose(statusbar_handle);
-    LogErr(FILENAME, "Failed to destory statusbar_handle!");
+    LogErr(kFilename, "Failed to destory statusbar_handle!");
     return err;
   }
   Statusbar& target = _statusbar_registry[statusbar_handle.idx];
@@ -640,14 +640,14 @@ int UpdateStatusbar(StatusbarHandle& statusbar_handle, const std::size_t idx,
     console_lock.unlock();
     registry_lock.unlock();
     _IsValidHandleVerbose(statusbar_handle);
-    LogErr(FILENAME, "Failed to update statusbar: Invalid handle.");
+    LogErr(kFilename, "Failed to update statusbar: Invalid handle.");
     return err;
   }
 
   if (percent > 100.0 || percent < 0.0) {
     console_lock.unlock();
     registry_lock.unlock();
-    LogErr(FILENAME, "Failed to update statusbar: Invalid percentage.");
+    LogErr(kFilename, "Failed to update statusbar: Invalid percentage.");
     return -5;
   }
 
@@ -656,7 +656,7 @@ int UpdateStatusbar(StatusbarHandle& statusbar_handle, const std::size_t idx,
   if (idx >= statusbar.percentages.size()) {
     console_lock.unlock();
     registry_lock.unlock();
-    LogErr(FILENAME, "Failed to update statusbar: Invalid bar index.");
+    LogErr(kFilename, "Failed to update statusbar: Invalid bar index.");
     return -6;
   }
 
@@ -691,7 +691,7 @@ int UpdateStatusbar(StatusbarHandle& statusbar_handle, const std::size_t idx,
             "needed";
         break;
     }
-    LogErr(FILENAME, "%s on statusbar with ID %u at bar idx %zu!", why,
+    LogErr(kFilename, "%s on statusbar with ID %u at bar idx %zu!", why,
             statusbar.id, idx);
   }
 

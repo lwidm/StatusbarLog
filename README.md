@@ -28,14 +28,59 @@ DOT_PATH = /usr/bin/dot
 The line above specifies where to find the `dot` executable of the graphviz program.
 
 ## Building
-```zsh
-cmake .. -DCMAKE_BUILD_TYPE=Release
-```
 
+### Quick build
 ```zsh
+mkdir -p build && cd build
+cmake .. -DCMAKE_BUILD_TYPE=Release
 cmake --build . -j$(nproc) --config Release
 ```
 
+### CMake options provided by this project (what each one means)
+
+- `CMAKE_BUILD_TYPE` (STRING)  
+  Standard CMake build type (Release, Debug, RelWithDebInfo, MinSizeRel).
+  If not set and multi-config generators are not used, the project defaults to `Release`.
+
+- `STATUSBARLOG_INSTALL` (BOOL)  
+  Default: `OFF`.  
+  If `ON`, generates installation targets for the library (install rules are present in the CMakeLists).
+  Example:
+```zsh
+cmake -S . -B build -DSTATUSBARLOG_INSTALL=ON
+cmake --install build --prefix /usr/local
+```
+- `STATUSBARLOG_BUILD_TESTS` (BOOL)  
+  Default: `OFF`.  
+  If `ON`, `enable_testing()` is invoked and the `tests/` subdirectory is processed to add tests.
+  Enable:
+```zsh
+cmake -S . -B build -DSTATUSBARLOG_BUILD_TESTS=ON
+cmake --build build
+ctest --test-dir build
+```
+
+- `STATUSBARLOG_BUILD_TEST_MAIN` (BOOL)
+  Default: `OFF`.
+  Used by `statusbarlog/tests/CMakeLists.txt` to control whether the test `main` executable is built
+  Example:
+```zsh
+cmake -S . -B build -DSTATUSBARLOG_BUILD_TESTS=ON -DSTATUSBARLOG_BUILD_TEST_MAIN=ON
+```
+
+- `STATUSBARLOG_LOG_LEVEL` (STRING) 
+  Default: `kLogLevelDbg`.
+  Controls the compile-time default `kLogLevel` value generated into the header by `configure_file()`.
+  Allowed values (must match the enum): `kLogLevelOff`, `kLogLevelErr`, `kLogLevelWrn`, `kLogLevelInf`, `kLogLevelDbg`. 
+  Set via CLI:
+```zsh
+cmake -S . -B build -DSTATUSBARLOG_LOG_LEVEL=kLogLevelInf
+```
+  Or when consuming via `add_subdirectory()` set it before adding the subdirectory:
+```cmake
+set(STATUSBARLOG_LOG_LEVEL kLogLevelWrn CACHE STRING "statusbarlog default")
+add_subdirectory(path/to/statusbarlog)
+```
 ## TODO
 - Make usable as git submodule and cmake module
 - Let log messages and statusbars take up arbitrary streams

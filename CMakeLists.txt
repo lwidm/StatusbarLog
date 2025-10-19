@@ -14,7 +14,8 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 option(STATUSBARLOG_INSTALL "Generate installation targets" OFF)
 option(STATUSBARLOG_BUILD_TESTS "Build tests" OFF)
-option(STATUSBARLOG_BUILD_TEST_MAIN "Build main executable for testing" OFF) # (used in statusbarlog/tests/CMakeLists.txt)
+option(STATUSBARLOG_BUILD_TEST_MAIN "Build main executable for testing" OFF
+)# (used in statusbarlog/tests/CMakeLists.txt)
 
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   set(CMAKE_BUILD_TYPE
@@ -22,9 +23,31 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
       CACHE STRING "Build type" FORCE)
 endif()
 
+# ----------- kLogLevel ---------
+
+set(STATUSBARLOG_LOG_LEVEL
+    "kLogLevelDbg"
+    CACHE STRING "sets the kLogLevel global in the statusbar_log.h.in")
+
+# validation
+set(_valid_levels kLogLevelOff kLogLevelErr kLogLevelWrn kLogLevelInf
+                  kLogLevelDbg)
+
+list(FIND _valid_levels "${STATUSBARLOG_LOG_LEVEL}" _found_index)
+if(_found_index EQUAL -1)
+  message(
+    FATAL_ERROR "Invalid STATUSBARLOG_LOG_LEVEL: ${STATUSBARLOG_LOG_LEVEL}. "
+                "Valid values are: ${_valid_levels}")
+endif()
+
 # =============================================================================
 # Library Target
 # =============================================================================
+
+# Generate header
+configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/statusbarlog/statusbarlog.h.in
+  ${CMAKE_CURRENT_BINARY_DIR}/include/statusbarlog/statusbarlog.h @ONLY)
 
 # Add the library sources
 set(SRC_FILES statusbarlog.cpp)
@@ -35,14 +58,15 @@ add_library(${PROJECT_NAME} ${SRC_FILES})
 
 # Include directories
 target_include_directories(
-  ${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-                         $<INSTALL_INTERFACE:include>)
+  ${PROJECT_NAME}
+  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
+         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+         $<INSTALL_INTERFACE:include>)
 
 # Set c++ standard
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
 target_compile_options(
-  ${PROJECT_NAME} PRIVATE -std=c++20
-                               $<$<CXX_COMPILER_ID:GNU>:-fno-extensions>)
+  ${PROJECT_NAME} PRIVATE -std=c++20 $<$<CXX_COMPILER_ID:GNU>:-fno-extensions>)
 
 # Compiler Flags (PRIVATE to avoid affecting parent projects)
 target_compile_options(

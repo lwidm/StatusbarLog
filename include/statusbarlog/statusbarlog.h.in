@@ -1,4 +1,4 @@
-// -- statusbarlog/include/statusbarlog/statusbarlog.h
+// -- statusbarlog/include/statusbarlog/statusbarlog.h.in
 
 #ifndef STATUSBARLOG_STATUSBARLOG_H_
 #define STATUSBARLOG_STATUSBARLOG_H_
@@ -61,20 +61,25 @@ typedef enum {
 // clang-format on
 
 /**
- * \brief Sets the global logging verbosity threshold.
+ * \brief Compile-time default logging threshold for the library.
  *
- * Only messages with a log level ≤ statusbar_log::kLogLevel are printed. Default:
- *kLogLevelDbg (all messages enabled).el can be adjusted to control the
- *verbosity of logging output.
- * Example:
- * \code
- * constexpr unsiged int kLogLevel=kLogLevelInf;  // Show errors, warnings, and info.
- * \endcode
+ * This value is generated at configure time by CMake's `configure_file()`
  *
- * \see statusbar_log::Log: Actual function used for creating log messages.
- * \see statusbar_log::LogLevel: Enum containing all log levels.
+ * Default: `kLogLevelDbg` (unless the consumer overrides via CMake).
+ *
+ * How to override the default (preferred):
+ *  - At CMake configure time (out-of-tree):
+ *      cmake -S . -B build -DSTATUSBARLOG_LOG_LEVEL=kLogLevelInf
+ *
+ *  - When used via add_subdirectory(), set the cache variable *before*
+ *    calling add_subdirectory():
+ *      set(STATUSBARLOG_LOG_LEVEL kLogLevelWrn CACHE STRING "statusbarlog default")
+ *      add_subdirectory(path/to/statusbarlog)
+ *
+ * Allowed configure-time values (must match the LogLevel identifiers):
+ *   kLogLevelOff, kLogLevelErr, kLogLevelWrn, kLogLevelInf, kLogLevelDbg
  */
-constexpr LogLevel kLogLevel = kLogLevelDbg;
+constexpr LogLevel kLogLevel = @STATUSBARLOG_LOG_LEVEL@;
 
 typedef struct {
   std::size_t idx;

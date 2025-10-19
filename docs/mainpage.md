@@ -20,11 +20,11 @@ The following code from `main.cpp` shows a simple example use-case:
 ```
 1b). **At the top of every cpp file define the filename** TODO: should be replace with constexpr
 ```cpp
-#define FILENAME "main.cpp"
+const std::string kFilename = "StatusbarLog_main.cpp";
 ```
 2. **Simple log message**:
 ```cpp
-statusbar_log::LogInf(FILENAME, "Starting test...");
+statusbar_log::LogInf(kFilename, "Starting test...");
 ```
 3. **Statusbar setup**:
   ```cpp

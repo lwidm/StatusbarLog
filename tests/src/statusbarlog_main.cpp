@@ -8,7 +8,7 @@
 
 #include "statusbarlog/statusbarlog.h"
 
-#define FILENAME "main.cpp"
+const std::string kFilename = "StatusbarLog_main.cpp";
 
 void PrintWithCleanup() {
   std::cout << "Start to be kept <- " << std::flush;
@@ -26,11 +26,11 @@ void PrintWithCleanup() {
 
 int main() {
   PrintWithCleanup();
-  statusbar_log::LogInf(FILENAME, "Starting test...");
-  statusbar_log::LogInf(FILENAME, "Starting test...");
-  statusbar_log::LogInf(FILENAME, "Starting test...");
+  statusbar_log::LogInf(kFilename, "Starting test...");
+  statusbar_log::LogInf(kFilename, "Starting test...");
+  statusbar_log::LogInf(kFilename, "Starting test...");
   statusbar_log::LogInf
- (FILENAME, "Starting test...");
+ (kFilename, "Starting test...");
   // statusbar_log::LogInf("ExremelyLongFilenameWhichShouldBeTruncated", "Lorem ipsum dolor
   // sit amet consectetur adipiscing elit. Quisque faucibus ex sapien vitae
   // pellentesque sem placerat. In id cursus mi pretium tellus duis convallis.
@@ -53,7 +53,7 @@ int main() {
       {" -- 15 total steps", "           -- 100 total steps"}  // <-- postfixes
   );
   if (err != 0) {
-    statusbar_log::LogErr(FILENAME, "Failed to create statusbar. Errorcode %d", err);
+    statusbar_log::LogErr(kFilename, "Failed to create statusbar. Errorcode %d", err);
     return err;
   }
 
@@ -62,7 +62,7 @@ int main() {
     statusbar_log::UpdateStatusbar(h, 0, percent);
     if (i % 10 == 0 && i != 0) {
       statusbar_log::LogInf
-     (FILENAME, "10 Ticks reached");
+     (kFilename, "10 Ticks reached");
     }
     if (i % 3 == 0 && i != 0) {
       // statusbar_log::UpdateStatusbar(h, 0, 100.1);
@@ -79,7 +79,7 @@ int main() {
 
   err = statusbar_log::DestroyStatusbarHandle(h);
   if (err != 0) {
-    statusbar_log::LogErr(FILENAME, "Failed to destroy statusbar. Errorcode %d", err);
+    statusbar_log::LogErr(kFilename, "Failed to destroy statusbar. Errorcode %d", err);
     return err;
   }
 
