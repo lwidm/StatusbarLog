@@ -6,8 +6,6 @@
 #include <thread>
 #include <vector>
 
-#define LOG_LEVEL statusbar_log::kLogLevelInf
-
 #include "statusbarlog/statusbarlog.h"
 
 #define FILENAME "main.cpp"

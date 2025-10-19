@@ -15,8 +15,8 @@ The following code from `main.cpp` shows a simple example use-case:
 
 @subsection explanation Code example explanation:
 1. **Set global logging threshold**:
+<!-- TODO : -->
 ```cpp
-#define LOG_LEVEL statusbar_log::kLogLevelInf
 ```
 1b). **At the top of every cpp file define the filename** TODO: should be replace with constexpr
 ```cpp

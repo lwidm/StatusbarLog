@@ -408,7 +408,7 @@ void ClearCurrentLine() {
 
 int Log(const LogLevel log_level, const std::string& filename, const char* fmt,
         ...) {
-  if (log_level > LOG_LEVEL) return kStatusbarLogSuccess;
+  if (log_level > kLogLevel) return kStatusbarLogSuccess;
   std::unique_lock<std::mutex> console_lock(_console_mutex, std::defer_lock);
   std::unique_lock<std::mutex> registry_lock(_registry_mutex, std::defer_lock);
   std::lock(console_lock, registry_lock);

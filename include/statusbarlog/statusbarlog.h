@@ -34,7 +34,7 @@ constexpr bool kStatusbarLogNoAutoFlush = false;
  * \enum LogLevel
  * \brief Defines log levels for categorizing message importance.
  *
- * Messages below the minimum log level (LOG_LEVEL) are ignored.
+ * Messages below the minimum log level (statusbar_log::kLogLevel) are ignored.
  *
  * Levels:
  * - \c kLogLevelOff: No logging
@@ -46,8 +46,8 @@ constexpr bool kStatusbarLogNoAutoFlush = false;
  * - \c kLogLevelDbg: Logs debug messages to the console with the prefix
  *"DEBUG".
  *
- *\see statusbar_log::Log: Actual function used for creating log messages.
- *\see statusbar_log::LOG_LEVEL: Macro to set the global logging threshold.
+ * \see statusbar_log::Log: Actual function used for creating log messages.
+ * \see statusbar_log::kLogLevel: Macro to set the global logging threshold.
  * \see PrintErr: Function for printing error messages -> \todo
  */
 // clang-format off
@@ -61,23 +61,20 @@ typedef enum {
 // clang-format on
 
 /**
- * \def LOG_LEVEL
  * \brief Sets the global logging verbosity threshold.
  *
- * Only messages with a log level ≤ LOG_LEVEL are printed. Default:
+ * Only messages with a log level ≤ statusbar_log::kLogLevel are printed. Default:
  *kLogLevelDbg (all messages enabled).el can be adjusted to control the
  *verbosity of logging output.
  * Example:
  * \code
- * #define LOG_LEVEL kLogLevelInf  // Show errors, warnings, and info.
+ * constexpr unsiged int kLogLevel=kLogLevelInf;  // Show errors, warnings, and info.
  * \endcode
  *
  * \see statusbar_log::Log: Actual function used for creating log messages.
- * \see statusbar_log::Log_level: Enum containing all log levels.
+ * \see statusbar_log::LogLevel: Enum containing all log levels.
  */
-#ifndef LOG_LEVEL
-#define LOG_LEVEL kLogLevelDbg
-#endif  // !LOG_LEVEL
+constexpr LogLevel kLogLevel = kLogLevelDbg;
 
 typedef struct {
   std::size_t idx;
@@ -124,7 +121,7 @@ void ClearCurrentLine();
 void FlushOutput();
 
 /**
- * \brief Logs a message if its level ≤ LOG_LEVEL
+ * \brief Logs a message if its level ≤ statusbar_log::kLogLevel
  *
  * \param[in] log_level Severity level of this message.
  * \param[in] filename Source filename or tag (will be printed in log message,
@@ -139,7 +136,7 @@ void FlushOutput();
  * \note Logging temporarily moves status bars down to avoid visual glitches.
  *
  * \see statusbar_log::LogLevel: Enum containing all log levels.
- * \see statusbar_log::LOG_LEVEL: Macro to set the global logging threshold.
+ * \see statusbar_log::kLogLevel: Macro to set the global logging threshold.
  * \see PrintErr: Function for printing error messages -> \todo
  */
 int Log(LogLevel log_level, const std::string& filename, const char* fmt, ...);
