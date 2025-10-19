@@ -3,6 +3,7 @@
 #ifndef STATUSBARLOG_STATUSBARLOG_H_
 #define STATUSBARLOG_STATUSBARLOG_H_
 
+#include <cstdarg>
 #ifdef _WIN32
 #include <windows.h>
 #else
@@ -117,12 +118,13 @@ void ClearCurrentLine();
 /**
  * \brief Manually flush the output buffer
  *
- * Useful when statusbar_log::kStatusbarLogNoAutoFlush is defined to force output
+ * Useful when statusbar_log::kStatusbarLogNoAutoFlush is defined to force
+ * output
  */
 void FlushOutput();
 
 /**
- * \brief \brief Logs a message if its level ≤ LOG_LEVEL
+ * \brief Logs a message if its level ≤ LOG_LEVEL
  *
  * \param[in] log_level Severity level of this message.
  * \param[in] filename Source filename or tag (will be printed in log message,
@@ -130,8 +132,9 @@ void FlushOutput();
  * \param[in] fmt printf-style format string.
  * \param[in] ... Additional format arguments.
  *
- * \return statusbar_log::kStatusbarLogSuccess (i.e. 0) on success, non-zero on formatting
- * error. (Currently always statusbar_log::kStatusbarLogSuccess, no error checking)
+ * \return statusbar_log::kStatusbarLogSuccess (i.e. 0) on success, non-zero on
+ * formatting error. (Currently always statusbar_log::kStatusbarLogSuccess, no
+ * error checking)
  *
  * \note Logging temporarily moves status bars down to avoid visual glitches.
  *
@@ -145,41 +148,48 @@ int Log(LogLevel log_level, const std::string& filename, const char* fmt, ...);
 #pragma GCC diagnostic ignored "-Wgnu-zero-variadic-macro-arguments"
 
 /**
- * \def LOG_ERR
  * \brief Shortcut for logging warnings.
  *
  *\see statusbar_log::Log: General logging function
  */
-#define LOG_ERR(filename, fmt, ...) \
-  statusbar_log::Log(statusbar_log::kLogLevelErr, filename, fmt, ##__VA_ARGS__)
+inline int LogErr(const std::string& filename, const char* fmt, ...) {
+  va_list args;
+  va_start(args, fmt);
+  return Log(kLogLevelErr, filename, fmt);
+}
 
 /**
- * \def LOG_WRN
  * \brief Shortcut for logging warnings.
  *
  *\see statusbar_log::Log: General logging function
  */
-#define LOG_WRN(filename, fmt, ...) \
-  statusbar_log::Log(statusbar_log::kLogLevelWrn, filename, fmt, ##__VA_ARGS__)
+inline int LogWrn(const std::string& filename, const char* fmt, ...) {
+  va_list args;
+  va_start(args, fmt);
+  return Log(kLogLevelWrn, filename, fmt);
+}
 
 /**
- * \def LOG_INF
  * \brief Shortcut for logging informational messages.
  *
  *\see statusbar_log::Log: General logging function
  */
-#define LOG_INF(filename, fmt, ...) \
-  statusbar_log::Log(statusbar_log::kLogLevelInf, filename, fmt, ##__VA_ARGS__)
+inline int LogInf(const std::string& filename, const char* fmt, ...) {
+  va_list args;
+  va_start(args, fmt);
+  return Log(kLogLevelInf, filename, fmt);
+}
 
 /**
- * \def LOG_DBG
  * \brief Shortcut for logging debug messages.
  *
  *\see statusbar_log::Log: General logging function
  */
-#define LOG_DBG(filename, fmt, ...) \
-  statusbar_log::Log(statusbar_log::kLogLevelDbg, filename, fmt, ##__VA_ARGS__)
-#pragma GCC diagnostic pop
+inline int LogDbg(const std::string& filename, const char* fmt, ...) {
+  va_list args;
+  va_start(args, fmt);
+  return Log(kLogLevelDbg, filename, fmt);
+}
 
 /**
  * \brief Initializes a Statusbar, updates its handle and prints its initial
@@ -202,8 +212,8 @@ int Log(LogLevel log_level, const std::string& filename, const char* fmt, ...);
  * \param[in] _prefixes Text before each bar.
  * \param[in] _postfixes Text before each bar.
  *
- * \return Returns statusbar_log::kStatusbarLogSuccess (i.e. 0) on success, or one of these
- * error/warning codes:
+ * \return Returns statusbar_log::kStatusbarLogSuccess (i.e. 0) on success, or
+ * one of these error/warning codes:
  *         -  statusbar_log::kStatusbarLogSuccess (i.e. 0): Success (no errors)
  *         - -1: Failed to create status bar handle (invalid inputs)
  *         - -2: Failed to create status bar handle (handle registry exceeds
@@ -233,8 +243,8 @@ int CreateStatusbarHandle(StatusbarHandle& statusbar_handle,
  *
  * \param[in, out] statusbar_handle Struct to destroy.
  *
- * \return Returns statusbar_log::kStatusbarLogSuccess (i.e. 0) on success, or one of these
- * error/warning codes:
+ * \return Returns statusbar_log::kStatusbarLogSuccess (i.e. 0) on success, or
+ * one of these error/warning codes:
  *         -  statusbar_log::kStatusbarLogSuccess (i.e. 0): Success (no errors)
  *         - -1: Invalid handle passed (valid flag set to false)
  *         - -2: Invalid handle passed (index out of registry bounds)
@@ -270,8 +280,8 @@ int DestroyStatusbarHandle(StatusbarHandle& statusbar_handle);
  * \param[in] percent New progress percentage (0-100).
  * updated.
  *
- * \return Returns statusbar_log::kStatusbarLogSuccess (i.e. 0) on success, or one of these
- * error/warning codes:
+ * \return Returns statusbar_log::kStatusbarLogSuccess (i.e. 0) on success, or
+ * one of these error/warning codes:
  *         -  statusbar_log::kStatusbarLogSuccess (i.e. 0): Success (no errors)
  *         - -1: Invalid handle passed (valid flag set to false)
  *         - -2: Invalid handle passed (index out of registry bounds)

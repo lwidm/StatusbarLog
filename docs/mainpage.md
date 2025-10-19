@@ -24,7 +24,7 @@ The following code from `main.cpp` shows a simple example use-case:
 ```
 2. **Simple log message**:
 ```cpp
-LOG_INF(FILENAME, "Starting test...");
+statusbar_log::LogInf(FILENAME, "Starting test...");
 ```
 3. **Statusbar setup**:
   ```cpp
@@ -46,7 +46,7 @@ statusbar_log::UpdateStatusbar(statusbar, 1, percent);  // Update lower bar
    Updates specific bars by index.
 5. **Logging during updates**:
 ```cpp
-LOG_INF("main.cpp", "10 Ticks reached\n");
+statusbar_log::LogInf("main.cpp", "10 Ticks reached\n");
 ```
    Log messages appear above active status bars.
 

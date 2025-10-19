@@ -28,11 +28,12 @@ void PrintWithCleanup() {
 
 int main() {
   PrintWithCleanup();
-  LOG_INF(FILENAME, "Starting test...");
-  LOG_INF(FILENAME, "Starting test...");
-  LOG_INF(FILENAME, "Starting test...");
-  LOG_INF(FILENAME, "Starting test...");
-  // LOG_INF("ExremelyLongFilenameWhichShouldBeTruncated", "Lorem ipsum dolor
+  statusbar_log::LogInf(FILENAME, "Starting test...");
+  statusbar_log::LogInf(FILENAME, "Starting test...");
+  statusbar_log::LogInf(FILENAME, "Starting test...");
+  statusbar_log::LogInf
+ (FILENAME, "Starting test...");
+  // statusbar_log::LogInf("ExremelyLongFilenameWhichShouldBeTruncated", "Lorem ipsum dolor
   // sit amet consectetur adipiscing elit. Quisque faucibus ex sapien vitae
   // pellentesque sem placerat. In id cursus mi pretium tellus duis convallis.
   // Tempus leo eu aenean sed diam urna tempor. Pulvinar vivamus fringilla lacus
@@ -54,7 +55,7 @@ int main() {
       {" -- 15 total steps", "           -- 100 total steps"}  // <-- postfixes
   );
   if (err != 0) {
-    LOG_ERR(FILENAME, "Failed to create statusbar. Errorcode %d", err);
+    statusbar_log::LogErr(FILENAME, "Failed to create statusbar. Errorcode %d", err);
     return err;
   }
 
@@ -62,7 +63,8 @@ int main() {
     double percent = static_cast<double>(i) / total_steps1 * 100.0;
     statusbar_log::UpdateStatusbar(h, 0, percent);
     if (i % 10 == 0 && i != 0) {
-      LOG_INF(FILENAME, "10 Ticks reached");
+      statusbar_log::LogInf
+     (FILENAME, "10 Ticks reached");
     }
     if (i % 3 == 0 && i != 0) {
       // statusbar_log::UpdateStatusbar(h, 0, 100.1);
@@ -79,7 +81,7 @@ int main() {
 
   err = statusbar_log::DestroyStatusbarHandle(h);
   if (err != 0) {
-    LOG_ERR(FILENAME, "Failed to destroy statusbar. Errorcode %d", err);
+    statusbar_log::LogErr(FILENAME, "Failed to destroy statusbar. Errorcode %d", err);
     return err;
   }
 
