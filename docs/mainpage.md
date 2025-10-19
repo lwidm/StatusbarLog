@@ -26,7 +26,7 @@ The following code from `main.cpp` shows a simple example use-case:
 ```cpp
 LOG_INF(FILENAME, "Starting test...");
 ```
-3. **StatusBar setup**:
+3. **Statusbar setup**:
   ```cpp
 statusbar_log::StatusbarHandle handle;
 std::vector<unsigned int> positions = {2, 1};
@@ -34,14 +34,14 @@ std::vector<unsigned int> bar_sizes = {20, 10};
 std::vector<std::string> prefixes = {"first", "second"};
 std::vector<std::string> postfixes = {"20 long", "10 long"};
 
-int err_code = statusbar_log::create_statusbar_handle(
+int err_code = statusbar_log::CreateStatusbarHandle(
    handle, positions, bar_sizes, prefixes, postfixes);
 ```
    Configures a two-bar stack with prefixes/postfixes.
 4. **Updating progress**:
 ```cpp
-statusbar_log::update_statusbar(statusbar, 0, percent);  // Update top bar
-statusbar_log::update_statusbar(statusbar, 1, percent);  // Update lower bar
+statusbar_log::UpdateStatusbar(statusbar, 0, percent);  // Update top bar
+statusbar_log::UpdateStatusbar(statusbar, 1, percent);  // Update lower bar
 ```
    Updates specific bars by index.
 5. **Logging during updates**:
@@ -53,7 +53,7 @@ LOG_INF("main.cpp", "10 Ticks reached\n");
 6. **Cleanup - DO NOT FORGET**
    After a statusbar is no longer needed don't forget to clean it up
 ```cpp
-int err_code = statusbar_log::destroy_statusbar_handle(handle);
+int err_code = statusbar_log::DestroyStatusbarHandle(handle);
 ```
 
 @section building Building

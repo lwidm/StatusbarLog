@@ -54,7 +54,7 @@ cmake --build . -j$(nproc) --config Release
 - out of bounds `spin_idx`, log message length, status bar text, `statusbar_registry`
 - Mutexes for `statusbar_registry`, `statusbar_free_handles`, `handle.id_count`
 - Thread safety (test race conditions)
-- Invalid handles (in update_statusbar and destroy_statusbar)
+- Invalid handles (in UpdateStatusbar and destroy_statusbar)
 - Test unsanitised strings (in log and prefixes and postfixes)
 - Test bounds of log message, filename, prefix and postfix length
 - Test bounds on statusbar_registry and statusbar_free_handles
@@ -84,8 +84,8 @@ TEST(TerminalUtils, FlushOutput_Behavior)
 **LOW PRIORITY - Complex Scenarios**
 6. Logging Integration Tests
 ```cpp
-TEST(Logging, LogWithoutStatusBars)
-TEST(Logging, LogWithActiveStatusBars)
+TEST(Logging, LogWithoutStatusbars)
+TEST(Logging, LogWithActiveStatusbars)
 TEST(Logging, LogDifferentLevels)
 TEST(Logging, LogWithFormatting)
 TEST(Logging, LogWithLongMessages_Truncation)
@@ -96,37 +96,37 @@ TEST(Logging, LogWithLongMessages_Truncation)
 ```cpp
 TEST(Concurrency, MultipleHandlesSimultaneousCreation)
 TEST(Concurrency, UpdatesFromDifferentThreads_NoCrash)
-TEST(Concurrency, LogWhileStatusBarActive)
+TEST(Concurrency, LogWhileStatusbarActive)
 ```
 
 8. Edge Case & Stress Tests
 ```cpp
 TEST(EdgeCases, RapidSequentialUpdates)
-TEST(EdgeCases, ManyStatusBarsSimultaneously)
+TEST(EdgeCases, ManyStatusbarsSimultaneously)
 TEST(EdgeCases, EmptyVectors_ErrorHandling)
 TEST(EdgeCases, VeryLongPrefixPostfix_Truncation)
 TEST(EdgeCases, BoundaryPercentages_0_and_100)
 ```
 
 **SPECIFIC TESTABLE BEHAVIORS**
-For _draw_statusbar_component:
+For _DrawStatusbarComponent:
 ```cpp
-TEST(DrawStatusBar, FormatsCorrectly_0Percent)
-TEST(DrawStatusBar, FormatsCorrectly_50Percent)
-TEST(DrawStatusBar, FormatsCorrectly_100Percent)
-TEST(DrawStatusBar, SpinnerCyclesCorrectly)
-TEST(DrawStatusBar, BarWidthRespected)
-TEST(DrawStatusBar, TerminalWidthTruncation)
-TEST(DrawStatusBar, ErrorCodes_AllScenarios)
+TEST(DrawStatusbar, FormatsCorrectly_0Percent)
+TEST(DrawStatusbar, FormatsCorrectly_50Percent)
+TEST(DrawStatusbar, FormatsCorrectly_100Percent)
+TEST(DrawStatusbar, SpinnerCyclesCorrectly)
+TEST(DrawStatusbar, BarWidthRespected)
+TEST(DrawStatusbar, TerminalWidthTruncation)
+TEST(DrawStatusbar, ErrorCodes_AllScenarios)
 ```
 
-For _get_terminal_width:
+For _GetTerminalWidth:
 ```cpp
 TEST(TerminalWidth, DefaultsTo80OnFailure)
 TEST(TerminalWidth, PlatformSpecificBehavior)
 ```
 
-For create_statusbar_handle:
+For CreateStatusbarHandle:
 ```cpp
 TEST(CreateHandle, ReusesFreeHandles)
 TEST(CreateHandle, SanitizesInputStrings)
@@ -134,9 +134,9 @@ TEST(CreateHandle, InitializesAllComponentsToZero)
 TEST(CreateHandle, SetsHandleValidAndID)
 ```
 
-For update_statusbar:
+For UpdateStatusbar:
 ```cpp
-TEST(UpdateStatusBar, SpinnerIndexIncrements)
-TEST(UpdateStatusBar, ErrorReportedFlagSetsOnce)
-TEST(UpdateStatusBar, NoErrorOnSubsequentUpdatesAfterError)
+TEST(UpdateStatusbar, SpinnerIndexIncrements)
+TEST(UpdateStatusbar, ErrorReportedFlagSetsOnce)
+TEST(UpdateStatusbar, NoErrorOnSubsequentUpdatesAfterError)
 ```

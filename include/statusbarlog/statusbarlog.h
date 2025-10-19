@@ -45,9 +45,9 @@ namespace statusbar_log {
  * - \c kLogLevelDbg: Logs debug messages to the console with the prefix
  *"DEBUG".
  *
- *\see statusbar_log::log: Actual function used for creating log messages.
+ *\see statusbar_log::Log: Actual function used for creating log messages.
  *\see statusbar_log::LOG_LEVEL: Macro to set the global logging threshold.
- * \see print_err: Function for printing error messages -> \todo
+ * \see PrintErr: Function for printing error messages -> \todo
  */
 // clang-format off
 typedef enum {
@@ -71,8 +71,8 @@ typedef enum {
  * #define LOG_LEVEL kLogLevelInf  // Show errors, warnings, and info.
  * \endcode
  *
- * \see statusbar_log::log: Actual function used for creating log messages.
- * \see statusbar_log::log_level: Enum containing all log levels.
+ * \see statusbar_log::Log: Actual function used for creating log messages.
+ * \see statusbar_log::Log_level: Enum containing all log levels.
  */
 #ifndef LOG_LEVEL
 #define LOG_LEVEL kLogLevelDbg
@@ -87,39 +87,39 @@ typedef struct {
 /**
  * \brief Saves the current cursor position in the terminal
  */
-void save_cursor_position();
+void SaveCursorPosition();
 
 /**
  * \brief Restores the previously saved cursor position in the terminal
  */
-void restore_cursor_position();
+void RestoreCursorPosition();
 
 /**
  * \brief Clears from the current cursor position to the end of the line
  */
-void clear_to_end_of_line();
+void ClearToEndOfLine();
 
 /**
  * \brief Clears from the current cursor position to the end of the line
  */
-void clear_from_start_of_line();
+void ClearFromStartOfLine();
 
 /**
  * \brief Clear entire current line
  */
-void clear_line();
+void ClearLine();
 
 /**
  * \brief More robust version with cursor positioning
  */
-void clear_current_line();
+void ClearCurrentLine();
 
 /**
  * \brief Manually flush the output buffer
  *
  * Useful when STATUSBARLOG_NO_AUTO_FLUSH is defined to force output
  */
-void flush_output();
+void FlushOutput();
 
 /**
  * \brief \brief Logs a message if its level ≤ LOG_LEVEL
@@ -135,11 +135,11 @@ void flush_output();
  *
  * \note Logging temporarily moves status bars down to avoid visual glitches.
  *
- * \see statusbar_log::log_level: Enum containing all log levels.
- * \see statusbar_log::log_LEVEL: Macro to set the global logging threshold.
- * \see print_err: Function for printing error messages -> \todo
+ * \see statusbar_log::LogLevel: Enum containing all log levels.
+ * \see statusbar_log::LOG_LEVEL: Macro to set the global logging threshold.
+ * \see PrintErr: Function for printing error messages -> \todo
  */
-int log(LogLevel log_level, const std::string& filename, const char* fmt, ...);
+int Log(LogLevel log_level, const std::string& filename, const char* fmt, ...);
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wgnu-zero-variadic-macro-arguments"
@@ -148,41 +148,41 @@ int log(LogLevel log_level, const std::string& filename, const char* fmt, ...);
  * \def LOG_ERR
  * \brief Shortcut for logging warnings.
  *
- *\see statusbar_log::log: General logging function
+ *\see statusbar_log::Log: General logging function
  */
 #define LOG_ERR(filename, fmt, ...) \
-  statusbar_log::log(statusbar_log::kLogLevelErr, filename, fmt, ##__VA_ARGS__)
+  statusbar_log::Log(statusbar_log::kLogLevelErr, filename, fmt, ##__VA_ARGS__)
 
 /**
  * \def LOG_WRN
  * \brief Shortcut for logging warnings.
  *
- *\see statusbar_log::log: General logging function
+ *\see statusbar_log::Log: General logging function
  */
 #define LOG_WRN(filename, fmt, ...) \
-  statusbar_log::log(statusbar_log::kLogLevelWrn, filename, fmt, ##__VA_ARGS__)
+  statusbar_log::Log(statusbar_log::kLogLevelWrn, filename, fmt, ##__VA_ARGS__)
 
 /**
  * \def LOG_INF
  * \brief Shortcut for logging informational messages.
  *
- *\see statusbar_log::log: General logging function
+ *\see statusbar_log::Log: General logging function
  */
 #define LOG_INF(filename, fmt, ...) \
-  statusbar_log::log(statusbar_log::kLogLevelInf, filename, fmt, ##__VA_ARGS__)
+  statusbar_log::Log(statusbar_log::kLogLevelInf, filename, fmt, ##__VA_ARGS__)
 
 /**
  * \def LOG_DBG
  * \brief Shortcut for logging debug messages.
  *
- *\see statusbar_log::log: General logging function
+ *\see statusbar_log::Log: General logging function
  */
 #define LOG_DBG(filename, fmt, ...) \
-  statusbar_log::log(statusbar_log::kLogLevelDbg, filename, fmt, ##__VA_ARGS__)
+  statusbar_log::Log(statusbar_log::kLogLevelDbg, filename, fmt, ##__VA_ARGS__)
 #pragma GCC diagnostic pop
 
 /**
- * \brief Initializes a StatusBar, updates its handle and prints its initial
+ * \brief Initializes a Statusbar, updates its handle and prints its initial
  * state.
  *
  * This function takes an empty statusbar_handle struct and populate its
@@ -211,25 +211,24 @@ int log(LogLevel log_level, const std::string& filename, const char* fmt, ...);
  *
  * \warning Don't forget to destroy the statusbar_handle after use.
  *
- * \see statusbar_registry: Global statusbar registry.
- * \see StatusBar: The statusbar struct.
- * \see statusbar_registry: The registry for statusbar struct in use.
- * \see statusbar_free_handles: The registry for free statusbar handles.
- * \see update_statusbar: Updating a statusbar
- * \see destroy_statusbar_handle: Destroying statusbar_handle after use.
+ * \see Statusbar: The statusbar struct.
+ * \see _statusbar_registry: The registry for statusbar struct in use.
+ * \see _statusbar_free_handles: The registry for free statusbar handles.
+ * \see UpdateStatusbar: Updating a statusbar
+ * \see DestroyStatusbarHandle: Destroying statusbar_handle after use.
  */
-int create_statusbar_handle(StatusbarHandle& statusbar_handle,
+int CreateStatusbarHandle(StatusbarHandle& statusbar_handle,
                             const std::vector<unsigned int> _positions,
                             const std::vector<unsigned int> _bar_sizes,
                             const std::vector<std::string> _prefixes,
                             const std::vector<std::string> _postfixes);
 
 /**
- * \brief Destorys a StatusBar
+ * \brief Destorys a Statusbar
  *
  * This function takes a StatusbarHandle, clears its content, adds it
- * to thestatusbar_free_handles registry and frees its position in the
- * statusbar_registry.
+ * to the _statusbar_free_handles registry and frees its position in the
+ * _statusbar_registry.
  *
  *
  * \param[in, out] statusbar_handle Struct to destroy.
@@ -242,14 +241,13 @@ int create_statusbar_handle(StatusbarHandle& statusbar_handle,
  *         - -3: Invalid handle passed (IDs don't match)
  *         - -4: Invalid handle passed (Other error)
  *
- * \see statusbar_registry: Global statusbar registry.
- * \see StatusBar: The statusbar struct.
- * \see statusbar_registry: The registry for statusbar struct in use.
- * \see statusbar_free_handles: The registry for free statusbar handles.
- * \see update_statusbar: Updating a statusbar
- * \see create_statusbar_handle: Creating new statusbar handles.
+ * \see Statusbar: The statusbar struct.
+ * \see _statusbar_registry: The registry for statusbar struct in use.
+ * \see _statusbar_free_handles: The registry for free statusbar handles.
+ * \see UpdateStatusbar: Updating a statusbar
+ * \see CreateStatusbarHandle: Creating new statusbar handles.
  */
-int destroy_statusbar_handle(StatusbarHandle& statusbar_handle);
+int DestroyStatusbarHandle(StatusbarHandle& statusbar_handle);
 
 /**
  * \brief Function used for updating a statusbar given its handle. The statusbar
@@ -284,11 +282,11 @@ int destroy_statusbar_handle(StatusbarHandle& statusbar_handle);
  *
  * \details The spinner character cycles through { |, /, -, \ } on each update.
  *
- * \see create_statusbar: Creating/Initializing a statusbar.
- * \see StatusBar: The statusbar struct.
- * \see g_statusbar_registry: Global statusbar registry.
+ * \see CreateStatusbarHandle: Creating/Initializing a statusbar handle.
+ * \see Statusbar: The statusbar struct.
+ * \see _statusbar_registry: Global statusbar registry.
  */
-int update_statusbar(StatusbarHandle& statusbar, const std::size_t idx,
+int UpdateStatusbar(StatusbarHandle& statusbar, const std::size_t idx,
                      const double percent);
 
 }  // namespace statusbar_log
