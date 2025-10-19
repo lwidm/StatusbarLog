@@ -15,6 +15,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
+#include <cstdarg>
 #include <iomanip>
 #include <iostream>
 #include <mutex>

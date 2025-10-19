@@ -22,6 +22,11 @@ FetchContent_MakeAvailable(googletest)
 add_executable(${PROJECT_NAME}_test
                ${CMAKE_CURRENT_SOURCE_DIR}/src/StatusbarLog_test.cpp)
 
+target_compile_features(${PROJECT_NAME}_test PUBLIC cxx_std_20)
+target_compile_options(
+  ${PROJECT_NAME}_test PRIVATE -std=c++20
+                               $<$<CXX_COMPILER_ID:GNU>:-fno-extensions>)
+
 target_link_libraries(${PROJECT_NAME}_test PRIVATE ${PROJECT_NAME}
                                                    GTest::gtest_main)
 

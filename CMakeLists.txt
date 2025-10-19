@@ -39,7 +39,10 @@ target_include_directories(
                          $<INSTALL_INTERFACE:include>)
 
 # Set c++ standard
-target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
+target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
+target_compile_options(
+  ${PROJECT_NAME} PRIVATE -std=c++20
+                               $<$<CXX_COMPILER_ID:GNU>:-fno-extensions>)
 
 # Compiler Flags (PRIVATE to avoid affecting parent projects)
 target_compile_options(
