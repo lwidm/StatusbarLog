@@ -15,18 +15,19 @@
 #include <string>
 #include <vector>
 
+namespace statusbar_log {
+
 #define MAX_HANDLES 100
 #define MAX_LOG_LENGTH 4096
 #define MAX_FILENAME_LENGTH 256
 #define MAX_PREFIX_LENGTH 80
 #define MAX_POSTFIX_LENGTH 80
 #define MAX_BAR_WIDTH 200
-
-#undef STATUSBARLOG_NO_AUTO_FLUSH
-
-// Define to disable automatic flushing (improves performance but may delay
-// output)
 #define STATUSBARLOG_SUCCESS 0
+
+/// Define to disable automatic flushing (improves performance but may delay
+/// output)
+#undef STATUSBARLOG_NO_AUTO_FLUSH
 
 /**
  * \enum Log_level
@@ -44,8 +45,8 @@
  * - \c LOG_LEVEL_DBG: Logs debug messages to the console with the prefix
  *"DEBUG".
  *
- *\see StatusbarLog::log: Actual function used for creating log messages.
- *\see StatusbarLog::LOG_LEVEL: Macro to set the global logging threshold.
+ *\see statusbar_log::log: Actual function used for creating log messages.
+ *\see statusbar_log::LOG_LEVEL: Macro to set the global logging threshold.
  * \see print_err: Function for printing error messages -> \todo
  */
 // clang-format off
@@ -70,14 +71,12 @@ typedef enum {
  * #define LOG_LEVEL LOG_LEVEL_INF  // Show errors, warnings, and info.
  * \endcode
  *
- * \see StatusbarLog::log: Actual function used for creating log messages.
- * \see StatusbarLog::log_level: Enum containing all log levels.
+ * \see statusbar_log::log: Actual function used for creating log messages.
+ * \see statusbar_log::log_level: Enum containing all log levels.
  */
 #ifndef LOG_LEVEL
 #define LOG_LEVEL LOG_LEVEL_DBG
 #endif  // !LOG_LEVEL
-
-namespace StatusbarLog {
 
 typedef struct {
   std::size_t idx;
@@ -136,8 +135,8 @@ void flush_output();
  *
  * \note Logging temporarily moves status bars down to avoid visual glitches.
  *
- * \see StatusbarLog::log_level: Enum containing all log levels.
- * \see StatusbarLog::log_LEVEL: Macro to set the global logging threshold.
+ * \see statusbar_log::log_level: Enum containing all log levels.
+ * \see statusbar_log::log_LEVEL: Macro to set the global logging threshold.
  * \see print_err: Function for printing error messages -> \todo
  */
 int log(Log_level log_level, const std::string& filename, const char* fmt, ...);
@@ -149,37 +148,37 @@ int log(Log_level log_level, const std::string& filename, const char* fmt, ...);
  * \def LOG_ERR
  * \brief Shortcut for logging warnings.
  *
- *\see StatusbarLog::log: General logging function
+ *\see statusbar_log::log: General logging function
  */
 #define LOG_ERR(filename, fmt, ...) \
-  StatusbarLog::log(LOG_LEVEL_ERR, filename, fmt, ##__VA_ARGS__)
+  statusbar_log::log(statusbar_log::LOG_LEVEL_ERR, filename, fmt, ##__VA_ARGS__)
 
 /**
  * \def LOG_WRN
  * \brief Shortcut for logging warnings.
  *
- *\see StatusbarLog::log: General logging function
+ *\see statusbar_log::log: General logging function
  */
 #define LOG_WRN(filename, fmt, ...) \
-  StatusbarLog::log(LOG_LEVEL_WRN, filename, fmt, ##__VA_ARGS__)
+  statusbar_log::log(statusbar_log::LOG_LEVEL_WRN, filename, fmt, ##__VA_ARGS__)
 
 /**
  * \def LOG_INF
  * \brief Shortcut for logging informational messages.
  *
- *\see StatusbarLog::log: General logging function
+ *\see statusbar_log::log: General logging function
  */
 #define LOG_INF(filename, fmt, ...) \
-  StatusbarLog::log(LOG_LEVEL_INF, filename, fmt, ##__VA_ARGS__)
+  statusbar_log::log(statusbar_log::LOG_LEVEL_INF, filename, fmt, ##__VA_ARGS__)
 
 /**
  * \def LOG_DBG
  * \brief Shortcut for logging debug messages.
  *
- *\see StatusbarLog::log: General logging function
+ *\see statusbar_log::log: General logging function
  */
 #define LOG_DBG(filename, fmt, ...) \
-  StatusbarLog::log(LOG_LEVEL_DBG, filename, fmt, ##__VA_ARGS__)
+  statusbar_log::log(statusbar_log::LOG_LEVEL_DBG, filename, fmt, ##__VA_ARGS__)
 #pragma GCC diagnostic pop
 
 /**
@@ -292,6 +291,6 @@ int destroy_statusbar_handle(StatusBar_handle& statusbar_handle);
 int update_statusbar(StatusBar_handle& statusbar, const std::size_t idx,
                      const double percent);
 
-}  // namespace StatusbarLog
+}  // namespace statusbar_log
 
 #endif  // !STATUSBARLOG_STATUSBARLOG_H_

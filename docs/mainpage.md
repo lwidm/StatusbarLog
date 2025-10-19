@@ -15,41 +15,46 @@ The following code from `main.cpp` shows a simple example use-case:
 
 @subsection explanation Code example explanation:
 1. **Set global logging threshold**:
-   ```cpp
-    #define LOG_LEVEL LOG_LEVEL_INF
-   ```
+```cpp
+#define LOG_LEVEL LOG_LEVEL_INF
+```
+1b). **At the top of every cpp file define the filename** TODO: should be replace with constexpr
+```cpp
+#define FILENAME "main.cpp"
+```
 2. **Simple log message**:
-   ```cpp
-   LOG_INF(FILENAME, "Starting test...");
-   ```
+```cpp
+LOG_INF(FILENAME, "Starting test...");
+```
 3. **StatusBar setup**:
-   ```cpp
-   StatusbarLog::StatusBar statusbar;
-   StatusbarLog::g_statusbar_registry.push_back(&statusbar); // <- DO NOT FORGET
-   ```
-   Creates a status bar **and registers it globally**.
-4. **StatusBar configuration**:
-   ```cpp
-   StatusbarLog::create_statusbar(
-     statusbar, 
-     {2, 1},      // Positions (2=top bar, 1=lower bar) 
-     {20, 10},    // Bar widths
-     {"first: ", "second: "}, 
-     {" -- 50 steps", " -- 100 steps"}
-   );
-   ```
+  ```cpp
+statusbar_log::StatusBar_handle handle;
+std::vector<unsigned int> positions = {2, 1};
+std::vector<unsigned int> bar_sizes = {20, 10};
+std::vector<std::string> prefixes = {"first", "second"};
+std::vector<std::string> postfixes = {"20 long", "10 long"};
+
+int err_code = statusbar_log::create_statusbar_handle(
+   handle, positions, bar_sizes, prefixes, postfixes);
+```
    Configures a two-bar stack with prefixes/postfixes.
-5. **Updating progress**:
-   ```cpp
-   StatusbarLog::update_statusbar(statusbar, 0, percent);  // Update top bar
-   StatusbarLog::update_statusbar(statusbar, 1, percent);  // Update lower bar
-   ```
+4. **Updating progress**:
+```cpp
+statusbar_log::update_statusbar(statusbar, 0, percent);  // Update top bar
+statusbar_log::update_statusbar(statusbar, 1, percent);  // Update lower bar
+```
    Updates specific bars by index.
-6. **Logging during updates**:
-   ```cpp
-   LOG_INF("main.cpp", "10 Ticks reached\n");
-   ```
+5. **Logging during updates**:
+```cpp
+LOG_INF("main.cpp", "10 Ticks reached\n");
+```
    Log messages appear above active status bars.
+
+6. **Cleanup - DO NOT FORGET**
+   After a statusbar is no longer needed don't forget to clean it up
+```cpp
+int err_code = statusbar_log::destroy_statusbar_handle(handle);
+```
 
 @section building Building
 TODO

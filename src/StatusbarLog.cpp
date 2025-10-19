@@ -25,7 +25,7 @@
 
 #define FILENAME "StatusbarLog.cpp"
 
-namespace StatusbarLog {
+namespace statusbar_log {
 
 // Hidden implementation detail
 namespace {

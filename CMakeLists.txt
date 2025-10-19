@@ -49,9 +49,6 @@ target_compile_options(
   ${PROJECT_NAME} PRIVATE $<$<CXX_COMPILER_ID:GNU,CLANG,AppleClang>:-Wall
                           -Wextra -Wpedantic -Wformat>)
 
-# Create alias for nicer usage in parent projects
-add_library(StatusbarLog::StatusbarLog ALIAS ${PROJECT_NAME})
-
 # =============================================================================
 # Testing (Optional)
 # =============================================================================
