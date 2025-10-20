@@ -1,5 +1,7 @@
 // -- statusbarlog/src/statusbarlog.cpp
 
+// clang-format off
+
 #include "statusbarlog/statusbarlog.h"
 
 #ifdef _WIN32
@@ -17,12 +19,16 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
-#include <iomanip>
 #include <iostream>
 #include <mutex>
 #include <ostream>
+#include <sstream>
+#include <iomanip>
 #include <string>
 #include <vector>
+
+
+// clang-format on
 
 const std::string kFilename = "statusbarlog.cpp";
 

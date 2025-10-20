@@ -1,5 +1,7 @@
 // -- statusbarlog/test/src/statusbarlog_main.cpp
 
+// clang-format off
+
 #include <cstddef>
 #include <iostream>
 #include <string>
@@ -7,6 +9,8 @@
 #include <vector>
 
 #include "statusbarlog/statusbarlog.h"
+
+// clang-format on
 
 const std::string kFilename = "statusbarlog_main.cpp";
 
