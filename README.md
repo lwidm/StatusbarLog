@@ -1,86 +1,67 @@
+# StatusbarLog
 
-# StatusbarLog.cpp
+StatusbarLog is a C++ utility for simultaneous logging and multiple stacked statusbar displays in terminal applications.
 
-## Overview
-A c++ utility for simultaneously logging and statusbar displays in terminals.
-Features:
-- Multiple stacked statusbars with configurable text and positions
-- Logging with severity levels (ERROR, WARN, INFO, DEBUG)
-- Spinner animation for "busy" statusbar
-- Cursor manipulation for seamless integration between logging messages and statusbar without overwriting each other.
-- Doxygen documentation available
+## Features
 
-## Requirements
-### Doxygen
-In order to generate the doxygen documentation you need the following packages
-- doxygen
-- Graphviz
-
-On **Debian** can run the following commands:
-```zsh
-sudo apt install doxygen graphviz
-```
-
-If you are using a different operating system you might need to modify the following line in the `DoxyFile`file:
-```
-DOT_PATH = /usr/bin/dot
-```
-The line above specifies where to find the `dot` executable of the graphviz program.
+- Multiple stacked statusbars with configurable text, sizes, and positions
+- Logging with severity levels: ERROR, WARN, INFO, DEBUG
+- Spinner animation for "busy" statusbars
+- Cursor manipulation so log messages and statusbars do not overwrite each other
+- Cross-platform design goals
 
 ## Building
 
 ### Quick build
 ```zsh
 mkdir -p build && cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release
+cmake -S .. -B . -DCMAKE_BUILD_TYPE=Release -DSTATUSBARLOG_LOG_LEVEL=kLogLevelInf
 cmake --build . -j$(nproc) --config Release
 ```
+### Important CMake Options
 
-### CMake options provided by this project (what each one means)
+| Option | Type | Default | Description |
+|--------|------|----------|--------------|
+| CMAKE_BUILD_TYPE | STRING | Release | Standard CMake build type |
+| STATUSBARLOG_INSTALL | BOOL | OFF | Generate installation targets |
+| STATUSBARLOG_BUILD_TESTS | BOOL | OFF | Build test suite |
+| STATUSBARLOG_BUILD_TEST_MAIN | BOOL | OFF | Build test main executable |
+| STATUSBARLOG_LOG_LEVEL | STRING | kLogLevelDbg | Compile-time log level (kLogLevelOff, kLogLevelErr, kLogLevelWrn, kLogLevelInf, kLogLevelDbg) |
 
-- `CMAKE_BUILD_TYPE` (STRING)  
-  Standard CMake build type (Release, Debug, RelWithDebInfo, MinSizeRel).
-  If not set and multi-config generators are not used, the project defaults to `Release`.
-
-- `STATUSBARLOG_INSTALL` (BOOL)  
-  Default: `OFF`.  
-  If `ON`, generates installation targets for the library (install rules are present in the CMakeLists).
-  Example:
+Example usage:
 ```zsh
-cmake -S . -B build -DSTATUSBARLOG_INSTALL=ON
-cmake --install build --prefix /usr/local
+cmake -S .. -B build -DCMAKE_BUILD_TYPE=Release -DSTATUSBARLOG_LOG_LEVEL=kLogLevelDbg
 ```
-- `STATUSBARLOG_BUILD_TESTS` (BOOL)  
-  Default: `OFF`.  
-  If `ON`, `enable_testing()` is invoked and the `tests/` subdirectory is processed to add tests.
-  Enable:
-```zsh
-cmake -S . -B build -DSTATUSBARLOG_BUILD_TESTS=ON
-cmake --build build
-ctest --test-dir build
-```
-
-- `STATUSBARLOG_BUILD_TEST_MAIN` (BOOL)
-  Default: `OFF`.
-  Used by `statusbarlog/tests/CMakeLists.txt` to control whether the test `main` executable is built
-  Example:
-```zsh
-cmake -S . -B build -DSTATUSBARLOG_BUILD_TESTS=ON -DSTATUSBARLOG_BUILD_TEST_MAIN=ON
-```
-
-- `STATUSBARLOG_LOG_LEVEL` (STRING) 
-  Default: `kLogLevelDbg`.
-  Controls the compile-time default `kLogLevel` value generated into the header by `configure_file()`.
-  Allowed values (must match the enum): `kLogLevelOff`, `kLogLevelErr`, `kLogLevelWrn`, `kLogLevelInf`, `kLogLevelDbg`. 
-  Set via CLI:
-```zsh
-cmake -S . -B build -DSTATUSBARLOG_LOG_LEVEL=kLogLevelInf
-```
-  Or when consuming via `add_subdirectory()` set it before adding the subdirectory:
+Or when consuming via add_subdirectory():
 ```cmake
 set(STATUSBARLOG_LOG_LEVEL kLogLevelWrn CACHE STRING "statusbarlog default")
 add_subdirectory(path/to/statusbarlog)
 ```
+## Requirements
+
+- C++20 capable compiler (Clang, GCC, or MSVC)
+- CMake ≥ 3.20
+
+For Doxygen documentation:
+- doxygen
+- graphviz (for diagrams)
+
+Install (Debian/Ubuntu):
+```zsh
+sudo apt install doxygen graphviz
+```
+Install (Arch)
+
+## Documentation
+
+Full documentation is available via Doxygen. To generate documentation locally:
+```zsh
+doxygen Doxyfile
+```
+HTML output is usually in docs/html.
+
+For online documentation hosted via GitHub Pages, see the project's GitHub Pages site.
+
 ## TODO
 - Make usable as git submodule and cmake module
 - Let log messages and statusbars take up arbitrary streams

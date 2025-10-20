@@ -24,7 +24,7 @@
 #include <string>
 #include <vector>
 
-const std::string kFilename = "StatusbarLog.cpp";
+const std::string kFilename = "statusbarlog.cpp";
 
 namespace statusbar_log {
 

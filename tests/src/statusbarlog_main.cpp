@@ -8,7 +8,7 @@
 
 #include "statusbarlog/statusbarlog.h"
 
-const std::string kFilename = "StatusbarLog_main.cpp";
+const std::string kFilename = "statusbarlog_main.cpp";
 
 void PrintWithCleanup() {
   std::cout << "Start to be kept <- " << std::flush;

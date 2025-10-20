@@ -1,7 +1,7 @@
 DOXYFILE_ENCODING      = UTF-8
-PROJECT_NAME           = "StatusbarLog"
+PROJECT_NAME           = "statusbarlog"
 PROJECT_NUMBER         = 1.0
-PROJECT_BRIEF          = "This Module is used for better logging and the creation of statusbars."
+PROJECT_BRIEF          = "This api is used for creating statusbars and for better logging alongside these statusbars."
 PROJECT_LOGO           =
 PROJECT_ICON           =
 OUTPUT_DIRECTORY       = docs
@@ -111,7 +111,8 @@ WARN_AS_ERROR          = NO
 WARN_FORMAT            = "$file:$line: $text"
 WARN_LINE_FORMAT       = "at line $line of file $file"
 WARN_LOGFILE           =
-INPUT                  = src include docs README.md docs/mainpage.md src/main.cpp
+# INPUT                  = src src/statusbarlog.cpp include include/statusbarlog include/statusbarlog/statusbarlog.h.in build/include build/include/statusbarlog build/include/statusbarlog/statusbarlog.h tests/src tests/src/statusbarlog_main.cpp tests/src/statusbarlog_test.cpp docs README.md docs/mainpage.md
+INPUT                  = src include tests
 INPUT_ENCODING         = UTF-8
 INPUT_FILE_ENCODING    =
 FILE_PATTERNS          = *.c \
@@ -133,6 +134,7 @@ FILE_PATTERNS          = *.c \
                          *.ddl \
                          *.odl \
                          *.h \
+                         *.h.in \
                          *.hh \
                          *.hxx \
                          *.hpp \
@@ -167,12 +169,12 @@ FILE_PATTERNS          = *.c \
                          *.ice
 
 RECURSIVE              = YES
-EXCLUDE                = include/Eigen
+EXCLUDE                = include/Eigen README.md docs/example
 EXCLUDE_SYMLINKS       = NO
 EXCLUDE_PATTERNS       = */Eigen/* */Eigen*
 EXCLUDE_SYMBOLS        =
 EXAMPLE_PATH           = ./src
-EXAMPLE_PATTERNS       = main.cpp
+EXAMPLE_PATTERNS       =
 EXAMPLE_RECURSIVE      = NO
 IMAGE_PATH             =
 INPUT_FILTER           =
