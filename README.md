@@ -108,7 +108,6 @@ TEST(TerminalUtils, FlushOutput_Behavior)
 ```
 
 **LOW PRIORITY - Complex Scenarios**
-
 6. Logging Integration Tests
 ```cpp
 TEST(Logging, LogWithoutStatusbars)
