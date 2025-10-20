@@ -79,7 +79,7 @@ cmake --build . -j$(nproc) --config Release
 
 ### Building on Windows
 
-#### Using Visual Studio Developer Command Prompt
+#### Method 1: Using Visual Studio Developer Command Prompt
 open "Developer Command Promt for VS 2022" or similar
 ```cmd
 mkdir build
@@ -88,14 +88,14 @@ cmake -S .. -B . -DCMAKE_BUILD_TYPE=Release -DSTATUSBARLOG_LOG_LEVEL=kLogLevelIn
 cmake --build . --config Release --parallel
 ```
 
-#### Using Ninja (Recommended)
+#### Method 2: Using Ninja (Recommended)
 ```cmd
 mkdir build
 cd build
 cmake -S .. -B . -G "Ninja" -DCMAKE_BUILD_TYPE=Release -DSTATUSBARLOG_LOG_LEVEL=kLogLevelInf
 cmake --build . --parallel
 ```
-#### Using Visual Studio IDE
+#### Method 3: Using Visual Studio IDE
 ```cmd
 mkdir build
 cd build
