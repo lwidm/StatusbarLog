@@ -60,7 +60,7 @@ doxygen Doxyfile
 ```
 HTML output is usually in docs/html.
 
-For online documentation hosted via GitHub Pages, see the project's GitHub Pages site.
+For online documentation hosted via GitHub Pages, see the project's [GitHub Pages site](https://lwidm.github.io/statusbarlog).
 
 ## TODO
 - Make usable as git submodule and cmake module
