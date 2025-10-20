@@ -3,7 +3,8 @@
 #ifndef STATUSBARLOG_STATUSBARLOG_H_
 #define STATUSBARLOG_STATUSBARLOG_H_
 
-#include <cstdarg>
+// clang-format off
+
 #ifdef _WIN32
 #include <windows.h>
 #else
@@ -11,10 +12,13 @@
 #include <unistd.h>
 #endif
 
+#include <cstdarg>
 #include <cstddef>
 #include <cstdio>
 #include <string>
 #include <vector>
+
+// clang-format on
 
 namespace statusbar_log {
 

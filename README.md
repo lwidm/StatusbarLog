@@ -12,12 +12,97 @@ StatusbarLog is a C++ utility for simultaneous logging and multiple stacked stat
 
 ## Building
 
-### Quick build
+### prerequisites
+
+#### All Platforms:
+- C++20 capable compiler (Clang, GCC, or MSVC)
+- CMake >= 3.20@subsubsection prereq_all_platforms All Platforms:
+
+For Doxygen documentation:
+- doxygen
+- graphviz (for diagrams)
+
+#### Linux (Debian/Ubuntu):
 ```zsh
+sudo apt install build-essential cmake
+```
+For Doxygen documentation:
+```zsh
+sudo apt install doxygen graphviz
+```
+
+#### Linux (Arch):
+```zsh
+sudo pacman -S base-devel cmake
+```
+For Doxygen documentation:
+```zsh
+sudo pacman -S base-devel doxygen graphviz
+```
+
+#### Windows:
+- Visual Studio 2019 or later with individual components:
+   - MSBuild
+   - Windows 11 SDK
+   - MSBuild support for LLVM (clang-cl) toolset
+   - C++ Clang compiler for Windows
+   - MSVC v143 - VS 2022 C++ ARM build tools (Latest)
+   - MSVC v143 - VS 2022 C++ ARM Spectre-mitigated libs (Latest)
+   - MSVC v143 - VS 2022 C++ ARM64/ARM64EC build tools (Latest)
+   - MSVC v143 - VS 2022 C++ ARM64/ARM64EC Spectre-mitigated libs (Latest)
+   - MSVC v143 - VS 2022 C++ x64/x86 build tools (Latest)
+   - MSVC v143 - VS 2022 C++ x64/x86 Spectre-mitigated libs (Latest)
+   - C++ Cmake tools for Windows
+   - C++ Cmake tools for Linux
+   (These are just the components i have installed, not all might be required and others might work)
+- Cmake (can be installed manually or using visual studio)
+- Ninja
+```PowerShell
+winget install Ninja-build.Ninja
+```
+- For Dxygen documentation:
+   - Doxygen
+   - graphviz
+```PowerShell
+winget install doxygen
+winget install graphviz
+```
+- **Don't forget to add the graphvize binaries to PATH!** (usually located at `C:/Program Files/Graphviz/bin`)
+
+### Building on Linux/macOS
+
+```sh
 mkdir -p build && cd build
-cmake -S .. -B . -DCMAKE_BUILD_TYPE=Release -DSTATUSBARLOG_LOG_LEVEL=kLogLevelInf
+cmake -S .. -B . build -DCMAKE_BUILD_TYPE=Release -DSTATUSBARLOG_LOG_LEVEL=kLogLevelInf
 cmake --build . -j$(nproc) --config Release
 ```
+
+### Building on Windows
+
+#### Using Visual Studio Developer Command Prompt
+open "Developer Command Promt for VS 2022" or similar
+```cmd
+mkdir build
+cd build
+cmake -S .. -B . -DCMAKE_BUILD_TYPE=Release -DSTATUSBARLOG_LOG_LEVEL=kLogLevelInf
+cmake --build . --config Release --parallel
+```
+
+#### Using Ninja (Recommended)
+```cmd
+mkdir build
+cd build
+cmake -S .. -B . -G "Ninja" -DCMAKE_BUILD_TYPE=Release -DSTATUSBARLOG_LOG_LEVEL=kLogLevelInf
+cmake --build . --parallel
+```
+#### Using Visual Studio IDE
+```cmd
+mkdir build
+cd build
+cmake -S .. -B . -G "Visual Studio 17 2022" -A x64
+```
+Then open the generated `.sln` in Visual Studio
+
 ### Important CMake Options
 
 | Option | Type | Default | Description |
@@ -37,20 +122,11 @@ Or when consuming via add_subdirectory():
 set(STATUSBARLOG_LOG_LEVEL kLogLevelWrn CACHE STRING "statusbarlog default")
 add_subdirectory(path/to/statusbarlog)
 ```
-## Requirements
 
-- C++20 capable compiler (Clang, GCC, or MSVC)
-- CMake ≥ 3.20
-
-For Doxygen documentation:
-- doxygen
-- graphviz (for diagrams)
-
-Install (Debian/Ubuntu):
-```zsh
-sudo apt install doxygen graphviz
-```
-Install (Arch)
+### Performance Notes for Windows
+- Use Ninja generator for fastest build times
+- MSVC compiler with */O2* and *LTO* provides best runtime performance
+- Consider *Profile-Guided Optimization (PGO)* for maximum performance in release builds
 
 ## Documentation
 

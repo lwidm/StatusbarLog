@@ -1,11 +1,16 @@
 // -- statusbarlog/test/src/statusbarlog_test.cpp
-#include "statusbarlog/statusbarlog.h"
+
+// clang-format off
 
 #include <gtest/gtest.h>
 
 #include <cstddef>
 #include <cstdint>
 #include <vector>
+
+#include "statusbarlog/statusbarlog.h"
+
+// clang-format on
 
 // ==================================================
 // HandleManagementTest
