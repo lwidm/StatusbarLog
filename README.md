@@ -138,6 +138,9 @@ HTML output is usually in docs/html.
 
 For online documentation hosted via GitHub Pages, see the project's [GitHub Pages site](https://lwidm.github.io/statusbarlog).
 
+## Devopment
+I used the compilation database located at `compile_commands.json.in` together with the `clangd` lsp for development and this works very well. I recommend using a build system that supports generating this compilation database (like _make_ or _Ninja_). If a build system that supports it is used cmake will generate the compilation database for you and coppy it to the root directory. If one doesn't want to do this one can coppy the `compile_commands.json.windows` or `compile_commands.json.linux` to `compile_commands.json` and place it in the root directory. This should work just fine as long as no new files or defines are created.
+
 ## TODO
 - Make usable as git submodule and cmake module
 - Let log messages and statusbars take up arbitrary streams
