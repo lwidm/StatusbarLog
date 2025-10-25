@@ -1,5 +1,4 @@
-@mainpage statusbarLog Documentation
-
+@mainpage Documentation
 
 @section overview Overview
 
@@ -79,7 +78,7 @@ Example code snippet (from `docs/example/main.cpp`):
 
 @subsubsection prereq_all_platforms All Platforms:
 - C++20 capable compiler (Clang, GCC, or MSVC)
-- CMake >= 3.20@subsubsection prereq_all_platforms All Platforms:
+- CMake >= 3.20
 
 For Doxygen documentation:
 - doxygen
@@ -207,69 +206,38 @@ add_subdirectory(path/to/statusbarlog)
 
 HTML output is usually in `docs/html`.
 
-@section development Devopment
+@section contributing_style Contributing & Style 
 
+@subsection compilation_database Compilation database
 I used the compilation database located at `compile_commands.json.in` together with the `clangd` lsp for development and this works very well. I recommend using a build system that supports generating this compilation database (like _make_ or _Ninja_). If a build system that supports it is used cmake will generate the compilation database for you and coppy it to the root directory. If one doesn't want to do this one can coppy the `compile_commands.json.windows` or `compile_commands.json.linux` to `compile_commands.json` and place it in the root directory. This should work just fine as long as no new files or defines are created.
-@section roadmap TODO / Roadmap
 
-- ✅ CMake integration with configurable `STATUSBARLOG_LOG_LEVEL`
-- 🔧 Make usable as git submodule / cmake module
-- 🔧 Stream selection for logs and statusbars
-- 🔧 Optional flush control for performance
-- ⚙️ Add cross-platform support (Windows)
-- 🧪 Expand unit test coverage:
-  - Destroying handles / invalid handles
-  - Out-of-bounds indices
-  - Mutex and thread safety
-  - Truncation and string sanitization
-  - Race conditions
-  - Edge cases and boundary tests
-- 📘 Follow Google C++ Style Guide:
-  - Replace macros with `constexpr` or inline functions
-  - Consistent naming: PascalCase for functions, UpperCamel for types
-  - Avoid global state
+@subsubsection style_guidelines Style & Formatting Guidelines
+- Follow [Google's C++ Style Guide](https://google.github.io/styleguide/cppguide.html) as strictly as possible 
+- Add ApacheAdd Apache-2.0 License boilerpalte at the top of every source file (**replace year and owner**):
+@code{cpp}
+// SPDX-License-Identifier: Apache-2.0
+// Copyright (c) [yyyy] [name of copyright owner]
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
-@section testing_unit Unit Test Plan (Summary)
+// -- statusbarlog/rest/of/path.cpp
+@endcode
+- Use `clang-format` with the provided root-level `.clang-format`. Ideally use
+  an editor integration to format on save. For exceptions, wrap the unformatted
+  region with:
+   @code{cpp}
+   // clang-format off
+   ...
+   // clang-format on
+   @endcode
+   Don't forget to re-enalbe!
 
-**String & Utility Functions**
-```cpp
-TEST(StringSanitization, SanitizeString_NoChangesNeeded)
-TEST(StringSanitization, SanitizeString_ControlCharacters)
-TEST(StringSanitization, SanitizeString_UnicodeReplacement)
-TEST(StringSanitization, SanitizeStringWithNewline_PreservesNewlines)
-TEST(StringSanitization, SanitizeString_TruncatesLongStrings)
-```
-
-**Terminal Utility Tests**
-```cpp
-TEST(TerminalUtils, GetTerminalWidth_Success)
-TEST(TerminalUtils, GetTerminalWidth_FallbackToDefault)
-TEST(TerminalUtils, ClearCurrentLine_NoCrash)
-TEST(TerminalUtils, CursorPosition_SaveRestore)
-TEST(TerminalUtils, FlushOutput_Behavior)
-```
-
-**Integration Tests**
-```cpp
-TEST(Logging, LogWithActiveStatusbars)
-TEST(Logging, LogDifferentLevels)
-TEST(Logging, LogWithFormatting)
-TEST(Logging, LogWithLongMessages_Truncation)
-```
-
-**Concurrency**
-```cpp
-TEST(Concurrency, MultipleHandlesSimultaneousCreation)
-TEST(Concurrency, UpdatesFromDifferentThreads_NoCrash)
-TEST(Concurrency, LogWhileStatusbarActive)
-```
-
-**Edge Cases**
-```cpp
-TEST(EdgeCases, RapidSequentialUpdates)
-TEST(EdgeCases, ManyStatusbarsSimultaneously)
-TEST(EdgeCases, EmptyVectors_ErrorHandling)
-TEST(EdgeCases, VeryLongPrefixPostfix_Truncation)
-TEST(EdgeCases, BoundaryPercentages_0_and_100)
-```
-```

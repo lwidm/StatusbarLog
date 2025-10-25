@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2025 Lukas Widmer
+
 # Doxyfile 1.10.0
 
 # This file describes the settings to be used by the documentation system
@@ -950,7 +953,7 @@ WARN_LOGFILE           =
 # Note: If this tag is empty the current directory is searched.
 
 # INPUT                  = src src/statusbarlog.cpp include include/statusbarlog include/statusbarlog/statusbarlog.h.in build/include build/include/statusbarlog build/include/statusbarlog/statusbarlog.h tests/src tests/src/statusbarlog_main.cpp tests/src/statusbarlog_text.cpp docs README.md docs/mainpage.md
-INPUT = src include docs
+INPUT = src include docs LICENSE
 
 # This tag can be used to specify the character encoding of the source files
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding. Doxygen uses

@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2025 Lukas Widmer
+
 DOXYFILE_ENCODING      = UTF-8
 PROJECT_NAME           = "statusbarlog"
 PROJECT_NUMBER         = 1.0
@@ -112,7 +115,7 @@ WARN_FORMAT            = "$file:$line: $text"
 WARN_LINE_FORMAT       = "at line $line of file $file"
 WARN_LOGFILE           =
 # INPUT                  = src src/statusbarlog.cpp include include/statusbarlog include/statusbarlog/statusbarlog.h.in build/include build/include/statusbarlog build/include/statusbarlog/statusbarlog.h tests/src tests/src/statusbarlog_main.cpp tests/src/statusbarlog_test.cpp docs README.md docs/mainpage.md
-INPUT                  = src include tests
+INPUT                  = src include tests LICENSE
 INPUT_ENCODING         = UTF-8
 INPUT_FILE_ENCODING    =
 FILE_PATTERNS          = *.c \
