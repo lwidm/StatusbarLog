@@ -1,4 +1,4 @@
-@mainpage Documentation
+@mainpage Quickstart / Overview
 
 @section overview Overview
 
@@ -240,4 +240,6 @@ I used the compilation database located at `compile_commands.json.in` together w
    // clang-format on
    @endcode
    Don't forget to re-enalbe!
+
+
 
