@@ -76,11 +76,12 @@ Write-Host "Configuring CMake with:"
 Write-Host "  - CMAKE_BUILD_TYPE=Release"
 Write-Host "  - STATUSBARLOG_BUILD_TESTS=OFF" 
 Write-Host "  - STATUSBARLOG_LOG_LEVEL=kLogLevelInf"
-
-& cmake .. `
+& cmake -S .. -B . `
+    -G "Ninja" `
     -DCMAKE_BUILD_TYPE=Release `
-    -DSTATUSBARLOG_BUILD_TESTS=OFF `
-    -DSTATUSBARLOG_LOG_LEVEL=kLogLevelInf
+    -DSTATUSBARLOG_LOG_LEVEL=kLogLevelInf `
+    -DSTATUSBARLOG_BUILD_TESTS=ON `
+    -DSTATUSBARLOG_BUILD_TEST_MAIN=ON
 
 if ($LASTEXITCODE -ne 0) {
     Write-ColorOutput -Color $RED -Message "CMake configuration failed!"
