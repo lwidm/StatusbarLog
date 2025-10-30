@@ -5,7 +5,7 @@ set -e
 RELEASE_DIR="export_release"
 FULL_PKG="statusbarlog-full"
 MINIMAL_PKG="statusbarlog-minimal"
-VERSION="1.0.1"
+VERSION="1.1.0"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'

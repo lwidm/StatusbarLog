@@ -1,6 +1,6 @@
 <!-- spdx-license-identifier: apache-2.0 -->
 <!-- Copyright (c) 2025 Lukas Widmer -->
-# StatusbarLog v1.0.1
+# StatusbarLog v1.1.0
 
 A C++20 utility for simultaneous logging and multiple stacked statusbar displays in terminal applications.
 
@@ -9,13 +9,13 @@ A C++20 utility for simultaneous logging and multiple stacked statusbar displays
 
 ## What's Included
 
-### 1. Full Source Package (`statusbarlog-full-v1.0.1`)
+### 1. Full Source Package (`statusbarlog-full-v1.1.0`)
 - Complete source code with tests and documentation
 - Ready-to-use CMake module - just extract and add to your project
 - Includes Doxygen configuration for generating documentation
 - (Personally I recommend cloning the repo instead)
 
-### 2. Minimal Package (`statusbarlog-minimal-v1.0.1`) 
+### 2. Minimal Package (`statusbarlog-minimal-v1.1.0`) 
 - Source files, header files and CMake configuration
 - Ready-to-use CMake module - just extract and add to your project
 

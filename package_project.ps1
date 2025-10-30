@@ -8,7 +8,7 @@ $ErrorActionPreference = "Stop"
 $RELEASE_DIR = "export_release"
 $FULL_PKG = "statusbarlog-full"
 $MINIMAL_PKG = "statusbarlog-minimal"
-$VERSION = "1.0.1"
+$VERSION = "1.1.0"
 
 # Colors for output
 $RED = "`e[31m"
