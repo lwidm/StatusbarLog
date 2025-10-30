@@ -113,7 +113,7 @@ cmake --build . -j$(nproc) --config Release
 ```
 
 ### Adding statusbarlog to your project
-The recommended approach to use this library is to include it in your project through a git submodule. However, Directely using source or precompiled files from the [github releases page](https://github.com/lwidm/statusbarlog/releases) is also an option.
+The recommended approach to use this library is to include it in your project through a git submodule. However, directely using source files or precompiled libraries and header files from the [github releases page](https://github.com/lwidm/statusbarlog/releases) is also an option.
 
 See [cmake submodule page](@ref cmake_module_page) for detailed instructions on how to inlcude statusbarlog in your project.
 
@@ -273,24 +273,13 @@ int main() {
 This project is licensed under the Apache License, Version 2.0. See the top-level LICENSE file for details.
 
 ## TODO
-- Make usable as git submodule and cmake module
 - Let log messages and statusbars take up arbitrary streams
 - Optionally don't force flushing after every status message or every statusbarupdate
-- Cross platform compatibility
-    - Windows
-    - Linux
-- Read through google's style guide
-    - Reduce Macros
-    - functions are Pascalcase ?
-    - Classes are ___? 
-    - etc...
+  - make it togalable using cmake
 
 ## TODO unittest
-- destroying of statusbar (all error codes)
 - out of bounds `spin_idx`, log message length, status bar text, `statusbar_registry`
-- Mutexes for `statusbar_registry`, `statusbar_free_handles`, `handle.id_count`
 - Thread safety (test race conditions)
-- Invalid handles (in UpdateStatusbar and destroy_statusbar)
 - Test unsanitised strings (in log and prefixes and postfixes)
 - Test bounds of log message, filename, prefix and postfix length
 - Test bounds on statusbar_registry and statusbar_free_handles

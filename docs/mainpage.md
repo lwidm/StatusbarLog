@@ -132,7 +132,7 @@ winget install graphviz
 
 
 @subsection add_to_project Adding statusbarlog to your project
-The recommended approach to use this library is to include it in your project through a git submodule. However, Directely using source or precompiled files from the [github releases page](https://github.com/lwidm/statusbarlog/releases) is also an option.
+The recommended approach to use this library is to include it in your project through a git submodule. However, directely using source files or precompiled libraries and header files from the [github releases page](https://github.com/lwidm/statusbarlog/releases) is also an option.
 
 See [cmake submodule page](@ref cmake_module_page) for detailed instructions on how to inlcude statusbarlog in your project.
 
