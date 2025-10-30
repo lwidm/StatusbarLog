@@ -5,6 +5,18 @@
 
 StatusbarLog is a C++ utility for simultaneous logging and multiple stacked statusbar displays in terminal applications.
 
+## Quick Links
+- [Features](#features)
+- [Documentation](#documentation)
+- [Building](#building)
+  - [Prerequisites](#prerequisites)
+  - [Linux/macOS Build](#building-on-linuxmacos)
+  - [Windows Build](#building-on-windows)
+- [CMake Integration](#using-statusbarlog-as-a-cmake-module-in-your-project)
+- [Contributing & Style](#contributing--style)
+- [License](#license)
+- [TODO](#todo)
+
 ## Features
 
 - Multiple stacked statusbars with configurable text, sizes, and positions
@@ -93,7 +105,7 @@ cmake --build . -j$(nproc) --config Release
 
 ### Git submodule (Recommended)
 The recommended approach to use this library is to include it in your project through a git submodule.
-See [section below](#using-statusbarlog-as-a-cmake-module-in-your-projec) for instructions.
+See [section below](#using-statusbarlog-as-a-cMake-module-in-your-project) for instructions.
 
 ### Releases (Not recommended)
 
