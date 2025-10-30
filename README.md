@@ -80,6 +80,26 @@ cmake -S .. -B . build -DCMAKE_BUILD_TYPE=Release -DSTATUSBARLOG_LOG_LEVEL=kLogL
 cmake --build . -j$(nproc) --config Release
 ```
 
+### Git submodule (Recommended)
+The recommended approach to use this library is to include it in your project through a git submodule.
+See [section below](## Using StatusbarLog as a CMake Module in Your Project) for instructions.
+
+### Releases (Not recommended)
+
+You can find packaged release artifacts (archives and prebuilt libraries) on the GitHub Releases page for this project: [https://github.com/lwidm/statusbarlog/releases](https://github.com/lwidm/statusbarlog/releases)
+
+Typical ways to consume release files:
+- **Use prebuilt binaries / libraries manually**: Download the release assets (headers + static library .a or .lib, and any example binaries) and:
+   1. Add the include/ folder from the release to your compiler include path.
+   2. Link the provided static library into your project (e.g. add the .a/.lib to your linker inputs).
+   3. Ensure the library's compile-time log level matches your needs. If not, build from source.
+
+- **Extract the archive into your project or add as a submodule**: extract the `statusbarlog-*.tar.gz` into a statusbarlog/ folder inside your repository and use `add_subdirectory(statusbarlog)` in your CMakeLists.txt.
+
+
+- **Extract the archive into your project or add as a submodule**: extract the `statusbarlog-*.tar.gz` into a statusbarlog/ folder inside your repository and use `add_subdirectory(statusbarlog)` in your CMakeLists.txt.
+
+
 ### Building on Windows
 
 #### Method 1: Using Visual Studio Developer Command Prompt
