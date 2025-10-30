@@ -82,7 +82,7 @@ cmake --build . -j$(nproc) --config Release
 
 ### Git submodule (Recommended)
 The recommended approach to use this library is to include it in your project through a git submodule.
-See [section below](## Using StatusbarLog as a CMake Module in Your Project) for instructions.
+See [section below](#Using StatusbarLog as a CMake Module in Your Project) for instructions.
 
 ### Releases (Not recommended)
 
