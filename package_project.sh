@@ -152,7 +152,7 @@ cp "build/include/statusbarlog/statusbarlog.h" "$RELEASE_DIR/"
 
 # Copy and rename precompiled library based on platform
 if [ -f "build/libstatusbarlog.a" ]; then
-    cp "build/libstatusbarlog.a" "lib$RELEASE_DIR/${LIBRARY_NAME}.a"
+    cp "build/libstatusbarlog.a" "$RELEASE_DIR/lib${LIBRARY_NAME}.a"
     echo -e "${GREEN}Created: lib${LIBRARY_NAME}.a${NC}"
 elif [ -f "build/statusbarlog.lib" ]; then
     cp "build/statusbarlog.lib" "$RELEASE_DIR/${LIBRARY_NAME}.lib"
