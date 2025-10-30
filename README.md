@@ -13,6 +13,17 @@ StatusbarLog is a C++ utility for simultaneous logging and multiple stacked stat
 - Cursor manipulation so log messages and statusbars do not overwrite each other
 - Cross-platform design goals
 
+## Documentation
+
+Full documentation is available via Doxygen. To generate documentation locally:
+```zsh
+doxygen Doxyfile
+```
+HTML output is usually in docs/html.
+
+For online documentation hosted via GitHub Pages, see the project's [GitHub Pages site](https://lwidm.github.io/statusbarlog).
+
+
 ## Building
 
 ### prerequisites
@@ -150,16 +161,6 @@ add_subdirectory(path/to/statusbarlog)
 - Use Ninja generator for fastest build times
 - MSVC compiler with */O2* and *LTO* provides best runtime performance
 - Consider *Profile-Guided Optimization (PGO)* for maximum performance in release builds
-
-## Documentation
-
-Full documentation is available via Doxygen. To generate documentation locally:
-```zsh
-doxygen Doxyfile
-```
-HTML output is usually in docs/html.
-
-For online documentation hosted via GitHub Pages, see the project's [GitHub Pages site](https://lwidm.github.io/statusbarlog).
 
 ## Contributing & Style 
 ### Compilation database
