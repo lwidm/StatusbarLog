@@ -1,4 +1,4 @@
-<!-- SPDX-License-Identifier: Apache-2.0 -->
+<!-- spdx-license-identifier: apache-2.0 -->
 <!-- Copyright (c) 2025 Lukas Widmer -->
 # StatusbarLog v1.0.1
 
