@@ -15,8 +15,7 @@ StatusbarLog is a C++ utility for simultaneous logging and multiple stacked stat
     - [Linux (Arch)](#linux-arch)
     - [Windows](#windows)
   - [Building on Linux/macOS](#building-on-linuxmacos)
-  - [Git submodule](#git-submodule-recommended)
-  - [Releases](#releases-not-recommended)
+  - [Adding statusbarlog to your project](#adding-statusbarlog-to-your-project)
   - [Building on Windows](#building-on-windows)
   - [Important CMake Options](#important-cmake-options)
   - [Performance Notes for Windows](#performance-notes-for-windows)
@@ -113,25 +112,12 @@ cmake -S .. -B . build -DCMAKE_BUILD_TYPE=Release -DSTATUSBARLOG_LOG_LEVEL=kLogL
 cmake --build . -j$(nproc) --config Release
 ```
 
-### Git submodule (Recommended)
-The recommended approach to use this library is to include it in your project through a git submodule.
-See [section below](#using-statusbarlog-as-a-cMake-module-in-your-project) for instructions.
+### Adding statusbarlog to your project
+The recommended approach to use this library is to include it in your project through a git submodule. However, Directely using source or precompiled files from the [github releases page](https://github.com/lwidm/statusbarlog/releases) is also an option.
 
-### Releases (Not recommended)
+See [cmake submodule page](@ref cmake_module_page) for detailed instructions on how to inlcude statusbarlog in your project.
 
-You can find packaged release artifacts (archives and prebuilt libraries) on the GitHub Releases page for this project: [https://github.com/lwidm/statusbarlog/releases](https://github.com/lwidm/statusbarlog/releases)
-
-Typical ways to consume release files:
-- **Use prebuilt binaries / libraries manually**: Download the release assets (headers + static library .a or .lib, and any example binaries) and:
-   1. Add the include/ folder from the release to your compiler include path.
-   2. Link the provided static library into your project (e.g. add the .a/.lib to your linker inputs).
-   3. Ensure the library's compile-time log level matches your needs. If not, build from source.
-
-- **Extract the archive into your project or add as a submodule**: extract the `statusbarlog-*.tar.gz` into a statusbarlog/ folder inside your repository and use `add_subdirectory(statusbarlog)` in your CMakeLists.txt.
-
-
-- **Extract the archive into your project or add as a submodule**: extract the `statusbarlog-*.tar.gz` into a statusbarlog/ folder inside your repository and use `add_subdirectory(statusbarlog)` in your CMakeLists.txt.
-
+@subsection build_linux Building on Linux/macOS
 
 ### Building on Windows
 
@@ -221,11 +207,25 @@ I used the compilation database located at `compile_commands.json.in` together w
 
 You can include **StatusbarLog** in your own C++ project in a few ways, I use it as a **git submodule** or by directly adding it to your project tree. Once included, you can consume it via CMake.
 
-### 1. Include StatusbarLog as a submodule**:
+### 1. Include StatusbarLog source files:
+
+#### a) As a git submodule (Recommended)
+The recommended approach is to add statusbarlog as a git submodule:
 ```zsh
 git submodule add git@github.com:lwidm/statusbarlog.git statusbarlog
 git submodule update --init --recursive
 ```
+
+#### b) Directly using release files (Not Recommeded)
+You can find packaged release artifacts (archives and prebuilt libraries) on the GitHub Releases page for this project: [https://github.com/lwidm/statusbarlog/releases](https://github.com/lwidm/statusbarlog/releases)
+
+Typical ways to consume release files:
+- **Use prebuilt binaries / libraries manually**: Download the release assets (headers + static library .a or .lib, and any example binaries) and:
+   1. Add the include/ folder from the release to your compiler include path.
+   2. Link the provided static library into your project (e.g. add the .a/.lib to your linker inputs).
+   3. Ensure the library's compile-time log level matches your needs. If not, build from source.
+
+- **Extract the archive into your project or add as a submodule**: Extract the `statusbarlog-*.tar.gz` into a statusbarlog/ folder inside your repository and follow the rest of this guide.
 
 ### 2. Add it to your CMake project
 in your root `CMakeLists.txt`:

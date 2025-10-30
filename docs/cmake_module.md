@@ -2,11 +2,25 @@
 
 You can include **StatusbarLog** in your own C++ project in a few ways, I use it as a **git submodule** or by directly adding it to your project tree. Once included, you can consume it via CMake.
 
-@section cmake_module_git_submodule 1. Include StatusbarLog as a submodule:
+@section source_files 1. Include StatusbarLog source files:
+
+@subsection git_submodule a) As a git submodule (Recommended)
+The recommended approach is to add statusbarlog as a git submodule:
 @code{bash}
 git submodule add git@github.com:lwidm/statusbarlog.git statusbarlog
 git submodule update --init --recursive
 @endcode
+
+@subsection release_files b) Directly using release files (Not Recommeded)
+You can find packaged release artifacts (archives and prebuilt libraries) on the GitHub Releases page for this project: [https://github.com/lwidm/statusbarlog/releases](https://github.com/lwidm/statusbarlog/releases)
+
+Typical ways to consume release files:
+- **Use prebuilt binaries / libraries manually**: Download the release assets (headers + static library .a or .lib, and any example binaries) and:
+   1. Add the include/ folder from the release to your compiler include path.
+   2. Link the provided static library into your project (e.g. add the .a/.lib to your linker inputs).
+   3. Ensure the library's compile-time log level matches your needs. If not, build from source.
+
+- **Extract the archive into your project or add as a submodule**: Extract the `statusbarlog-*.tar.gz` into a statusbarlog/ folder inside your repository and follow the rest of this guide.
 
 @section cmake_module_consume 2. Add it to your CMake project
 in your root `CMakeLists.txt`:
@@ -46,6 +60,5 @@ int main() {
 @endcode
 
 @section cmake_module_notes Notes
-- This approach allows you to keep StatusbarLog version-controlled alongside your project via the submodule,
-- Or to copy the source folder directly into your project.
+- This approach allows you to keep StatusbarLog version-controlled alongside your project via the submodule.
 - When cloning your project elsewhere, run git submodule update --init --recursive if you use the submodule method.
