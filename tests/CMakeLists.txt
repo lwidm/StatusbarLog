@@ -1,5 +1,4 @@
-# SPDX-License-Identifier: Apache-2.0
-# Copyright (c) 2025 Lukas Widmer
+# SPDX-License-Identifier: Apache-2.0 Copyright (c) 2025 Lukas Widmer
 
 # -- statusbarLog/tests/CMakeLists.txt
 
@@ -25,6 +24,11 @@ FetchContent_MakeAvailable(googletest)
 add_executable(${PROJECT_NAME}_test
                ${CMAKE_CURRENT_SOURCE_DIR}/src/statusbarlog_test.cpp)
 
+target_include_directories(
+  ${PROJECT_NAME}_test
+  PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>
+          $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/../include>)
+
 target_compile_features(${PROJECT_NAME}_test PUBLIC cxx_std_20)
 target_compile_options(
   ${PROJECT_NAME}_test PRIVATE -std=c++20
@@ -43,5 +47,11 @@ gtest_discover_tests(${PROJECT_NAME}_test)
 if(STATUSBARLOG_BUILD_TEST_MAIN)
   add_executable(${PROJECT_NAME}_main
                  ${CMAKE_CURRENT_SOURCE_DIR}/src/statusbarlog_main.cpp)
+
+  target_include_directories(
+    ${PROJECT_NAME}_main
+    PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>
+            $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/../include>)
+
   target_link_libraries(${PROJECT_NAME}_main PRIVATE ${PROJECT_NAME})
 endif()

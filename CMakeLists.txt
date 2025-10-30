@@ -68,15 +68,6 @@ target_include_directories(
 
 message(STATUS "Detected C++ compiler: ${CMAKE_CXX_COMPILER_ID}")
 
-include(CheckIPOSupported)
-check_ipo_supported(RESULT ipo_supported OUTPUT ipo_output)
-
-if(ipo_supported)
-  message(STATUS "LTO (Link Time Optimization) is supported")
-else()
-  message(STATUS "LTO (Link Time Optimization) is NOT supported")
-endif()
-
 if(WIN32)
   target_compile_definitions(statusbarlog PRIVATE NOMINMAX)
 endif()
@@ -87,12 +78,6 @@ if(MSVC)
   target_compile_options(
     ${PROJECT_NAME} PRIVATE /std:c++20 /W4 /WX $<$<CONFIG:Release>:/O2 /Ob2
                             /fp:fast>)
-
-  if(ipo_supported)
-    message(STATUS "Enabling LTO for Release builds")
-    set_target_properties(${PROJECT_NAME}
-                          PROPERTIES INTERPROCEDURAL_OPTIMIZATION_RELEASE ON)
-  endif()
 
 else()
   message(STATUS "Configuring for GCC/Clang compiler with Unix optimizations")
@@ -106,12 +91,6 @@ else()
   target_compile_options(
     ${PROJECT_NAME} PRIVATE $<$<CXX_COMPILER_ID:GNU,CLANG,AppleClang>:-Wall
                             -Wextra -Wpedantic -Wformat>)
-
-  if(ipo_supported)
-    message(STATUS "Enabling LTO for Release builds")
-    set_target_properties(${PROJECT_NAME}
-                          PROPERTIES INTERPROCEDURAL_OPTIMIZATION_RELEASE ON)
-  endif()
 endif()
 
 # Print final configuration summary
@@ -121,7 +100,6 @@ message(STATUS "  Build Type: ${CMAKE_BUILD_TYPE}")
 message(STATUS "  Compiler: ${CMAKE_CXX_COMPILER_ID}")
 message(STATUS "  C++ Standard: 20")
 message(STATUS "  Log Level: ${STATUSBARLOG_LOG_LEVEL}")
-message(STATUS "  LTO Enabled: ${ipo_supported}")
 if(MSVC)
   message(STATUS "  MSVC Optimizations: /O2 /Ob2 /fp:fast (Release)")
 else()

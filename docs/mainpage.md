@@ -140,7 +140,7 @@ See [cmake submodule page](@ref cmake_module_page) for detailed instructions on 
 
 ```sh
 mkdir -p build && cd build
-cmake -S .. -B . build -DCMAKE_BUILD_TYPE=Release -DSTATUSBARLOG_LOG_LEVEL=kLogLevelInf
+cmake -S .. -B . -DCMAKE_BUILD_TYPE=Release -DSTATUSBARLOG_LOG_LEVEL=kLogLevelInf
 cmake --build . -j$(nproc) --config Release
 ```
 
