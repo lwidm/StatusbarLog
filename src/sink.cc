@@ -42,7 +42,7 @@ namespace sink {
 int SinkInitStdout(Sink& sink) {
   sink.type = kSinkStdout;
   sink.out = &std::cout;
-  sink.owned_file = nullptr;
+  sink.owned_file.reset();
   sink.fd = fileno(stdout);
   return 0;
 }
@@ -51,12 +51,13 @@ int SinkInitFile(Sink& sink, const std::string& path) {
   try {
     std::unique_ptr<std::ofstream> f =
         std::make_unique<std::ofstream>(path, std::ios::app);
-    if (!f->good()) return -1;
+    if (!f->is_open() || !f->good()) {
+      return -1;
+    }
     sink.type = kSinkFileOwned;
     sink.out = f.get();
     sink.owned_file = std::move(f);
     sink.fd = -1;
-
   } catch (...) {
     return -2;
   }
@@ -66,7 +67,7 @@ int SinkInitFile(Sink& sink, const std::string& path) {
 int SinkInitOstream(Sink& sink, std::ostream& os) {
   sink.type = kSinkOstreamWrapped;
   sink.out = &os;
-  sink.owned_file = nullptr;
+  sink.owned_file.reset();
   if (&os == &std::cout) {
     sink.fd = fileno(stdout);
   } else if (&os == &std::cerr) {
@@ -78,28 +79,55 @@ int SinkInitOstream(Sink& sink, std::ostream& os) {
 }
 
 ssize_t SinkWrite(Sink& sink, const char* buf, std::size_t len) {
+  if (!buf) return -1;
+
   std::lock_guard<std::mutex> lock(sink.mutex);
 
-  sink.out->write(buf, static_cast<std::streamsize>(len));
-  if (!sink.out->good()) {
-    return -1;
+  if (len == 0) return 0;
+  if (!sink.out->good() && sink.fd < 0) return -1;
+
+  if (sink.fd >= 0) {
+#if defined(SSIZE_MAX)
+    if (len > static_cast<std::size_t>(SSIZE_MAX)) return -2;
+#endif
+    ssize_t rc = ::write(sink.fd, buf, static_cast<size_t>(len));
+    return rc;
   }
-  return static_cast<ssize_t>(len);
+
+  if (!sink.out->good()) return -3;
+
+  if (len >
+      static_cast<std::size_t>(std::numeric_limits<std::streamsize>::max())) {
+    return -4;
+  }
+
+  std::streambuf* sb = sink.out->rdbuf();
+  if (!sb) return -5;
+
+  std::streamsize want = static_cast<std::streamsize>(len);
+  std::streamsize written = sb->sputn(buf, want);
+
+  if (written != want) {
+    sink.out->setstate(std::ios::failbit);
+    return -6;
+  }
+  return static_cast<ssize_t>(written);
 }
 
 ssize_t SinkWriteStr(Sink& sink, const std::string& str) {
-  const ssize_t rc = SinkWrite(sink, str.c_str(), str.size());
-  return rc;
+  return SinkWrite(sink, str.c_str(), str.size());
 }
 
 int SinkFlush(Sink& s) {
   std::lock_guard<std::mutex> lk(s.mutex);
-  s.out->flush();
-  if (!s.out->good()) {
-    return -1;
+  if (s.fd >= 0) {
+    return 0;
   }
-  return 0;
+  if (!s.out->good()) return -1;
+  s.out->flush();
+  return s.out->good() ? 0 : -2;
 }
+
 void SinkClose(Sink& sink) {
   std::lock_guard<std::mutex> lk(sink.mutex);
   if (sink.owned_file) {
@@ -107,18 +135,17 @@ void SinkClose(Sink& sink) {
     sink.owned_file.reset();  // closes file
   }
   sink.out = nullptr;
-  sink.owned_file = nullptr;
   sink.fd = -1;
   sink.type = kSinkInvalid;
 }
 
-bool SinkIsTty(Sink &sink) {
-    if (sink.fd >= 0) {
-        return ::isatty(sink.fd) != 0;
-    }
-    if (sink.out == &std::cout) return ::isatty(::fileno(stdout));
-    if (sink.out == &std::cerr) return ::isatty(::fileno(stderr));
-    return false;
+bool SinkIsTty(Sink& sink) {
+  if (sink.fd >= 0) {
+    return ::isatty(sink.fd) != 0;
+  }
+  if (sink.out == &std::cout) return ::isatty(fileno(stdout));
+  if (sink.out == &std::cerr) return ::isatty(fileno(stderr));
+  return false;
 }
 
 }  // namespace sink
