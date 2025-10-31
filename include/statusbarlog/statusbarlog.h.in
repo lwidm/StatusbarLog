@@ -91,18 +91,30 @@ typedef enum {
  *
  *  - When used via add_subdirectory(), set the cache variable *before*
  *    calling add_subdirectory():
- *      set(STATUSBARLOG_LOG_LEVEL kLogLevelWrn CACHE STRING "statusbarlog default")
- *      add_subdirectory(path/to/statusbarlog)
+ *      set(STATUSBARLOG_LOG_LEVEL kLogLevelWrn CACHE STRING "statusbarlog
+ * default") add_subdirectory(path/to/statusbarlog)
  *
  * Allowed configure-time values (must match the LogLevel identifiers):
  *   kLogLevelOff, kLogLevelErr, kLogLevelWrn, kLogLevelInf, kLogLevelDbg
  */
+// clang-format off
 constexpr LogLevel kLogLevel = @STATUSBARLOG_LOG_LEVEL@;
+// clang-format on
 
+/**
+ * \struct StatusbarHandle
+ * \brief Handle to a statusbar. Used to interact with the underlying statusbar
+ * struct without directly touching it
+ *
+ * \see Statusbar: Underlying statusbar struct
+ */
 typedef struct {
-  std::size_t idx;
-  unsigned int id;
-  bool valid;
+  std::size_t idx;  ///< Positional index corresponding to the statusbars
+                    ///< position in the registry
+  unsigned int id;  ///< ID of the statusbar. Must be unique. Used to verify
+                    ///< validity of statusbar
+  bool valid;  ///< weather or not this statusbar is valid (for e.g. false after
+               ///< destruction)
 } StatusbarHandle;
 
 /**
