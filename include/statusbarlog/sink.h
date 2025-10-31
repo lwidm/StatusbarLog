@@ -17,14 +17,13 @@
 #ifndef STATUSBARLOG_SINK_H_
 #define STATUSBARLOG_SINK_H_
 
-#include <fstream>
-#include <memory>
-#include <mutex>
 #include <ostream>
 #include <string>
 
 namespace statusbar_log {
 namespace sink {
+
+constexpr unsigned int kMaxSinkHandles = 20;
 
 /**
  * \enum SinkType
@@ -34,57 +33,97 @@ namespace sink {
 typedef enum { kSinkInvalid, kSinkStdout, kSinkFileOwned, kSinkOstreamWrapped} SinkType;
 
 /**
+ * \struct SinkHandle
+ * \brief Handle to a Sink. Used to interact with the underlying sink
+ * struct without directly touching it
  *
- *
- * TODO : write this
-*/
+ * \see Sink: Underlying sink struct
+ */
 typedef struct {
-  SinkType type;
-  std::ostream* out;
-  std::unique_ptr<std::ofstream> owned_file;
-  std::mutex mutex;
-  int fd;
-} Sink;
+  std::size_t idx;  ///< Positional index corresponding to the sinks
+                    ///< position in the registry
+  unsigned int id;  ///< ID of the sink. Must be unique. Used to verify
+                    ///< validity of statusbar
+  bool valid;  ///< weather or not this sink is valid (for e.g. false after
+               ///< destruction)
+} SinkHandle;
 
 /**
- * \brief Initialises a sink that wraps std::cout (does not take ownership).
+ * \brief Initialises a sink that wraps std::cout (does not take ownership) and updates its handle.
+ *
+ * This function takes an empty SinkHandle struct and creates an associated sink that wraps std::cout (does not take ownership)
+ *
+ * \param[out] sink_handle Struct to initialize.
+ *
+ * \warning Don't forget to destroy the sink_handle after use.
+ *
+ * \return Returns statusbar_log::kStatusbarLogSuccess (i.e. 0) on success, or
+ * one of these error/warning codes:
+ *         -  statusbar_log::kStatusbarLogSuccess (i.e. 0): Success (no errors)
+ *         - -1: Failed to create sink handle (handle already valid)
+ *         - -2: Failed to create sink handle (handle registry exceeds
+ * maximum element limit)
+ *
+ * \see Sink: The sink struct.
+ * \see _sink_registry: The registry for sink struct in use.
+ * \see _sink_free_handles: The registry for free sink handles.
 */
-int SinkInitStdout(Sink& sink);
+int CreateSinkStdout(SinkHandle& sink_handle);
 
 /**
- * \brief Initialises a sink that opens/owns the given file path (append mode).
+ * \brief Initialises a sink that opens/owns the given file path (append mode)
+ *
+ * This function takes an empty SinkHandle struct and creates an associated sink that opens/owns a file path (takes owvernship). It opens the file in append mode.
+ *
+ * \param[out] sink_handle Struct to initialize.
+ * \param[in] path to the file to be opened/created.
+ *
+ * \warning Don't forget to destroy the sink_handle after use.
+ *
+ * \return Returns statusbar_log::kStatusbarLogSuccess (i.e. 0) on success, or
+ * one of these error/warning codes:
+ *         -  statusbar_log::kStatusbarLogSuccess (i.e. 0): Success (no errors)
+ *         - -1: Failed to create sink handle (handle already valid)
+ *         - -2: Failed to create sink handle (handle registry exceeds
+ * maximum element limit)
+ *         - -3: Failed to create sink handle (failed in opening file)
+ *         - -4: Failed to create sink handle (unknown error in opening file)
+ *
+ * \see Sink: The sink struct.
+ * \see _sink_registry: The registry for sink struct in use.
+ * \see _sink_free_handles: The registry for free sink handles.
 */
-int SinkInitFile(Sink& sink, const std::string& path);
+int CreateSinkFile(SinkHandle& sink_handle, const std::string& path) {
 
 /**
  * \brief Initialize a sink that wraps an existing std::ostream (non-owning).
 */
-int SinkInitOstream(Sink& sink, std::ostream& os);
+int SinkInitOstream(SinkHandle& sink, std::ostream& os);
 
 /**
  * \brief Write len bytes (returns number of bytes written or -1 on error).
 */
-ssize_t SinkWrite(Sink &s, const char *buf, std::size_t len);
+ssize_t SinkWrite(SinkHandle &s, const char *buf, std::size_t len);
 
 /**
  * Convenience to write a NUL-terminated string (returns 0 on success, -1 on error).
 */
-ssize_t SinkWriteStr(Sink &s, const std::string& str);
+ssize_t SinkWriteStr(SinkHandle &s, const std::string& str);
 
 /**
  * Flush the underlying stream (0 on success, -1 on error).
 */
-int SinkFlush(Sink &s);
+int SinkFlush(SinkHandle &s);
 
 /**
  * Close/free resources associated with sink (safe to call multiple times).
 */
-void SinkClose(Sink &s);
+void SinkClose(SinkHandle &s);
 
 /**
  * Returns true if the underlying stream is a TTY (best-effort).
 */
-bool SinkIsTty(Sink &s);
+bool SinkIsTty(SinkHandle &s);
 
 } // namespace sink
 } // namespace statusbar_log

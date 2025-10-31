@@ -83,10 +83,10 @@ typedef struct {
  */
 std::vector<Statusbar> _statusbar_registry = {};
 std::vector<StatusbarHandle> _statusbar_free_handles = {};
-unsigned int _handle_id_count = 0;
+unsigned int _statusbar_handle_id_count = 0;
 
-static std::mutex _registry_mutex;
-static std::mutex _id_count_mutex;
+static std::mutex _statusbar_registry_mutex;
+static std::mutex _statusbar_id_count_mutex;
 static std::mutex _console_mutex;
 
 /**
@@ -214,7 +214,7 @@ std::string _SanitizeString(const std::string& input) {
  *         - -4: Invalid handle: Handle ID is 0 (i.e. invalid)
  * and registry
  *
- * \see _IsValidHandle: Verbose version of this function
+ * \see _IsValidHandleVerbose: Verbose version of this function
  */
 int _IsValidHandle(const StatusbarHandle& statusbar_handle) {
   const std::size_t idx = statusbar_handle.idx;
@@ -243,7 +243,7 @@ int _IsValidHandle(const StatusbarHandle& statusbar_handle) {
  * This functions performs a test on a StatusbarHandle and returns
  * statusbar_log::kStatusbarLogSuccess (i.e. 0) if it is a valid handle and a
  * negative number otherwise. Same as _IsValidHandle but also prints an error
- * message and returns the target Statusbar
+ * message.
  *
  * \param[in] StatusbarHandle struct to be checked for validity
  *
@@ -284,7 +284,7 @@ int _IsValidHandleVerbose(const StatusbarHandle& statusbar_handle) {
     return -3;
   }
 
-  if (is_valid_handle != kStatusbarLogSuccess) {
+  if (is_valid_handle != -4) {
     LogWrn(kFilename, "Invalid Handle: ID is 0 (i.e. invalid)");
     return -4;
   }
@@ -433,7 +433,7 @@ int Log(const LogLevel log_level, const std::string& filename, const char* fmt,
         ...) {
   if (log_level > kLogLevel) return kStatusbarLogSuccess;
   std::unique_lock<std::mutex> console_lock(_console_mutex, std::defer_lock);
-  std::unique_lock<std::mutex> registry_lock(_registry_mutex, std::defer_lock);
+  std::unique_lock<std::mutex> registry_lock(_statusbar_registry_mutex, std::defer_lock);
   std::lock(console_lock, registry_lock);
   // std::lock_guard<std::mutex> ID_count_lock(_id_count_mutex);
 
@@ -507,6 +507,11 @@ int CreateStatusbarHandle(StatusbarHandle& statusbar_handle,
                           const std::vector<unsigned int> _bar_sizes,
                           const std::vector<std::string> _prefixes,
                           const std::vector<std::string> _postfixes) {
+  const int err = _IsValidHandle(statusbar_handle);
+  if (err == kStatusbarLogSuccess) {
+    LogErr(kFilename, "Handle already is valid, cannot use it to create a new statusbar");
+    return -1;
+  }
   statusbar_handle.valid = false;
   statusbar_handle.id = 0;
   if (_positions.size() != _bar_sizes.size() ||
@@ -519,32 +524,32 @@ int CreateStatusbarHandle(StatusbarHandle& statusbar_handle,
             "'_bar_sizes': %d, '_prefixes': %d, '_postfixes': %d.",
             _positions.size(), _bar_sizes.size(), _prefixes.size(),
             _postfixes.size());
-    return -1;
-  }
-
-  if (_statusbar_registry.size() - _statusbar_free_handles.size() >=
-      kMaxHandles) {
-    LogErr(
-        kFilename,
-        "Failed to create statusbar handle. Maximum status bars (%zu) reached",
-        statusbar_log::kMaxHandles);
     return -2;
   }
 
-  std::unique_lock<std::mutex> console_lock(_console_mutex, std::defer_lock);
-  std::unique_lock<std::mutex> registry_lock(_registry_mutex, std::defer_lock);
-  std::unique_lock<std::mutex> ID_count_lock(_id_count_mutex, std::defer_lock);
-  std::lock(console_lock, registry_lock, ID_count_lock);
+  if (_statusbar_registry.size() - _statusbar_free_handles.size() >=
+      kMaxStatusbarHandles) {
+    LogErr(
+        kFilename,
+        "Failed to create statusbar handle. Maximum number of status bars (%zu) reached",
+        kMaxStatusbarHandles);
+    return -3;
+  }
 
-  _handle_id_count++;
-  if (_handle_id_count == 0) {
+  std::unique_lock<std::mutex> console_lock(_console_mutex, std::defer_lock);
+  std::unique_lock<std::mutex> registry_lock(_statusbar_registry_mutex, std::defer_lock);
+  std::unique_lock<std::mutex> id_count_lock(_statusbar_id_count_mutex, std::defer_lock);
+  std::lock(console_lock, registry_lock, id_count_lock);
+
+  _statusbar_handle_id_count++;
+  if (_statusbar_handle_id_count == 0) {
     console_lock.unlock();
     registry_lock.unlock();
     LogWrn(kFilename,
-            "Max number of possible statusbar handle.ids reached, looping back "
+            "Max number of possible statusbar handle ids reached, looping back "
             "to 1");
     std::lock(console_lock, registry_lock);
-    _handle_id_count++;
+    _statusbar_handle_id_count++;
   }
 
   const std::size_t num_bars = _positions.size();
@@ -584,14 +589,14 @@ int CreateStatusbarHandle(StatusbarHandle& statusbar_handle,
         percentages,         _positions,
         sanitized_bar_sizes, sanitized_prefixes,
         sanitized_postfixes, spin_idxs,
-        _handle_id_count,    false};
+        _statusbar_handle_id_count,    false};
   } else {
     statusbar_handle.idx = _statusbar_registry.size();
     _statusbar_registry.emplace_back(Statusbar{
         percentages, _positions, sanitized_bar_sizes, sanitized_prefixes,
-        sanitized_postfixes, spin_idxs, _handle_id_count, false});
+        sanitized_postfixes, spin_idxs, _statusbar_handle_id_count, false});
   }
-  statusbar_handle.id = _handle_id_count;
+  statusbar_handle.id = _statusbar_handle_id_count;
   statusbar_handle.valid = true;
   for (std::size_t idx = 0; idx < num_bars; idx++) {
     _DrawStatusbarComponent(
@@ -606,7 +611,7 @@ int CreateStatusbarHandle(StatusbarHandle& statusbar_handle,
 
 int DestroyStatusbarHandle(StatusbarHandle& statusbar_handle) {
   std::unique_lock<std::mutex> console_lock(_console_mutex, std::defer_lock);
-  std::unique_lock<std::mutex> registry_lock(_registry_mutex, std::defer_lock);
+  std::unique_lock<std::mutex> registry_lock(_statusbar_registry_mutex, std::defer_lock);
   std::lock(console_lock, registry_lock);
 
   const int err = _IsValidHandle(statusbar_handle);
@@ -653,7 +658,7 @@ int DestroyStatusbarHandle(StatusbarHandle& statusbar_handle) {
 int UpdateStatusbar(StatusbarHandle& statusbar_handle, const std::size_t idx,
                     const double percent) {
   std::unique_lock<std::mutex> console_lock(_console_mutex, std::defer_lock);
-  std::unique_lock<std::mutex> registry_lock(_registry_mutex, std::defer_lock);
+  std::unique_lock<std::mutex> registry_lock(_statusbar_registry_mutex, std::defer_lock);
   std::lock(console_lock, registry_lock);
 
   // std::lock_guard<std::mutex> ID_count_lock(_id_count_mutex);

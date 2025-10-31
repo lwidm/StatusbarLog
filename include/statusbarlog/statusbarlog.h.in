@@ -36,7 +36,7 @@
 
 namespace statusbar_log {
 
-constexpr unsigned int kMaxHandles = 100;
+constexpr unsigned int kMaxStatusbarHandles = 100;
 constexpr unsigned int kMaxLogLength = 4096;
 constexpr unsigned int kMaxFilenameLength = 256;
 constexpr unsigned int kMaxPrefixLength = 80;
@@ -227,7 +227,7 @@ inline int LogDbg(const std::string& filename, const char* fmt, ...) {
  * \brief Initializes a Statusbar, updates its handle and prints its initial
  * state.
  *
- * This function takes an empty statusbar_handle struct and populate its
+ * This function takes an empty StatusbarHandle struct and populate its
  * corresponding statusbar with the other input parameters. Additionally it sets
  * all percentages to 0 and sets the spinner-indices to 0.
  *
@@ -247,8 +247,9 @@ inline int LogDbg(const std::string& filename, const char* fmt, ...) {
  * \return Returns statusbar_log::kStatusbarLogSuccess (i.e. 0) on success, or
  * one of these error/warning codes:
  *         -  statusbar_log::kStatusbarLogSuccess (i.e. 0): Success (no errors)
- *         - -1: Failed to create status bar handle (invalid inputs)
- *         - -2: Failed to create status bar handle (handle registry exceeds
+ *         - -1: Failed to create statusbar handle (handle already valid)
+ *         - -2: Failed to create statusbar handle (invalid inputs)
+ *         - -3: Failed to create statusbar handle (handle registry exceeds
  * maximum element limit)
  *
  * \warning Don't forget to destroy the statusbar_handle after use.
