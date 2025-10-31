@@ -39,7 +39,7 @@
 namespace statusbar_log {
 namespace sink {
 
-int sink_init_stdout(Sink& sink) {
+int SinkInitStdout(Sink& sink) {
   sink.type = kSinkStdout;
   sink.out = &std::cout;
   sink.owned_file = nullptr;
@@ -47,7 +47,7 @@ int sink_init_stdout(Sink& sink) {
   return 0;
 }
 
-int sink_init_file(Sink& sink, const std::string& path) {
+int SinkInitFile(Sink& sink, const std::string& path) {
   try {
     std::unique_ptr<std::ofstream> f =
         std::make_unique<std::ofstream>(path, std::ios::app);
@@ -63,7 +63,7 @@ int sink_init_file(Sink& sink, const std::string& path) {
   return 0;
 }
 
-int sink_init_ostream(Sink& sink, std::ostream& os) {
+int SinkInitOstream(Sink& sink, std::ostream& os) {
   sink.type = kSinkOstreamWrapped;
   sink.out = &os;
   sink.owned_file = nullptr;
@@ -77,7 +77,7 @@ int sink_init_ostream(Sink& sink, std::ostream& os) {
   return 0;
 }
 
-ssize_t sink_write(Sink& sink, const char* buf, std::size_t len) {
+ssize_t SinkWrite(Sink& sink, const char* buf, std::size_t len) {
   std::lock_guard<std::mutex> lock(sink.mutex);
 
   sink.out->write(buf, static_cast<std::streamsize>(len));
@@ -87,12 +87,12 @@ ssize_t sink_write(Sink& sink, const char* buf, std::size_t len) {
   return static_cast<ssize_t>(len);
 }
 
-ssize_t sink_write_str(Sink& sink, const std::string& str) {
-  const ssize_t rc = sink_write(sink, str.c_str(), str.size());
+ssize_t SinkWriteStr(Sink& sink, const std::string& str) {
+  const ssize_t rc = SinkWrite(sink, str.c_str(), str.size());
   return rc;
 }
 
-int sink_flush(Sink& s) {
+int SinkFlush(Sink& s) {
   std::lock_guard<std::mutex> lk(s.mutex);
   s.out->flush();
   if (!s.out->good()) {
@@ -100,7 +100,7 @@ int sink_flush(Sink& s) {
   }
   return 0;
 }
-void sink_close(Sink& sink) {
+void SinkClose(Sink& sink) {
   std::lock_guard<std::mutex> lk(sink.mutex);
   if (sink.owned_file) {
     sink.owned_file->flush();
@@ -112,7 +112,7 @@ void sink_close(Sink& sink) {
   sink.type = kSinkInvalid;
 }
 
-bool sink_is_tty(Sink &sink) {
+bool SinkIsTty(Sink &sink) {
     if (sink.fd >= 0) {
         return ::isatty(sink.fd) != 0;
     }

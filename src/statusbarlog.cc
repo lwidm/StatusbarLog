@@ -78,6 +78,9 @@ typedef struct {
 } Statusbar;
 // clang-format on
 
+/**
+ *
+ */
 std::vector<Statusbar> _statusbar_registry = {};
 std::vector<StatusbarHandle> _statusbar_free_handles = {};
 unsigned int _handle_id_count = 0;
