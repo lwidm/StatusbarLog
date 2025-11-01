@@ -76,9 +76,7 @@ int CreateSinkStdout(SinkHandle& sink_handle);
  * This function takes an empty SinkHandle struct and creates an associated sink that opens/owns a file path (takes owvernship). It opens the file in append mode.
  *
  * \param[out] sink_handle Struct to initialize.
- * \param[in] path to the file to be opened/created.
- *
- * \warning Don't forget to destroy the sink_handle after use.
+ * \param[in] path Path to the file to be opened/created.
  *
  * \return Returns statusbar_log::kStatusbarLogSuccess (i.e. 0) on success, or
  * one of these error/warning codes:
@@ -89,11 +87,13 @@ int CreateSinkStdout(SinkHandle& sink_handle);
  *         - -3: Failed to create sink handle (failed in opening file)
  *         - -4: Failed to create sink handle (unknown error in opening file)
  *
+ * \warning Don't forget to destroy the sink_handle after use.
+ *
  * \see Sink: The sink struct.
  * \see _sink_registry: The registry for sink struct in use.
  * \see _sink_free_handles: The registry for free sink handles.
 */
-int CreateSinkFile(SinkHandle& sink_handle, const std::string& path) {
+int CreateSinkFile(SinkHandle& sink_handle, const std::string& path);
 
 /**
  * \brief Initialize a sink that wraps an existing std::ostream (non-owning).

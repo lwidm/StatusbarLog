@@ -53,7 +53,7 @@ configure_file(
   ${CMAKE_CURRENT_BINARY_DIR}/include/statusbarlog/statusbarlog.h @ONLY)
 
 # Add the library sources
-set(SRC_FILES statusbarlog.cc)
+set(SRC_FILES statusbarlog.cc sink.cc)
 list(TRANSFORM SRC_FILES PREPEND "${CMAKE_CURRENT_SOURCE_DIR}/src/")
 
 # Create the library
