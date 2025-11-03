@@ -32,6 +32,8 @@
 #include <string>
 #include <vector>
 
+#include "statusbarlog/sink.h"
+
 // clang-format on
 
 namespace statusbar_log {
@@ -162,11 +164,17 @@ void FlushOutput();
  * \param[in] filename Source filename or tag (will be printed in log message,
  * should be the origin of the log message).
  * \param[in] fmt printf-style format string.
- * \param[in] ... Additional format arguments.
+ * \param[in] args Additional format arguments.
  *
- * \return statusbar_log::kStatusbarLogSuccess (i.e. 0) on success, non-zero on
- * formatting error. (Currently always statusbar_log::kStatusbarLogSuccess, no
- * error checking)
+ * \return statusbar_log::kStatusbarLogSuccess (i.e. 0) on success, or one of these status codes:
+ *         -  statusbar_log::kStatusbarLogSuccess (i.e. 0): Successfull log
+ *         - -1: Invalid statusbar handle: Valid flag of handle set to false
+ *         - -2: Invalid statusbar handle: Handle index out of bounds in
+ * `statusbar_registry`
+ *         - -3: Invalid statusbar handle: Handle IDs don't match between handle struct
+ *         - -4: Invalid statusbar handle: Handle ID is 0 (i.e. invalid)
+ *         - -5: Invalid statusbar handle: Errorcode not handled
+ * and registry
  *
  * \note Logging temporarily moves status bars down to avoid visual glitches.
  *
@@ -174,10 +182,22 @@ void FlushOutput();
  * \see statusbar_log::kLogLevel: Macro to set the global logging threshold.
  * \see PrintErr: Function for printing error messages -> \todo
  */
-int Log(LogLevel log_level, const std::string& filename, const char* fmt, ...);
+int LogV(LogLevel log_level, const std::string& filename, const char* fmt, va_list args);
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wgnu-zero-variadic-macro-arguments"
+/**
+ * \brief variadic wrapper to LogV
+ *
+ * Logs a message if its level <= statusbar_log::kLogLevel
+ *
+ * \see LogV for more detail
+*/
+inline int Log(LogLevel log_level, const std::string& filename, const char* fmt, ...) {
+  va_list args;
+  va_start(args, fmt);
+  return LogV(log_level, filename, fmt, args);
+  va_end(args);
+}
+
 
 /**
  * \brief Shortcut for logging warnings.
@@ -187,7 +207,8 @@ int Log(LogLevel log_level, const std::string& filename, const char* fmt, ...);
 inline int LogErr(const std::string& filename, const char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
-  return Log(kLogLevelErr, filename, fmt);
+  return LogV(kLogLevelErr, filename, fmt, args);
+  va_end(args);
 }
 
 /**
@@ -198,7 +219,8 @@ inline int LogErr(const std::string& filename, const char* fmt, ...) {
 inline int LogWrn(const std::string& filename, const char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
-  return Log(kLogLevelWrn, filename, fmt);
+  return LogV(kLogLevelWrn, filename, fmt, args);
+  va_end(args);
 }
 
 /**
@@ -209,7 +231,8 @@ inline int LogWrn(const std::string& filename, const char* fmt, ...) {
 inline int LogInf(const std::string& filename, const char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
-  return Log(kLogLevelInf, filename, fmt);
+  return LogV(kLogLevelInf, filename, fmt, args);
+  va_end(args);
 }
 
 /**
@@ -220,7 +243,8 @@ inline int LogInf(const std::string& filename, const char* fmt, ...) {
 inline int LogDbg(const std::string& filename, const char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
-  return Log(kLogLevelDbg, filename, fmt);
+  return LogV(kLogLevelDbg, filename, fmt, args);
+  va_end(args);
 }
 
 /**
@@ -267,7 +291,7 @@ int CreateStatusbarHandle(StatusbarHandle& statusbar_handle,
                           const std::vector<std::string> _postfixes);
 
 /**
- * \brief Destorys a Statusbar
+ * \brief Destorys a Statusbar using its handle and invalidates it.
  *
  * This function takes a StatusbarHandle, clears its content, adds it
  * to the _statusbar_free_handles registry and frees its position in the

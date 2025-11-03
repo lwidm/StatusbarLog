@@ -17,7 +17,7 @@
 #ifndef STATUSBARLOG_SINK_H_
 #define STATUSBARLOG_SINK_H_
 
-#include <ostream>
+#include <mutex>
 #include <string>
 
 namespace statusbar_log {
@@ -27,10 +27,15 @@ constexpr unsigned int kMaxSinkHandles = 20;
 
 /**
  * \enum SinkType
- *
- * TODO : write this
-*/
-typedef enum { kSinkInvalid, kSinkStdout, kSinkFileOwned, kSinkOstreamWrapped} SinkType;
+ * \brief All possible sink types.
+ */
+typedef enum {
+  kSinkInvalid,        ///< Involid sink type
+  kSinkStdout,         ///< Sink linked to stdcout (non owning)
+  kSinkFileOwned,      ///< Sink linked to a file (owning)
+  kSinkOstreamWrapped  /// Sink wrapped around existing arbitrary ostream (non
+                       /// owning)
+} SinkType;
 
 /**
  * \struct SinkHandle
@@ -44,14 +49,16 @@ typedef struct {
                     ///< position in the registry
   unsigned int id;  ///< ID of the sink. Must be unique. Used to verify
                     ///< validity of statusbar
-  bool valid;  ///< weather or not this sink is valid (for e.g. false after
-               ///< destruction)
+  bool valid;       ///< weather or not this sink is valid (for e.g. false after
+                    ///< destruction)
 } SinkHandle;
 
 /**
- * \brief Initialises a sink that wraps std::cout (does not take ownership) and updates its handle.
+ * \brief Initialises a sink that wraps std::cout (does not take ownership) and
+ * updates its handle.
  *
- * This function takes an empty SinkHandle struct and creates an associated sink that wraps std::cout (does not take ownership)
+ * This function takes an empty SinkHandle struct and creates an associated sink
+ * that wraps std::cout (does not take ownership)
  *
  * \param[out] sink_handle Struct to initialize.
  *
@@ -67,13 +74,15 @@ typedef struct {
  * \see Sink: The sink struct.
  * \see _sink_registry: The registry for sink struct in use.
  * \see _sink_free_handles: The registry for free sink handles.
-*/
+ */
 int CreateSinkStdout(SinkHandle& sink_handle);
 
 /**
  * \brief Initialises a sink that opens/owns the given file path (append mode)
  *
- * This function takes an empty SinkHandle struct and creates an associated sink that opens/owns a file path (takes owvernship). It opens the file in append mode.
+ * This function takes an empty SinkHandle struct and creates an associated sink
+ * that opens/owns a file path (takes owvernship). It opens the file in append
+ * mode.
  *
  * \param[out] sink_handle Struct to initialize.
  * \param[in] path Path to the file to be opened/created.
@@ -89,43 +98,135 @@ int CreateSinkStdout(SinkHandle& sink_handle);
  *
  * \warning Don't forget to destroy the sink_handle after use.
  *
+ * \see SinkHandle: The sink handle struct
  * \see Sink: The sink struct.
  * \see _sink_registry: The registry for sink struct in use.
  * \see _sink_free_handles: The registry for free sink handles.
-*/
+ */
 int CreateSinkFile(SinkHandle& sink_handle, const std::string& path);
 
 /**
- * \brief Initialize a sink that wraps an existing std::ostream (non-owning).
-*/
-int SinkInitOstream(SinkHandle& sink, std::ostream& os);
+ * \brief Destorys a Sink using its handle and invalidates it.
+ *
+ * This function takes a Sinkhandle, clears its content, adds it
+ * to the _statusbar_free_handles registry and frees its position in the
+ * _statusbar_registry.
+ *
+ *
+ * \param[in, out] sink_handle Struct to destroy.
+ *
+ * \return Returns statusbar_log::kStatusbarLogSuccess (i.e. 0) on success, or
+ * one of these error/warning codes:
+ *         -  statusbar_log::kStatusbarLogSuccess (i.e. 0): Successfull
+ * destruction
+ *         - -1: Couldn't destroy sink: Invalid handle - Valid flag of handle
+ * set to false
+ *         - -2: Couldn't destroy sink: Invalid handle - Handle index out of
+ * bounds in `statusbar_registry`
+ *         - -3: Couldn't destroy sink: Invalid handle - Handle IDs don't match
+ * between handle struct
+ *         - -4: Couldn't destroy sink: Invalid handle - Handle ID is 0 (i.e.
+ * invalid)
+ *         - -5: Couldn't destroy sink: Invalid handle - Errorcode not handled
+ *         - -6: Failed to handle destruction of owned_file.
+ *
+ * \see SinkHandle: The sink handle struct
+ * \see Sink: The sink struct.
+ * \see _sink_registry: The registry for statusbar struct in use.
+ * \see _sink_free_handles: The registry for free statusbar handles.
+ * \see CreateSinkStdout: Creating new stdout sink.
+ * \see CreateSinkFile: Creating new file sink.
+ */
+int DestroySinkHandle(SinkHandle& sink_handle);
 
 /**
  * \brief Write len bytes (returns number of bytes written or -1 on error).
-*/
-ssize_t SinkWrite(SinkHandle &s, const char *buf, std::size_t len);
+ */
+ssize_t SinkWrite(const SinkHandle& sink_handle, const char* buf,
+                  std::size_t len);
 
 /**
- * Convenience to write a NUL-terminated string (returns 0 on success, -1 on error).
-*/
-ssize_t SinkWriteStr(SinkHandle &s, const std::string& str);
+ * Convenience to write a NUL-terminated string (returns 0 on success, -1 on
+ * error).
+ */
+ssize_t SinkWriteStr(const SinkHandle& sink_handle, const std::string& str);
 
 /**
- * Flush the underlying stream (0 on success, -1 on error).
+ * \brief Flush a sink using its handle
+ *
+ * Function tries to flush a sink using its handle. Returns kStatusbarLogSuccess on success,
+ * otherwise a negative integer
+ *
+ *\returns Returns statusbar_log::kStatusbarLogSuccess (i.e. 0) on success, or
+ * one of these error/warnings codes:
+ *         - statusbar_log::kStatusbarLogSuccess (i.e. 0): Successfully flushed
+ * sink.
+ *         - -1: Couldn't flush sink: Invalid handle (Valid flag of handle
+ * set to false)
+ *         - -2: Couldn't flush sink: Invalid handle (Handle index out of
+ * bounds in `statusbar_registry`)
+ *         - -3: Couldn't flush sink: Invalid handle (Handle IDs don't match
+ * between handle struct)
+ *         - -4: Couldn't flush sink: Invalid handle (Handle ID is 0 (i.e.
+ * invalid))
+ *         - -5: Couldn't flush sink: Invalid handle (Errorcode not handled)
+ *         - -6: Failed: Sink ostream not functional.
+ *         - -7: Failed: Sink ostream became not functional after flushing.
 */
-int SinkFlush(SinkHandle &s);
-
-/**
- * Close/free resources associated with sink (safe to call multiple times).
-*/
-void SinkClose(SinkHandle &s);
+int FlushSinkHandle(const SinkHandle& sink_handle);
 
 /**
  * Returns true if the underlying stream is a TTY (best-effort).
-*/
-bool SinkIsTty(SinkHandle &s);
+ */
+bool SinkIsTty(const SinkHandle& sink_handle);
 
-} // namespace sink
-} // namespace statusbar_log
+/**
+ * \brief Get a unique lock of the mutex associated to the sink handle.
+ *
+ * This function is used to retrieve a (unlocked) unique_lock of the mutex of
+ * the sink assocated to the handle.
+ *
+ * \return Returns statusbar_log::kStatusbarLogSuccess (i.e. 0) if the lock
+ * retrieval succeeded, or one of these status codes:
+ *         -  statusbar_log::kStatusbarLogSuccess (i.e. 0): Valid handle
+ *         - -1: Failed: Invalid handle (Valid flag of handle set to false)
+ *         - -2: Failed: Invalid handle (Handle index out of bounds in
+ * `statusbar_registry)`
+ *         - -3: Failed: Invalid handle (Handle IDs don't match between handle
+ * struct)
+ *         - -4: Failed: Invalid handle (Handle ID is 0 (i.e. invalid))
+ *         - -5: Failed: Invalid handle (Errorcode not handled)
+ *
+ * \see SinkHandle: The sink handle struct
+ * \see Sink: The sink struct
+ */
+int GetUniqueLock(const SinkHandle& sink_handle,
+                  std::unique_lock<std::mutex>& lock);
+
+/**
+ * \brief Get the sink type associated to the sink handle.
+ *
+ * This function is used to retrieve a the sink type of the sink associated to
+ * the handle
+ *
+ * \return Returns statusbar_log::kStatusbarLogSuccess (i.e. 0) if the sink type
+ * retrieval succeeded, or one of these status codes:
+ *         -  statusbar_log::kStatusbarLogSuccess (i.e. 0): Valid handle
+ *         - -1: Failed: Invalid handle (Valid flag of handle set to false)
+ *         - -2: Failed: Invalid handle (Handle index out of bounds in
+ * `statusbar_registry)`
+ *         - -3: Failed: Invalid handle (Handle IDs don't match between handle
+ * struct)
+ *         - -4: Failed: Invalid handle (Handle ID is 0 (i.e. invalid))
+ *         - -5: Failed: Invalid handle (Errorcode not handled)
+ *
+ * \see SinkType: All possible sink types
+ * \see SinkHandle: The sink handle struct
+ * \see Sink: The sink struct
+ */
+int GetSinkType(const SinkHandle& sink_handle, SinkType& sink_type);
+
+}  // namespace sink
+}  // namespace statusbar_log
 
 #endif  // !STATUSBARLOG_SINK_H_

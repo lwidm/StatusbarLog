@@ -48,17 +48,24 @@ namespace sink {
 namespace {
 
 /**
+ * \struct Sink
  *
+ * \brief Sinkt struct contains both outputstreams and filestream as well as
+ * identifier to validate associated handles and a mutex to make sure the sink
+ * doesn't suffer from race conditions.
  *
- * TODO : write this
+ * \see SinkType: All possilbe sink types
+ * \see SinkHandle: The handle to the sink
  */
 typedef struct {
   std::mutex mutex;
-  std::ostream* out;
-  std::unique_ptr<std::ofstream> owned_file;
-  SinkType type;
-  int fd;
-  unsigned int id;
+  std::ostream* out;  ///< actual output stream used for printing
+  std::unique_ptr<std::ofstream>
+      owned_file;  ///< Some sinks need to own a file (nullptr otherwise)
+  SinkType type;   ///< The sinks type
+  int fd;  ///< File descriptor, used for differenciating between cout and cerr
+           ///< (-1 if not applicable)
+  unsigned int id;  ///< id of the struct, used for validating handles
 } Sink;
 
 std::vector<std::unique_ptr<Sink>> _sink_registry = {};
@@ -203,6 +210,29 @@ int _ValidateSinkCreation(SinkHandle& sink_handle) {
   }
 
   return kStatusbarLogSuccess;
+}
+
+/**
+* \brief Flush the sink
+*
+* Function tries to flush a sink. Returns kStatusbarLogSuccess on success,
+* otherwise a negative integer
+*
+*\returns Returns statusbar_log::kStatusbarLogSuccess (i.e. 0) on success, or
+* one of these error/warnings codes:
+*         - statusbar_log::kStatusbarLogSuccess (i.e. 0): Successfully flushed
+* sink.
+*         - -1: Failed: Sink ostream not functional.
+*         - -2: Failed: Sink ostream became not functional after flushing.
+*/
+int FlushSink(std::unique_ptr<Sink>& sink) {
+  std::lock_guard<std::mutex> lk(sink->mutex);
+  if (sink->fd >= 0) {
+    return 0;
+  }
+  if (!sink->out->good()) return -1;
+  sink->out->flush();
+  return sink->out->good() ? 0 : -2;
 }
 
 }  // namespace
@@ -394,29 +424,47 @@ ssize_t SinkWrite(Sink& sink, const char* buf, std::size_t len) {
   return static_cast<ssize_t>(written);
 }
 
+int DestroySinkHandle(SinkHandle& sink_handle) {
+  int err = _IsValidHandleVerbose(sink_handle);
+  if (err != kStatusbarLogSuccess) {
+    LogErr(kFilename, "Failed to destory statusbar_handle!");
+    return err;
+  }
+
+  std::unique_lock<std::mutex> sink_lock;
+  GetUniqueLock(sink_handle, sink_lock);
+  std::unique_lock<std::mutex> registry_lock(_sink_registry_mutex,
+                                             std::defer_lock);
+  std::lock(sink_lock, registry_lock);
+
+  std::unique_ptr<Sink> target = std::move(_sink_registry[sink_handle.idx]);
+
+  FlushSink(target);
+
+  target->out = nullptr;
+  if (target->owned_file) {
+    target->owned_file->close();
+    if (!target->owned_file->good()) {
+      // TODO: Error message (not sure if it will work here)
+      return -6;
+    }
+    target->owned_file.reset();
+  }
+  target->type = kSinkInvalid;
+  target->fd = -1;
+  target->id = 0;
+
+  _sink_registry[sink_handle.idx] = std::move(target);
+
+  sink_handle.valid = false;
+  sink_handle.id = 0;
+  _sink_free_handles.push_back(sink_handle);
+
+  return kStatusbarLogSuccess;
+}
+
 ssize_t SinkWriteStr(Sink& sink, const std::string& str) {
   return SinkWrite(sink, str.c_str(), str.size());
-}
-
-int SinkFlush(Sink& s) {
-  std::lock_guard<std::mutex> lk(s.mutex);
-  if (s.fd >= 0) {
-    return 0;
-  }
-  if (!s.out->good()) return -1;
-  s.out->flush();
-  return s.out->good() ? 0 : -2;
-}
-
-void SinkClose(Sink& sink) {
-  std::lock_guard<std::mutex> lk(sink.mutex);
-  if (sink.owned_file) {
-    sink.owned_file->flush();
-    sink.owned_file.reset();  // closes file
-  }
-  sink.out = nullptr;
-  sink.fd = -1;
-  sink.type = kSinkInvalid;
 }
 
 bool SinkIsTty(Sink& sink) {
@@ -426,6 +474,34 @@ bool SinkIsTty(Sink& sink) {
   if (sink.out == &std::cout) return ::isatty(fileno(stdout));
   if (sink.out == &std::cerr) return ::isatty(fileno(stderr));
   return false;
+}
+
+int GetUniqueLock(const SinkHandle& sink_handle,
+                  std::unique_lock<std::mutex>& lock) {
+  int err = _IsValidHandleVerbose(sink_handle);
+  if (err != kStatusbarLogSuccess) return err;
+  std::lock_guard<std::mutex> lx(_sink_registry_mutex);
+  lock = std::unique_lock<std::mutex>(_sink_registry[sink_handle.idx]->mutex,
+                                      std::defer_lock);
+  return 0;
+}
+
+int GetSinkType(const SinkHandle& sink_handle, SinkType& sink_type) {
+  int err = _IsValidHandleVerbose(sink_handle);
+  if (err != kStatusbarLogSuccess) return err;
+  std::lock_guard<std::mutex> lx(_sink_registry_mutex);
+  sink_type = _sink_registry[sink_handle.idx]->type;
+  return 0;
+}
+
+int FlushSinkHandle(const SinkHandle& sink_handle) {
+  int err = _IsValidHandleVerbose(sink_handle);
+  if (err != kStatusbarLogSuccess) return err;
+  err = FlushSink(_sink_registry[sink_handle.idx]);
+  if (err != kStatusbarLogSuccess) {
+    return err+5;
+  }
+  return kStatusbarLogSuccess;
 }
 
 }  // namespace sink
