@@ -1,21 +1,33 @@
 [
 {
   "directory": "/home/lukas/Documents/statusbarlog/build",
-  "command": "/usr/bin/clang++  -I/home/lukas/Documents/statusbarlog/build/include -I/home/lukas/Documents/statusbarlog/include -O3 -DNDEBUG -std=gnu++20 -std=c++20 -O3 -ffast-math -o CMakeFiles/statusbarlog.dir/src/statusbarlog.cpp.o -c /home/lukas/Documents/statusbarlog/src/statusbarlog.cpp",
-  "file": "/home/lukas/Documents/statusbarlog/src/statusbarlog.cpp",
-  "output": "CMakeFiles/statusbarlog.dir/src/statusbarlog.cpp.o"
+  "command": "/usr/bin/clang++  -I/home/lukas/Documents/statusbarlog/build/include -I/home/lukas/Documents/statusbarlog/include -O3 -DNDEBUG -std=gnu++20 -std=c++20 -O3 -ffast-math -o CMakeFiles/statusbarlog.dir/src/statusbarlog.cc.o -c /home/lukas/Documents/statusbarlog/src/statusbarlog.cc",
+  "file": "/home/lukas/Documents/statusbarlog/src/statusbarlog.cc",
+  "output": "CMakeFiles/statusbarlog.dir/src/statusbarlog.cc.o"
+},
+{
+  "directory": "/home/lukas/Documents/statusbarlog/build",
+  "command": "/usr/bin/clang++  -I/home/lukas/Documents/statusbarlog/build/include -I/home/lukas/Documents/statusbarlog/include -O3 -DNDEBUG -std=gnu++20 -std=c++20 -O3 -ffast-math -o CMakeFiles/statusbarlog.dir/src/sink.cc.o -c /home/lukas/Documents/statusbarlog/src/sink.cc",
+  "file": "/home/lukas/Documents/statusbarlog/src/sink.cc",
+  "output": "CMakeFiles/statusbarlog.dir/src/sink.cc.o"
 },
 {
   "directory": "/home/lukas/Documents/statusbarlog/build/tests",
-  "command": "/usr/bin/clang++  -I/home/lukas/Documents/statusbarlog/build/include -I/home/lukas/Documents/statusbarlog/include -isystem /home/lukas/Documents/statusbarlog/build/_deps/googletest-src/googletest/include -isystem /home/lukas/Documents/statusbarlog/build/_deps/googletest-src/googletest -O3 -DNDEBUG -std=gnu++20 -std=c++20 -o CMakeFiles/statusbarlog_test.dir/src/statusbarlog_test.cpp.o -c /home/lukas/Documents/statusbarlog/tests/src/statusbarlog_test.cpp",
-  "file": "/home/lukas/Documents/statusbarlog/tests/src/statusbarlog_test.cpp",
-  "output": "tests/CMakeFiles/statusbarlog_test.dir/src/statusbarlog_test.cpp.o"
+  "command": "/usr/bin/clang++  -I/home/lukas/Documents/statusbarlog/tests/../include -I/home/lukas/Documents/statusbarlog/build/tests/../include -I/home/lukas/Documents/statusbarlog/tests/include -I/home/lukas/Documents/statusbarlog/build/include -I/home/lukas/Documents/statusbarlog/include -isystem /home/lukas/Documents/statusbarlog/build/_deps/googletest-src/googletest/include -isystem /home/lukas/Documents/statusbarlog/build/_deps/googletest-src/googletest -O3 -DNDEBUG -std=gnu++20 -std=c++20 -o CMakeFiles/statusbarlog_test.dir/src/statusbarlog_test.cc.o -c /home/lukas/Documents/statusbarlog/tests/src/statusbarlog_test.cc",
+  "file": "/home/lukas/Documents/statusbarlog/tests/src/statusbarlog_test.cc",
+  "output": "tests/CMakeFiles/statusbarlog_test.dir/src/statusbarlog_test.cc.o"
 },
 {
   "directory": "/home/lukas/Documents/statusbarlog/build/tests",
-  "command": "/usr/bin/clang++  -I/home/lukas/Documents/statusbarlog/build/include -I/home/lukas/Documents/statusbarlog/include -O3 -DNDEBUG -std=gnu++20 -o CMakeFiles/statusbarlog_main.dir/src/statusbarlog_main.cpp.o -c /home/lukas/Documents/statusbarlog/tests/src/statusbarlog_main.cpp",
-  "file": "/home/lukas/Documents/statusbarlog/tests/src/statusbarlog_main.cpp",
-  "output": "tests/CMakeFiles/statusbarlog_main.dir/src/statusbarlog_main.cpp.o"
+  "command": "/usr/bin/clang++  -I/home/lukas/Documents/statusbarlog/tests/../include -I/home/lukas/Documents/statusbarlog/build/tests/../include -I/home/lukas/Documents/statusbarlog/tests/include -I/home/lukas/Documents/statusbarlog/build/include -I/home/lukas/Documents/statusbarlog/include -isystem /home/lukas/Documents/statusbarlog/build/_deps/googletest-src/googletest/include -isystem /home/lukas/Documents/statusbarlog/build/_deps/googletest-src/googletest -O3 -DNDEBUG -std=gnu++20 -std=c++20 -o CMakeFiles/statusbarlog_test.dir/src/statusbarlog_test_helpers.cc.o -c /home/lukas/Documents/statusbarlog/tests/src/statusbarlog_test_helpers.cc",
+  "file": "/home/lukas/Documents/statusbarlog/tests/src/statusbarlog_test_helpers.cc",
+  "output": "tests/CMakeFiles/statusbarlog_test.dir/src/statusbarlog_test_helpers.cc.o"
+},
+{
+  "directory": "/home/lukas/Documents/statusbarlog/build/tests",
+  "command": "/usr/bin/clang++  -I/home/lukas/Documents/statusbarlog/tests/../include -I/home/lukas/Documents/statusbarlog/build/tests/../include -I/home/lukas/Documents/statusbarlog/build/include -I/home/lukas/Documents/statusbarlog/include -O3 -DNDEBUG -std=gnu++20 -o CMakeFiles/statusbarlog_main.dir/src/statusbarlog_main.cc.o -c /home/lukas/Documents/statusbarlog/tests/src/statusbarlog_main.cc",
+  "file": "/home/lukas/Documents/statusbarlog/tests/src/statusbarlog_main.cc",
+  "output": "tests/CMakeFiles/statusbarlog_main.dir/src/statusbarlog_main.cc.o"
 },
 {
   "directory": "/home/lukas/Documents/statusbarlog/build/_deps/googletest-build/googlemock",

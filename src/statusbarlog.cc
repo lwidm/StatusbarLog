@@ -431,7 +431,7 @@ void ClearCurrentLine() {
 }
 
 int LogV(const LogLevel log_level, const std::string& filename, const char* fmt,
-        va_list args) {
+         va_list args) {
   if (log_level > kLogLevel) return kStatusbarLogSuccess;
   std::unique_lock<std::mutex> console_lock(_console_mutex, std::defer_lock);
   // std::unique_lock<std::mutex> write_lock;
@@ -498,12 +498,62 @@ int LogV(const LogLevel log_level, const std::string& filename, const char* fmt,
     for (std::size_t i = 0; i < _statusbar_registry.size(); ++i) {
       for (std::size_t j = 0; j < _statusbar_registry[i].positions.size();
            ++j) {
-        _DrawStatusbarComponent(_statusbar_registry[i].percentages[j],
-                                _statusbar_registry[i].bar_sizes[j],
-                                _statusbar_registry[i].prefixes[j],
-                                _statusbar_registry[i].postfixes[j],
-                                _statusbar_registry[i].spin_idxs[j],
-                                _statusbar_registry[i].positions[j]);
+        std::cout << "Debug 4, i:" << i << ", j:" << j << std::endl;
+        int bar_err_code =
+            _DrawStatusbarComponent(_statusbar_registry[i].percentages[j],
+                                    _statusbar_registry[i].bar_sizes[j],
+                                    _statusbar_registry[i].prefixes[j],
+                                    _statusbar_registry[i].postfixes[j],
+                                    _statusbar_registry[i].spin_idxs[j],
+                                    _statusbar_registry[i].positions[j]);
+        if ((bar_err_code != kStatusbarLogSuccess) &&
+            !_statusbar_registry[i].error_reported) {
+          std::string why;
+          bool is_critical_error = false;
+          switch (bar_err_code) {
+            case -1:
+              is_critical_error = true;
+              why = "Terminal width detection failed (Windows)";
+              break;
+            case -2:
+              is_critical_error = true;
+              why = "Terminal width detection failed (Linux)";
+              break;
+            case -3:
+              is_critical_error = false;
+              why = "Truncantion was needed (bar exeeds terminal width)";
+              break;
+            case -4:
+              is_critical_error = true;
+              why =
+                  "Both terminal width detection failed (Window) AND "
+                  "truncation";
+              break;
+            case -5:
+              is_critical_error = true;
+              why =
+                  "Both terminal width detection failed (Linux) AND truncation";
+              break;
+            case -6:
+              is_critical_error = true;
+              why = "Invalid percentage given";
+              break;
+            default:
+              is_critical_error = true;
+              why = "Unknown _DrawStatusbarComponent error!";
+              break;
+          }
+          if (is_critical_error) {
+            _statusbar_registry[i].error_reported = true;
+            console_lock.unlock();
+            registry_lock.unlock();
+            printf(
+                "ERROR [statusbarlog.cpp]: LogV(...) failed updating "
+                "statusbar: %s on statusbar with ID %zu at bar idx %zu",
+                why.c_str(), i, j);
+            return bar_err_code - 5;
+          }
+        }
       }
     }
   }
@@ -734,6 +784,8 @@ int UpdateStatusbar(StatusbarHandle& statusbar_handle, const std::size_t idx,
             "needed";
         break;
     }
+    console_lock.unlock();
+    registry_lock.unlock();
     LogErr(kFilename, "%s on statusbar with ID %u at bar idx %zu!", why,
            statusbar.id, idx);
   }

@@ -22,12 +22,14 @@ endif()
 FetchContent_MakeAvailable(googletest)
 
 add_executable(${PROJECT_NAME}_test
-               ${CMAKE_CURRENT_SOURCE_DIR}/src/statusbarlog_test.cpp)
+               ${CMAKE_CURRENT_SOURCE_DIR}/src/statusbarlog_test.cc
+               ${CMAKE_CURRENT_SOURCE_DIR}/src/statusbarlog_test_helpers.cc)
 
 target_include_directories(
   ${PROJECT_NAME}_test
   PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>
-          $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/../include>)
+          $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/../include>
+          $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 
 target_compile_features(${PROJECT_NAME}_test PUBLIC cxx_std_20)
 target_compile_options(
@@ -46,7 +48,7 @@ gtest_discover_tests(${PROJECT_NAME}_test)
 
 if(STATUSBARLOG_BUILD_TEST_MAIN)
   add_executable(${PROJECT_NAME}_main
-                 ${CMAKE_CURRENT_SOURCE_DIR}/src/statusbarlog_main.cpp)
+                 ${CMAKE_CURRENT_SOURCE_DIR}/src/statusbarlog_main.cc)
 
   target_include_directories(
     ${PROJECT_NAME}_main
