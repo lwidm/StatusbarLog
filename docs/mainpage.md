@@ -15,7 +15,7 @@ Features:
 
 @section usage_example Usage Example
 
-Example code snippet (from `docs/example/main.cpp`):
+Example code snippet (from `docs/example/main.cc`):
 
 @include docs/example/main.cpp
 

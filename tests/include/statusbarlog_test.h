@@ -25,14 +25,17 @@
 
 #include "statusbarlog/statusbarlog.h"
 
-static int _saved_stdout_fd = -1;
-static bool _is_capturing = false;
-static std::string test_output_dir = "test_output";
 
 namespace statusbar_log {
 namespace test {
 
-bool SetupTestOutputDirectory();
+inline int _saved_stdout_fd = -1;
+inline bool _is_capturing = false;
+constexpr std::string test_output_dir = "test_output";
+constexpr bool kSeparateLogFiles = false;
+constexpr std::string global_log_filename = "test_log.txt";
+
+void SetupTestOutputDirectory();
 
 std::string GenerateTestLogFilename(const std::string& test_suite,
                                     const std::string& test_name);
