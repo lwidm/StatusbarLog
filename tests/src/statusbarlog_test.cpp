@@ -18,6 +18,9 @@
 
 #include <unistd.h>
 #include <fcntl.h>
+#include <sys/stat.h>
+#include <algorithm>
+#include <filesystem>
 
 #include <gtest/gtest.h>
 
@@ -25,9 +28,8 @@
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
-#include <fstream>
-#include <stdexcept>
 #include <vector>
+#include <string>
 
 #include "statusbarlog/statusbarlog.h"
 
@@ -35,17 +37,31 @@
 
 static int _saved_stdout_fd = -1;
 static bool _is_capturing = false;
-static std::string log_filename = "test_log.txt";
+static std::string test_output_dir = "test_output";
 
-int CaptureStdoutToFile() {
+bool SetupTestOutputDirectory() {
+  std::filesystem::remove_all(test_output_dir);
+  return std::filesystem::create_directory(test_output_dir);
+}
+
+std::string GenerateTestLogFilename(const std::string& test_suite,
+                                    const std::string& test_name) {
+  std::string safe_suite = test_suite;
+  std::string safe_name = test_name;
+  std::replace(safe_suite.begin(), safe_suite.end(), '/', '_');
+  std::replace(safe_name.begin(), safe_name.end(), '/', '_');
+  return test_output_dir + "/" + safe_suite + "_" + safe_name + ".log";
+}
+
+int CaptureStdoutToFile(const std::string& filename) {
   if (_is_capturing) {
     std::cerr << "CaptureStdoutToFile - Error: Already capturing stdout!\n";
     return -1;
   }
 
-  int fd = open(log_filename.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
+  int fd = open(filename.c_str(), O_CREAT | O_WRONLY, 0644);
   if (fd == -1) {
-    std::cerr << "CaptureStdoutToFile - Error: open('" << log_filename
+    std::cerr << "CaptureStdoutToFile - Error: open('" << filename
               << "') failed: " << std::strerror(errno) << "\n";
     return -2;
   }
@@ -115,8 +131,9 @@ int RedirectCreateStatusbarHandle(
     const std::vector<unsigned int> _positions,
     const std::vector<unsigned int> _bar_sizes,
     const std::vector<std::string> _prefixes,
-    const std::vector<std::string> _postfixes) {
-  CaptureStdoutToFile();
+    const std::vector<std::string> _postfixes,
+    const std::string& log_filename) {
+  CaptureStdoutToFile(log_filename);
   int err_code = statusbar_log::CreateStatusbarHandle(
       statusbar_handle, _positions, _bar_sizes, _prefixes, _postfixes);
   RestoreStdout();
@@ -124,26 +141,42 @@ int RedirectCreateStatusbarHandle(
 }
 
 int RedirectDestroyStatusbarHandle(
-    statusbar_log::StatusbarHandle& statusbar_handle) {
-  CaptureStdoutToFile();
+    statusbar_log::StatusbarHandle& statusbar_handle,
+    const std::string& log_filename) {
+  CaptureStdoutToFile(log_filename);
   int err_code = statusbar_log::DestroyStatusbarHandle(statusbar_handle);
   RestoreStdout();
   return err_code;
 }
 
 int RedirectUpdateStatusbar(statusbar_log::StatusbarHandle& statusbar_handle,
-                            const std::size_t idx, const double percent) {
-  // CaptureStdoutToFile();
+                            const std::size_t idx, const double percent,
+                            const std::string& log_filename) {
+  // CaptureStdoutToFile(log_filename);
   int err_code = statusbar_log::UpdateStatusbar(statusbar_handle, idx, percent);
   // RestoreStdout();
   return err_code;
 }
 
 // ==================================================
+// Base Test Fixture with Auto Log Filename Generation
+// ==================================================
+
+class StatusbarTestBase : public ::testing::Test {
+ protected:
+  std::string GetTestLogFilename() {
+    const auto* test_info =
+        ::testing::UnitTest::GetInstance()->current_test_info();
+    return GenerateTestLogFilename(test_info->test_suite_name(),
+                                   test_info->name());
+  }
+};
+
+// ==================================================
 // HandleManagementTest
 // ==================================================
 
-class HandleManagementTest : public ::testing::Test {
+class HandleManagementTest : public StatusbarTestBase {
  protected:
   void SetUp() override {}
   void TearDown() override {}
@@ -156,8 +189,9 @@ TEST_F(HandleManagementTest, CreateSingleBarHandle) {
   std::vector<std::string> prefixes = {"Processing"};
   std::vector<std::string> postfixes = {"items"};
 
-  int err_code = RedirectCreateStatusbarHandle(handle, positions, bar_sizes,
-                                               prefixes, postfixes);
+  const std::string log_filename = GetTestLogFilename();
+  int err_code = RedirectCreateStatusbarHandle(
+      handle, positions, bar_sizes, prefixes, postfixes, log_filename);
   ASSERT_EQ(err_code, statusbar_log::kStatusbarLogSuccess)
       << "CreateStatusbarHandle should return "
          "statusbar_log::kStatusbarLogSuccess";
@@ -168,11 +202,11 @@ TEST_F(HandleManagementTest, CreateSingleBarHandle) {
   EXPECT_LT(handle.idx, statusbar_log::kMaxStatusbarHandles)
       << "Handle index should be less than statusbar_log::kMaxStatusbarHandles";
 
-  err_code = RedirectUpdateStatusbar(handle, 0, 50.0);
+  err_code = RedirectUpdateStatusbar(handle, 0, 50.0, log_filename);
   EXPECT_EQ(err_code, statusbar_log::kStatusbarLogSuccess)
       << "Should be able to update the status bar with valid handle";
 
-  err_code = RedirectDestroyStatusbarHandle(handle);
+  err_code = RedirectDestroyStatusbarHandle(handle, log_filename);
   EXPECT_EQ(err_code, statusbar_log::kStatusbarLogSuccess)
       << "Should be able to destroy the handle cleanly";
   EXPECT_FALSE(handle.valid)
@@ -186,17 +220,18 @@ TEST_F(HandleManagementTest, CreateMultiBarHandle) {
   std::vector<std::string> prefixes = {"first", "second"};
   std::vector<std::string> postfixes = {"20 long", "10 long"};
 
-  int err_code = RedirectCreateStatusbarHandle(handle, positions, bar_sizes,
-                                               prefixes, postfixes);
+  const std::string log_filename = GetTestLogFilename();
+  int err_code = RedirectCreateStatusbarHandle(
+      handle, positions, bar_sizes, prefixes, postfixes, log_filename);
 
   EXPECT_NE(handle.id, 0) << "Handle should have a non-zero ID assigned";
   EXPECT_LT(handle.id, SIZE_MAX) << "Handle index should be a valid value";
   EXPECT_LT(handle.idx, statusbar_log::kMaxStatusbarHandles)
       << "Handle index should be less than statusbar_log::kMaxStatusbarHandles";
-  err_code = RedirectUpdateStatusbar(handle, 0, 50.0);
+  err_code = RedirectUpdateStatusbar(handle, 0, 50.0, log_filename);
   EXPECT_EQ(err_code, statusbar_log::kStatusbarLogSuccess)
       << "Should be able to update the status bar with valid handle";
-  err_code = RedirectDestroyStatusbarHandle(handle);
+  err_code = RedirectDestroyStatusbarHandle(handle, log_filename);
   EXPECT_EQ(err_code, statusbar_log::kStatusbarLogSuccess)
       << "Should be able to destroy the handle cleanly";
   EXPECT_FALSE(handle.valid)
@@ -213,8 +248,9 @@ TEST_F(HandleManagementTest, CreateHandle_InvalidInputSizes) {
     std::vector<std::string> prefixes = {"Processing"};
     std::vector<std::string> postfixes = {"items"};
 
-    int err_code = RedirectCreateStatusbarHandle(handle, positions, bar_sizes,
-                                                 prefixes, postfixes);
+    const std::string log_filename = GetTestLogFilename();
+    int err_code = RedirectCreateStatusbarHandle(
+        handle, positions, bar_sizes, prefixes, postfixes, log_filename);
 
     EXPECT_NE(err_code, statusbar_log::kStatusbarLogSuccess)
         << "Should fail when positions vector (size " << positions.size()
@@ -232,8 +268,9 @@ TEST_F(HandleManagementTest, CreateHandle_InvalidInputSizes) {
     std::vector<std::string> prefixes = {"Processing"};
     std::vector<std::string> postfixes = {"items"};
 
-    int err_code = RedirectCreateStatusbarHandle(handle, positions, bar_sizes,
-                                                 prefixes, postfixes);
+    const std::string log_filename = GetTestLogFilename();
+    int err_code = RedirectCreateStatusbarHandle(
+        handle, positions, bar_sizes, prefixes, postfixes, log_filename);
 
     EXPECT_NE(err_code, statusbar_log::kStatusbarLogSuccess)
         << "Should fail when bar_sizes vector (size " << bar_sizes.size()
@@ -251,8 +288,9 @@ TEST_F(HandleManagementTest, CreateHandle_InvalidInputSizes) {
     std::vector<std::string> prefixes = {"Processing", "more"};
     std::vector<std::string> postfixes = {"items"};
 
-    int err_code = RedirectCreateStatusbarHandle(handle, positions, bar_sizes,
-                                                 prefixes, postfixes);
+    const std::string log_filename = GetTestLogFilename();
+    int err_code = RedirectCreateStatusbarHandle(
+        handle, positions, bar_sizes, prefixes, postfixes, log_filename);
 
     EXPECT_NE(err_code, statusbar_log::kStatusbarLogSuccess)
         << "Should fail when prefixes vector (size " << prefixes.size()
@@ -270,8 +308,9 @@ TEST_F(HandleManagementTest, CreateHandle_InvalidInputSizes) {
     std::vector<std::string> prefixes = {"Processing"};
     std::vector<std::string> postfixes = {"items", "more"};
 
-    int err_code = RedirectCreateStatusbarHandle(handle, positions, bar_sizes,
-                                                 prefixes, postfixes);
+    const std::string log_filename = GetTestLogFilename();
+    int err_code = RedirectCreateStatusbarHandle(
+        handle, positions, bar_sizes, prefixes, postfixes, log_filename);
 
     EXPECT_NE(err_code, statusbar_log::kStatusbarLogSuccess)
         << "Should fail when postfixes vector (size " << postfixes.size()
@@ -294,8 +333,9 @@ TEST_F(HandleManagementTest, CreateHandle_MaxActiveHandlesLimit) {
     std::vector<std::string> prefixes = {"Test " + std::to_string(i)};
     std::vector<std::string> postfixes = {"item"};
 
-    int err_code = RedirectCreateStatusbarHandle(handle, positions, bar_sizes,
-                                                 prefixes, postfixes);
+    const std::string log_filename = GetTestLogFilename();
+    int err_code = RedirectCreateStatusbarHandle(
+        handle, positions, bar_sizes, prefixes, postfixes, log_filename);
 
     if (err_code == statusbar_log::kStatusbarLogSuccess) {
       // Successfully created - should only happen up to
@@ -326,7 +366,8 @@ TEST_F(HandleManagementTest, CreateHandle_MaxActiveHandlesLimit) {
   // Test that we can still destroy handles and create new ones after cleanup
   if (!handles.empty()) {
     // Destroy one handle
-    int err_code = RedirectDestroyStatusbarHandle(handles[0]);
+    const std::string log_filename = GetTestLogFilename();
+    int err_code = RedirectDestroyStatusbarHandle(handles[0], log_filename);
     EXPECT_EQ(err_code, statusbar_log::kStatusbarLogSuccess);
     handles.erase(handles.begin());
 
@@ -338,7 +379,7 @@ TEST_F(HandleManagementTest, CreateHandle_MaxActiveHandlesLimit) {
     std::vector<std::string> postfixes = {"works"};
 
     err_code = RedirectCreateStatusbarHandle(new_handle, positions, bar_sizes,
-                                             prefixes, postfixes);
+                                             prefixes, postfixes, log_filename);
 
     EXPECT_EQ(err_code, statusbar_log::kStatusbarLogSuccess)
         << "Should be able to create new handle after destroying one";
@@ -347,7 +388,8 @@ TEST_F(HandleManagementTest, CreateHandle_MaxActiveHandlesLimit) {
   }
 
   for (auto& handle : handles) {
-    RedirectDestroyStatusbarHandle(handle);
+    const std::string log_filename = GetTestLogFilename();
+    RedirectDestroyStatusbarHandle(handle, log_filename);
   }
 }
 
@@ -358,14 +400,15 @@ TEST_F(HandleManagementTest, DestroyValidHandle) {
   std::vector<std::string> prefixes = {"Processing"};
   std::vector<std::string> postfixes = {"items"};
 
-  int err_code = RedirectCreateStatusbarHandle(handle, positions, bar_sizes,
-                                               prefixes, postfixes);
+  const std::string log_filename = GetTestLogFilename();
+  int err_code = RedirectCreateStatusbarHandle(
+      handle, positions, bar_sizes, prefixes, postfixes, log_filename);
 
   EXPECT_EQ(err_code, statusbar_log::kStatusbarLogSuccess)
       << "CreateStatusbarHandle should return "
          "statusbar_log::kStatusbarLogSuccess";
 
-  err_code = RedirectDestroyStatusbarHandle(handle);
+  err_code = RedirectDestroyStatusbarHandle(handle, log_filename);
 
   EXPECT_EQ(err_code, statusbar_log::kStatusbarLogSuccess)
       << "Should be able to destroy the handle cleanly";
@@ -380,13 +423,14 @@ TEST_F(HandleManagementTest, DestroyInvalidHandle) {
   std::vector<std::string> prefixes = {"Processing"};
   std::vector<std::string> postfixes = {"items"};
 
-  int err_code = RedirectDestroyStatusbarHandle(handle);
+  const std::string log_filename = GetTestLogFilename();
+  int err_code = RedirectDestroyStatusbarHandle(handle, log_filename);
 
   EXPECT_NE(err_code, statusbar_log::kStatusbarLogSuccess)
       << "Should not be able to destroy a statusbar before it has been created";
 
   err_code = RedirectCreateStatusbarHandle(handle, positions, bar_sizes,
-                                           prefixes, postfixes);
+                                           prefixes, postfixes, log_filename);
   ASSERT_EQ(err_code, statusbar_log::kStatusbarLogSuccess)
       << "CreateStatusbarHandle should return "
          "statusbar_log::kStatusbarLogSuccess";
@@ -394,13 +438,13 @@ TEST_F(HandleManagementTest, DestroyInvalidHandle) {
   std::size_t tmp_idx = handle.idx;
   handle.idx = SIZE_MAX;
 
-  err_code = RedirectDestroyStatusbarHandle(handle);
+  err_code = RedirectDestroyStatusbarHandle(handle, log_filename);
 
   EXPECT_NE(err_code, statusbar_log::kStatusbarLogSuccess)
       << "If indexes don't match, destroying statusbars should not be possible";
 
   handle.idx = tmp_idx;
-  err_code = RedirectDestroyStatusbarHandle(handle);
+  err_code = RedirectDestroyStatusbarHandle(handle, log_filename);
 
   EXPECT_EQ(err_code, statusbar_log::kStatusbarLogSuccess)
       << "Should be able to destroy the handle cleanly";
@@ -415,20 +459,21 @@ TEST_F(HandleManagementTest, DestroyAlreadyDestroyedHandle) {
   std::vector<std::string> prefixes = {"Processing"};
   std::vector<std::string> postfixes = {"items"};
 
-  int err_code = RedirectCreateStatusbarHandle(handle, positions, bar_sizes,
-                                               prefixes, postfixes);
+  const std::string log_filename = GetTestLogFilename();
+  int err_code = RedirectCreateStatusbarHandle(
+      handle, positions, bar_sizes, prefixes, postfixes, log_filename);
   ASSERT_EQ(err_code, statusbar_log::kStatusbarLogSuccess)
       << "CreateStatusbarHandle should return "
          "statusbar_log::kStatusbarLogSuccess";
 
-  err_code = RedirectDestroyStatusbarHandle(handle);
+  err_code = RedirectDestroyStatusbarHandle(handle, log_filename);
 
   ASSERT_EQ(err_code, statusbar_log::kStatusbarLogSuccess)
       << "Should be able to destroy the handle cleanly";
   EXPECT_FALSE(handle.valid)
       << "Handle should be marked as invalid after destruction";
 
-  err_code = RedirectDestroyStatusbarHandle(handle);
+  err_code = RedirectDestroyStatusbarHandle(handle, log_filename);
 
   EXPECT_NE(err_code, statusbar_log::kStatusbarLogSuccess)
       << "Should not be able to destroy already destroyed handle";
@@ -438,8 +483,9 @@ TEST_F(HandleManagementTest, DestroyAlreadyDestroyedHandle) {
 // StatusbarUpdateTest
 // ==================================================
 
-class StatusbarUpdateTest : public ::testing::Test {
+class StatusbarUpdateTest : public StatusbarTestBase {
  protected:
+  std::string log_filename;
   statusbar_log::StatusbarHandle handle;
   std::vector<unsigned int> positions;
   std::vector<unsigned int> bar_sizes;
@@ -451,10 +497,11 @@ class StatusbarUpdateTest : public ::testing::Test {
     this->bar_sizes = {50};
     this->prefixes = {"Processing"};
     this->postfixes = {"items"};
+    this->log_filename = GetTestLogFilename();
 
     int err_code = RedirectCreateStatusbarHandle(
         this->handle, this->positions, this->bar_sizes, this->prefixes,
-        this->postfixes);
+        this->postfixes, this->log_filename);
 
     ASSERT_EQ(err_code, statusbar_log::kStatusbarLogSuccess)
         << "Failed to create statusbar handle in fixture setup";
@@ -465,20 +512,22 @@ class StatusbarUpdateTest : public ::testing::Test {
   void TearDown() override {
     // Only destroy if the handle is still valid
     if (handle.valid) {
-      int err_code = RedirectDestroyStatusbarHandle(handle);
+      int err_code = RedirectDestroyStatusbarHandle(handle, log_filename);
       EXPECT_EQ(err_code, statusbar_log::kStatusbarLogSuccess)
           << "Failed to destroy statusbar handle in fixture teardown";
     }
   }
 
   void UpdateBarAndVerify(size_t bar_index, double percentage) {
-    int err_code = RedirectUpdateStatusbar(this->handle, bar_index, percentage);
+    int err_code = RedirectUpdateStatusbar(this->handle, bar_index, percentage,
+                                           log_filename);
     EXPECT_EQ(err_code, statusbar_log::kStatusbarLogSuccess)
         << "Failed to update bar at index " << bar_index << " with percentage "
         << percentage;
   }
   void updateBarAndVerifyFailure(size_t bar_index, double percentage) {
-    int err_code = RedirectUpdateStatusbar(this->handle, bar_index, percentage);
+    int err_code = RedirectUpdateStatusbar(this->handle, bar_index, percentage,
+                                           log_filename);
     EXPECT_NE(err_code, statusbar_log::kStatusbarLogSuccess)
         << "Should have failed to update bar with index " << bar_index
         << " with percentage " << percentage;
@@ -501,7 +550,7 @@ TEST_F(StatusbarUpdateTest, UpdateBoundaryPercentages) {
 }
 
 TEST_F(StatusbarUpdateTest, UpdateMultipleBarsInHandle) {
-  int err = RedirectDestroyStatusbarHandle(this->handle);
+  int err = RedirectDestroyStatusbarHandle(this->handle, this->log_filename);
   ASSERT_EQ(err, statusbar_log::kStatusbarLogSuccess)
       << "Failed to destroy statusbar handle "
          "in UpdateMultipleBarsInHandle test";
@@ -511,9 +560,9 @@ TEST_F(StatusbarUpdateTest, UpdateMultipleBarsInHandle) {
   this->prefixes = {"second", "first"};
   this->postfixes = {"items", "things"};
 
-  int err_code = RedirectCreateStatusbarHandle(this->handle, this->positions,
-                                               this->bar_sizes, this->prefixes,
-                                               this->postfixes);
+  int err_code = RedirectCreateStatusbarHandle(
+      this->handle, this->positions, this->bar_sizes, this->prefixes,
+      this->postfixes, this->log_filename);
 
   ASSERT_EQ(err_code, statusbar_log::kStatusbarLogSuccess)
       << "Failed to create multiple statusbars in UpdateMultipleBarsInHandle "
@@ -541,20 +590,21 @@ TEST_F(StatusbarUpdateTest, InvalidUpdates) {
   std::vector<std::string> prefixes2 = {"Processing"};
   std::vector<std::string> postfixes2 = {"items"};
 
-  int err_code = RedirectCreateStatusbarHandle(handle2, positions2, bar_sizes2,
-                                               prefixes2, postfixes2);
+  const std::string log_filename2 = GetTestLogFilename();
+  int err_code = RedirectCreateStatusbarHandle(
+      handle2, positions2, bar_sizes2, prefixes2, postfixes2, log_filename2);
   ASSERT_EQ(err_code, statusbar_log::kStatusbarLogSuccess)
       << "CreateStatusbarHandle should return "
          "statusbar_log::kStatusbarLogSuccess";
 
-  err_code = RedirectDestroyStatusbarHandle(handle2);
+  err_code = RedirectDestroyStatusbarHandle(handle2, log_filename2);
 
   ASSERT_EQ(err_code, statusbar_log::kStatusbarLogSuccess)
       << "Should be able to destroy the handle cleanly";
   EXPECT_FALSE(handle2.valid)
       << "Handle should be marked as invalid after destruction";
 
-  err_code = RedirectUpdateStatusbar(handle2, 0, 20);
+  err_code = RedirectUpdateStatusbar(handle2, 0, 20, log_filename2);
 
   EXPECT_NE(err_code, statusbar_log::kStatusbarLogSuccess)
       << "Should not be able to destroy already destroyed handle";
@@ -564,8 +614,9 @@ TEST_F(StatusbarUpdateTest, InvalidUpdates) {
 // StatusbarValidations
 // ==================================================
 
-class StatusbarValidations : public ::testing::Test {
+class StatusbarValidations : public StatusbarTestBase {
  protected:
+  std::string log_filename;
   statusbar_log::StatusbarHandle handle;
   std::vector<unsigned int> positions;
   std::vector<unsigned int> bar_sizes;
@@ -577,10 +628,11 @@ class StatusbarValidations : public ::testing::Test {
     this->bar_sizes = {50};
     this->prefixes = {"Processing"};
     this->postfixes = {"items"};
+    this->log_filename = GetTestLogFilename();
 
     int err_code = RedirectCreateStatusbarHandle(
         this->handle, this->positions, this->bar_sizes, this->prefixes,
-        this->postfixes);
+        this->postfixes, this->log_filename);
 
     ASSERT_EQ(err_code, statusbar_log::kStatusbarLogSuccess)
         << "Failed to create statusbar handle in fixture setup";
@@ -589,59 +641,77 @@ class StatusbarValidations : public ::testing::Test {
   }
 };
 
-TEST(StatusbarValidations, IsValidHandle) {
-  statusbar_log::StatusbarHandle handle;
+TEST_F(StatusbarValidations, IsValidHandle) {
   statusbar_log::StatusbarHandle handle2;
   std::vector<unsigned int> positions = {1};
   std::vector<unsigned int> bar_sizes = {50};
   std::vector<std::string> prefixes = {"Processing"};
   std::vector<std::string> postfixes = {"items"};
 
-  int err_code = RedirectCreateStatusbarHandle(handle, positions, bar_sizes,
-                                               prefixes, postfixes);
-  ASSERT_EQ(err_code, statusbar_log::kStatusbarLogSuccess)
-      << "Failed to create statusbar handle";
-  ASSERT_TRUE(handle.valid) << "Handle should be valid after creation";
-
-  err_code = RedirectCreateStatusbarHandle(handle2, positions, bar_sizes,
-                                           prefixes, postfixes);
+  std::string log_filename2 = GetTestLogFilename();
+  int err_code = RedirectCreateStatusbarHandle(
+      handle2, positions, bar_sizes, prefixes, postfixes, log_filename2);
   ASSERT_EQ(err_code, statusbar_log::kStatusbarLogSuccess)
       << "Failed to create statusbar handle";
   ASSERT_TRUE(handle2.valid) << "Handle should be valid after creation";
 
   handle.valid = false;
-  err_code = RedirectDestroyStatusbarHandle(handle);
+  err_code = RedirectDestroyStatusbarHandle(handle, this->log_filename);
   EXPECT_EQ(err_code, -1);
 
   handle.valid = true;
   int idx_backup = handle.idx;
   handle.idx = SIZE_MAX;
-  err_code = RedirectDestroyStatusbarHandle(handle);
+  err_code = RedirectDestroyStatusbarHandle(handle, this->log_filename);
   EXPECT_EQ(err_code, -2);
 
   handle.idx = 99999;
-  err_code = RedirectDestroyStatusbarHandle(handle);
+  err_code = RedirectDestroyStatusbarHandle(handle, this->log_filename);
   EXPECT_EQ(err_code, -2);
 
   handle.idx = idx_backup + 1;
-  err_code = RedirectDestroyStatusbarHandle(handle);
+  err_code = RedirectDestroyStatusbarHandle(handle, this->log_filename);
   EXPECT_EQ(err_code, -3);
 
   handle.idx = idx_backup;
   int ID_backup = handle.id;
   handle.id = handle2.id;
-  err_code = RedirectDestroyStatusbarHandle(handle);
+  err_code = RedirectDestroyStatusbarHandle(handle, this->log_filename);
   EXPECT_EQ(err_code, -3);
 
   handle.id = ID_backup + 1;
-  err_code = RedirectDestroyStatusbarHandle(handle);
+  err_code = RedirectDestroyStatusbarHandle(handle, this->log_filename);
   EXPECT_EQ(err_code, -3);
 
   // BUG : Cant test err_code -4
 
   handle.id = ID_backup;
-  err_code = RedirectDestroyStatusbarHandle(handle);
+  err_code = RedirectDestroyStatusbarHandle(handle, this->log_filename);
   EXPECT_EQ(err_code, statusbar_log::kStatusbarLogSuccess);
-  err_code = RedirectDestroyStatusbarHandle(handle2);
+  err_code = RedirectDestroyStatusbarHandle(handle2, log_filename2);
   EXPECT_EQ(err_code, statusbar_log::kStatusbarLogSuccess);
+}
+
+// ==================================================
+// Main function with test directory management
+// ==================================================
+
+int main(int argc, char** argv) {
+  // Set up the test output directory
+  if (!SetupTestOutputDirectory()) {
+    std::cerr << "Failed to create test output directory: " << test_output_dir
+              << std::endl;
+    return 1;
+  }
+
+  std::cout << "Test output directory created: " << test_output_dir
+            << std::endl;
+
+  ::testing::InitGoogleTest(&argc, argv);
+
+  int result = RUN_ALL_TESTS();
+
+  std::cout << "Test logs available in: " << test_output_dir << std::endl;
+
+  return result;
 }
