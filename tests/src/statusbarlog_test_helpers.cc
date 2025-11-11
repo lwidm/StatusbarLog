@@ -64,8 +64,9 @@ std::string GenerateTestLogFilename(const std::string& test_suite,
 }
 
 int CaptureStdoutToFile(const std::string& filename) {
-  if (_is_capturing) {
+  if (++_is_capturing > 1) {
     std::cerr << "CaptureStdoutToFile - Error: Already capturing stdout!\n";
+    _is_capturing--;
     return -1;
   }
 
@@ -76,6 +77,7 @@ int CaptureStdoutToFile(const std::string& filename) {
   if (fd == -1) {
     std::cerr << "CaptureStdoutToFile - Error: open('" << filename
               << "') failed: " << std::strerror(errno) << "\n";
+    _is_capturing--;
     return -2;
   }
 
@@ -84,6 +86,7 @@ int CaptureStdoutToFile(const std::string& filename) {
     std::cerr << "CaptureStdoutToFile - Error: dup(STDOUT_FILENO) failed: "
               << std::strerror(errno) << "\n";
     close(fd);
+    _is_capturing--;
     return -2;
   }
 
@@ -93,6 +96,7 @@ int CaptureStdoutToFile(const std::string& filename) {
     close(fd);
     close(_saved_stdout_fd);
     _saved_stdout_fd = -1;
+    _is_capturing--;
     return -4;
   }
 
@@ -100,13 +104,11 @@ int CaptureStdoutToFile(const std::string& filename) {
   std::ios::sync_with_stdio(true);
   std::fflush(stdout);
   std::cout.flush();
-
-  _is_capturing = true;
   return 0;
 }
 
 int RestoreStdout() {
-  if (!_is_capturing) {
+  if (_is_capturing == 0) {
     std::cerr << "RestoreStdout - Error: Not capturing stdout!\n";
     return -1;
   }
@@ -125,13 +127,13 @@ int RestoreStdout() {
               << std::strerror(errno) << "\n";
     close(_saved_stdout_fd);
     _saved_stdout_fd = -1;
-    _is_capturing = false;
+    _is_capturing--;
     return -3;
   }
 
   close(_saved_stdout_fd);
   _saved_stdout_fd = -1;
-  _is_capturing = false;
+  _is_capturing--;
 
   std::fflush(stdout);
   std::cout.flush();

@@ -21,6 +21,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include <atomic>
 #include <cstring>
 
 #include "statusbarlog/statusbarlog.h"
@@ -29,10 +30,11 @@
 namespace statusbar_log {
 namespace test {
 
+static std::atomic<unsigned int> _is_capturing = 0;
+
 constexpr std::string test_output_dir = "test_output";
 constexpr bool kSeparateLogFiles = false;
 constexpr std::string global_log_filename = "test_log.txt";
-static bool _is_capturing = false;
 static int _saved_stdout_fd = -1;
 
 void SetupTestOutputDirectory();
