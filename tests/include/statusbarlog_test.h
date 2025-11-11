@@ -26,7 +26,6 @@
 
 #include "statusbarlog/statusbarlog.h"
 
-
 namespace statusbar_log {
 namespace test {
 
@@ -41,10 +40,6 @@ void SetupTestOutputDirectory();
 
 std::string GenerateTestLogFilename(const std::string& test_suite,
                                     const std::string& test_name);
-
-int CaptureStdoutToFile(const std::string& filename);
-
-int RestoreStdout();
 
 int RedirectCreateStatusbarHandle(
     statusbar_log::StatusbarHandle& statusbar_handle,

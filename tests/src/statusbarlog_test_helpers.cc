@@ -21,6 +21,7 @@
 #include <unistd.h>
 
 #include <algorithm>
+#include <cstdio>
 #include <cstring>
 #include <filesystem>
 #include <iostream>
@@ -63,7 +64,7 @@ std::string GenerateTestLogFilename(const std::string& test_suite,
   return safe_file_name;
 }
 
-int CaptureStdoutToFile(const std::string& filename) {
+int _CaptureStdoutToFile(const std::string& filename) {
   if (++_is_capturing > 1) {
     std::cerr << "CaptureStdoutToFile - Error: Already capturing stdout!\n";
     _is_capturing--;
@@ -87,7 +88,7 @@ int CaptureStdoutToFile(const std::string& filename) {
               << std::strerror(errno) << "\n";
     close(fd);
     _is_capturing--;
-    return -2;
+    return -3;
   }
 
   if (dup2(fd, STDOUT_FILENO) == -1) {
@@ -107,9 +108,9 @@ int CaptureStdoutToFile(const std::string& filename) {
   return 0;
 }
 
-int RestoreStdout() {
+int _RestoreCaptureStdout() {
   if (_is_capturing == 0) {
-    std::cerr << "RestoreStdout - Error: Not capturing stdout!\n";
+    std::cerr << "RestoreCaptureStdout - Error: Not capturing stdout!\n";
     return -1;
   }
 
@@ -117,12 +118,12 @@ int RestoreStdout() {
   std::cout.flush();
 
   if (_saved_stdout_fd == -1) {
-    std::cerr << "RestoreStdout - Error: Saved fd invalid\n";
+    std::cerr << "RestoreCaptureStdout - Error: Saved fd invalid\n";
     return -2;
   }
 
   if (dup2(_saved_stdout_fd, STDOUT_FILENO) == -1) {
-    std::cerr << "RestoreStdout - Error: dup2(_saved_stdout_fd, STDOUT_FILENO) "
+    std::cerr << "RestoreCaptureStdout - Error: dup2(_saved_stdout_fd, STDOUT_FILENO) "
                  "failed: "
               << std::strerror(errno) << "\n";
     close(_saved_stdout_fd);
@@ -149,28 +150,28 @@ int RedirectCreateStatusbarHandle(
     const std::vector<std::string> _prefixes,
     const std::vector<std::string> _postfixes,
     const std::string& log_filename) {
-  CaptureStdoutToFile(log_filename);
+  _CaptureStdoutToFile(log_filename);
   int err_code = statusbar_log::CreateStatusbarHandle(
       statusbar_handle, _positions, _bar_sizes, _prefixes, _postfixes);
-  RestoreStdout();
+  _RestoreCaptureStdout();
   return err_code;
 }
 
 int RedirectDestroyStatusbarHandle(
     statusbar_log::StatusbarHandle& statusbar_handle,
     const std::string& log_filename) {
-  CaptureStdoutToFile(log_filename);
+  _CaptureStdoutToFile(log_filename);
   int err_code = statusbar_log::DestroyStatusbarHandle(statusbar_handle);
-  RestoreStdout();
+  _RestoreCaptureStdout();
   return err_code;
 }
 
 int RedirectUpdateStatusbar(statusbar_log::StatusbarHandle& statusbar_handle,
                             const std::size_t idx, const double percent,
                             const std::string& log_filename) {
-  CaptureStdoutToFile(log_filename);
+  _CaptureStdoutToFile(log_filename);
   int err_code = statusbar_log::UpdateStatusbar(statusbar_handle, idx, percent);
-  RestoreStdout();
+  _RestoreCaptureStdout();
   return err_code;
 }
 
