@@ -631,6 +631,120 @@ TEST_F(LogTest, LogLevelsTest) {
       << "Expected output of LogErr did not match actual output";
 }
 
+TEST_F(LogTest, LogFormatStringTest) {
+  std::string capture_stdout;
+
+  statusbar_log::test::RedirectToStrLog(
+      capture_stdout, statusbar_log::kLogLevelInf, kFilename,
+      "int: %i, unsigned: %u, hex: %#x, oct: %#o, short: %hd, long: %ld, long "
+      "long: %lld",
+      -1, 2u, 255u, 8u, (short)3, -1234567890L, 1234567890123LL);
+
+  EXPECT_STREQ(capture_stdout.c_str(),
+               "INFO [statusbarlog_test.cc]: "
+               "int: -1, unsigned: 2, hex: 0xff, oct: 010, short: 3, "
+               "long: -1234567890, long long: 1234567890123"
+               "\n");
+
+  statusbar_log::test::RedirectToStrLog(
+      capture_stdout, statusbar_log::kLogLevelInf, kFilename,
+      "size_t: %zu, ssize_t: %zd", (size_t)42, (ssize_t)-5);
+
+  EXPECT_STREQ(capture_stdout.c_str(),
+               "INFO [statusbarlog_test.cc]: "
+               "size_t: 42, ssize_t: -5"
+               "\n");
+
+  statusbar_log::test::RedirectToStrLog(
+      capture_stdout, statusbar_log::kLogLevelInf, kFilename,
+      "unsigned (wrap): %u", (unsigned int)(-1));
+
+  EXPECT_STREQ(capture_stdout.c_str(),
+               "INFO [statusbarlog_test.cc]: "
+               "unsigned (wrap): 4294967295"
+               "\n");
+
+  double v = 1234.56789;
+
+  statusbar_log::test::RedirectToStrLog(
+      capture_stdout, statusbar_log::kLogLevelInf, kFilename, "v %%f: %f", v);
+
+  EXPECT_STREQ(capture_stdout.c_str(),
+               "INFO [statusbarlog_test.cc]: "
+               "v %f: 1234.567890"
+               "\n");
+
+  statusbar_log::test::RedirectToStrLog(capture_stdout,
+                                        statusbar_log::kLogLevelInf, kFilename,
+                                        "v %%.2f: %.2f", v);
+
+  EXPECT_STREQ(capture_stdout.c_str(),
+               "INFO [statusbarlog_test.cc]: "
+               "v %.2f: 1234.57"
+               "\n");
+
+  statusbar_log::test::RedirectToStrLog(capture_stdout,
+                                        statusbar_log::kLogLevelInf, kFilename,
+                                        "v %%+09.2f: %+09.2f", v);
+
+  EXPECT_STREQ(capture_stdout.c_str(),
+               "INFO [statusbarlog_test.cc]: "
+               "v %+09.2f: +01234.57"
+               "\n");
+
+  statusbar_log::test::RedirectToStrLog(capture_stdout,
+                                        statusbar_log::kLogLevelInf, kFilename,
+                                        "v %%e: %e, v %%E: %E", v, v);
+
+  EXPECT_STREQ(capture_stdout.c_str(),
+               "INFO [statusbarlog_test.cc]: "
+               "v %e: 1.234568e+03, v %E: 1.234568E+03"
+               "\n");
+
+  long double w = 1.234567890123456789L;
+
+  statusbar_log::test::RedirectToStrLog(capture_stdout,
+                                        statusbar_log::kLogLevelInf, kFilename,
+                                        "long double Lf: %Lf", w);
+
+  EXPECT_STREQ(capture_stdout.c_str(),
+               "INFO [statusbarlog_test.cc]: "
+               "long double Lf: 1.234568"
+               "\n");
+
+  std::string s = "hello";
+  const char* cs = "chars";
+  char c = 'A';
+
+  statusbar_log::test::RedirectToStrLog(
+      capture_stdout, statusbar_log::kLogLevelInf, kFilename,
+      "str: %s, c_str: %s, char: %c", s.c_str(), cs, c);
+
+  EXPECT_STREQ(capture_stdout.c_str(),
+               "INFO [statusbarlog_test.cc]: "
+               "str: hello, c_str: chars, char: A"
+               "\n");
+
+  statusbar_log::test::RedirectToStrLog(
+      capture_stdout, statusbar_log::kLogLevelInf, kFilename,
+      "[%10s] [%-10s] [%.3s]", "hi", "left", "truncate");
+
+  EXPECT_STREQ(capture_stdout.c_str(),
+               "INFO [statusbarlog_test.cc]: "
+               "[        hi] [left      ] [tru]"
+               "\n");
+
+  statusbar_log::test::RedirectToStrLog(capture_stdout,
+                                        statusbar_log::kLogLevelInf, kFilename,
+                                        "int:%i u:%u sz:%zu f:%.2f s:%s c:%c",
+                                        -1, 2u, (size_t)7, 3.14159, "ok", 'Z');
+
+  EXPECT_STREQ(capture_stdout.c_str(),
+               "INFO [statusbarlog_test.cc]: "
+               "int:-1 u:2 sz:7 f:3.14 s:ok c:Z"
+               "\n");
+}
+
 // ==================================================
 // Main function with test directory management
 // ==================================================
