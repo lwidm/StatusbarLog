@@ -40,7 +40,7 @@
 
 // clang-format on
 
-const std::string kFilename = "statusbarlog.cpp";
+const std::string kFilename = "statusbarlog.cc";
 
 namespace statusbar_log {
 namespace sink {

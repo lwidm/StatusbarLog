@@ -17,7 +17,7 @@ Features:
 
 Example code snippet (from `docs/example/main.cc`):
 
-@include docs/example/main.cpp
+@include docs/example/main.cc
 
 @subsection brief Brief explenation
 
@@ -31,7 +31,7 @@ Example code snippet (from `docs/example/main.cc`):
 
 2. **Define filename for every cpp file in which you want to log** 
    ```cpp
-   const std::string kFilename = "StatusbarLog_main.cpp";
+   const std::string kFilename = "StatusbarLog_main.cc";
    ```
 
 3. **Now a simple log message can be done like:**
@@ -201,7 +201,7 @@ add_subdirectory(path/to/statusbarlog)
 2. Adjust the Doxyfile to point to this mainpage:  
    ```
    INPUT = src include docs
-   FILE_PATTERNS = *.h *.hpp *.cpp *.md
+   FILE_PATTERNS = *.h *.hpp *.cc *.cpp *.md
    MAINPAGE = docs/mainpage.md
    EXCLUDE_PATTERNS = README.md
    ```
@@ -235,7 +235,7 @@ I used the compilation database located at `compile_commands.json.in` together w
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// -- statusbarlog/rest/of/path.cpp
+// -- statusbarlog/rest/of/path.cc
 @endcode
 - Use `clang-format` with the provided root-level `.clang-format`. Ideally use
   an editor integration to format on save. For exceptions, wrap the unformatted

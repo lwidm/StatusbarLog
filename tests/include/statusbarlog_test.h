@@ -29,12 +29,13 @@
 namespace statusbar_log {
 namespace test {
 
-static std::atomic<unsigned int> _is_capturing = 0;
+inline std::atomic<unsigned int> _is_capturing = 0;
 
 constexpr std::string test_output_dir = "test_output";
 constexpr bool kSeparateLogFiles = false;
 constexpr std::string global_log_filename = "test_log.txt";
-static int _saved_stdout_fd = -1;
+inline int _saved_stdout_fd = -1;
+inline int _saved_pipe_read_fd = -1;
 
 void SetupTestOutputDirectory();
 
@@ -55,6 +56,16 @@ int RedirectDestroyStatusbarHandle(
 int RedirectUpdateStatusbar(statusbar_log::StatusbarHandle& statusbar_handle,
                             const std::size_t idx, const double percent,
                             const std::string& log_filename);
+
+int RedirectToStrUpdateStatusbar(
+    std::string& capture_stdout,
+    statusbar_log::StatusbarHandle& statusbar_handle, const std::size_t idx,
+    const double percent);
+
+int RedirectToStrLog(std::string& capture_stdout, LogLevel log_level,
+                     const std::string filename, const char* fmt, ...);
+
+std::string StripAnsiEscapeSequences(const std::string&s);
 
 }  // namespace test
 }  // namespace statusbar_log

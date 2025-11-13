@@ -952,7 +952,7 @@ WARN_LOGFILE           =
 # spaces. See also FILE_PATTERNS and EXTENSION_MAPPING
 # Note: If this tag is empty the current directory is searched.
 
-# INPUT                  = src src/statusbarlog.cpp include include/statusbarlog include/statusbarlog/statusbarlog.h.in build/include build/include/statusbarlog build/include/statusbarlog/statusbarlog.h tests/src tests/src/statusbarlog_main.cpp tests/src/statusbarlog_text.cpp docs README.md docs/mainpage.md
+# INPUT                  = src src/statusbarlog.cc include include/statusbarlog include/statusbarlog/statusbarlog.h.in build/include build/include/statusbarlog build/include/statusbarlog/statusbarlog.h tests/src tests/src/statusbarlog_main.cc tests/src/statusbarlog_test.cc docs README.md docs/mainpage.md
 INPUT = src include docs LICENSE
 
 # This tag can be used to specify the character encoding of the source files

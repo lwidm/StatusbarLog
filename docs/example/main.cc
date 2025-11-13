@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright (c) 2025 Lukas Widmer
 
-// -- statusbarlog/test/src/statusbarlog_main.cpp
+// -- statusbarlog/test/src/statusbarlog_main.cc
 
 #include <cstddef>
 #include <iostream>
@@ -10,7 +10,7 @@
 
 #include "statusbarlog/statusbarlog.h"
 
-const std::string kFilename = "main.cpp";
+const std::string kFilename = "main.cc";
 
 int main() {
   std::cout << "Start to be kept <- " << std::flush;

@@ -21,14 +21,18 @@
 #include <unistd.h>
 
 #include <algorithm>
+#include <cstddef>
 #include <cstdio>
 #include <cstring>
 #include <filesystem>
 #include <iostream>
+#include <regex>
 #include <string>
 
 #include "statusbarlog/statusbarlog.h"
 #include "statusbarlog_test.h"
+
+// clang-format on
 
 namespace statusbar_log {
 namespace test {
@@ -36,15 +40,15 @@ namespace test {
 void SetupTestOutputDirectory() {
   if (kSeparateLogFiles) {
     std::filesystem::remove_all(test_output_dir);
-    if (!std::filesystem::create_directory(test_output_dir)){
-    std::cerr << "Failed to create test output directory: " << test_output_dir
-              << std::endl;
+    if (!std::filesystem::create_directory(test_output_dir)) {
+      std::cerr << "Failed to create test output directory: " << test_output_dir
+                << std::endl;
     }
   }
-  if (!std::filesystem::remove_all(global_log_filename)){
+  if (!std::filesystem::remove_all(global_log_filename)) {
     std::cerr << "Failed to create test log file: " << global_log_filename
               << std::endl;
-}
+  }
 }
 
 std::string GenerateTestLogFilename(const std::string& test_suite,
@@ -123,7 +127,8 @@ int _RestoreCaptureStdout() {
   }
 
   if (dup2(_saved_stdout_fd, STDOUT_FILENO) == -1) {
-    std::cerr << "RestoreCaptureStdout - Error: dup2(_saved_stdout_fd, STDOUT_FILENO) "
+    std::cerr << "RestoreCaptureStdout - Error: dup2(_saved_stdout_fd, "
+                 "STDOUT_FILENO) "
                  "failed: "
               << std::strerror(errno) << "\n";
     close(_saved_stdout_fd);
@@ -139,6 +144,123 @@ int _RestoreCaptureStdout() {
   std::fflush(stdout);
   std::cout.flush();
   std::ios::sync_with_stdio(true);
+
+  return 0;
+}
+
+int _CaptureStdoutToPipe() {
+  if (++_is_capturing > 1) {
+    std::cerr << "_CaptureStdoutToString - Error: Already capturing stdout!\n";
+    _is_capturing--;
+    return -1;
+  }
+
+  std::fflush(stdout);
+  std::cout.flush();
+
+  int pipefd[2];
+
+  if (pipe(pipefd) == -1) {
+    std::cerr << "_CaptureStdoutToStringStart - Error: pipe() failed: "
+              << std::strerror(errno) << "\n";
+    _is_capturing--;
+    return -2;
+  }
+
+  _saved_pipe_read_fd = pipefd[0];
+  int write_fd = pipefd[1];
+
+  _saved_stdout_fd = dup(STDOUT_FILENO);
+  if (_saved_stdout_fd == -1) {
+    std::cerr
+        << "_CaptureStdoutToStringStart - Error: dup(STDOUT_FILENO) failed: "
+        << std::strerror(errno) << "\n";
+    close(_saved_pipe_read_fd);
+    _saved_pipe_read_fd = -1;
+    close(write_fd);
+    _is_capturing--;
+    return -3;
+  }
+
+  if (dup2(write_fd, STDOUT_FILENO) == -1) {
+    std::cerr << "CaptureStdoutToFile - Error: dup2(fd, STDOUT_FILENO) failed: "
+              << std::strerror(errno) << "\n";
+    close(_saved_pipe_read_fd);
+    _saved_pipe_read_fd = -1;
+    close(write_fd);
+    close(_saved_stdout_fd);
+    _saved_stdout_fd = -1;
+    _is_capturing--;
+    return -4;
+  }
+
+  close(write_fd);
+  std::ios::sync_with_stdio(true);
+  std::fflush(stdout);
+  std::cout.flush();
+  return 0;
+}
+
+int _RestoreCaptureStdoutToStr(std::string& out) {
+  if (_is_capturing == 0) {
+    std::cerr << "_RestoreCaptureStdoutToStr - Error: Not capturing stdout!\n";
+    return -1;
+  }
+  if (_saved_stdout_fd == -1) {
+    std::cerr
+        << "_RestoreCaptureStdoutToStr - Error: Saved stdout fd invalid \n";
+    return -2;
+  }
+
+  std::fflush(stdout);
+  std::cout.flush();
+
+  if (dup2(_saved_stdout_fd, STDOUT_FILENO) == -1) {
+    std::cerr << "_RestoreCaptureStdoutToStr - Error: dup2(_saved_stdout_fd, "
+                 "STDOUT_FILENO) failed: "
+              << std::strerror(errno) << "\n";
+    return -3;
+  }
+
+  close(_saved_stdout_fd);
+  _saved_stdout_fd = -1;
+
+  if (_saved_pipe_read_fd == -1) {
+    std::cout
+        << "_RestoreCaptureStdoutToStr - Warning: Nothing to read in pipe \n";
+    out.clear();
+    return 1;
+  }
+
+  out.clear();
+  constexpr size_t kBufSize = 4096;
+  char buffer[kBufSize];
+
+  while (true) {
+    ssize_t n = read(_saved_pipe_read_fd, buffer, kBufSize);
+    if (n > 0) {
+      out.append(buffer, static_cast<size_t>(n));
+    } else if (n == 0) {
+      // EOF
+      break;
+    } else {
+      if (errno == EINTR) continue;
+      std::cerr << "_RestoreCaptureStdoutToStr - Error: read() failed: "
+                << std::strerror(errno) << "\n";
+      close(_saved_pipe_read_fd);
+      _saved_pipe_read_fd = -1;
+      return -4;
+    }
+  }
+
+  close(_saved_pipe_read_fd);
+  _saved_pipe_read_fd = -1;
+
+  std::fflush(stdout);
+  std::cout.flush();
+  std::ios::sync_with_stdio();
+
+  _is_capturing--;
 
   return 0;
 }
@@ -173,6 +295,43 @@ int RedirectUpdateStatusbar(statusbar_log::StatusbarHandle& statusbar_handle,
   int err_code = statusbar_log::UpdateStatusbar(statusbar_handle, idx, percent);
   _RestoreCaptureStdout();
   return err_code;
+}
+
+int RedirectToStrUpdateStatusbar(
+    std::string& capture_stdout,
+    statusbar_log::StatusbarHandle& statusbar_handle, const std::size_t idx,
+    const double percent) {
+  _CaptureStdoutToPipe();
+  int err_code = statusbar_log::UpdateStatusbar(statusbar_handle, idx, percent);
+  _RestoreCaptureStdoutToStr(capture_stdout);
+  return err_code;
+}
+
+int RedirectToStrLog(std::string& capture_stdout, LogLevel log_level,
+                     const std::string filename, const char* fmt, ...) {
+  _CaptureStdoutToPipe();
+  va_list args;
+  va_start(args, fmt);
+  int err_code = LogV(log_level, filename, fmt, args);
+  va_end(args);
+  _RestoreCaptureStdoutToStr(capture_stdout);
+  std::string capture_stdout_cleaned = StripAnsiEscapeSequences(capture_stdout);
+  capture_stdout = capture_stdout_cleaned;
+  return err_code;
+}
+
+std::string StripAnsiEscapeSequences(const std::string& s) {
+  std::string esc = "\x1B";
+  std::string pattern = esc + R"(\[[0-?]*[ -/]*[@-~])";
+  std::string cleaned = std::regex_replace(s, std::regex(pattern), "");
+  std::string out;
+  out.reserve(cleaned.size());
+  for (char c : cleaned) {
+    if (c == '\n' || static_cast<unsigned char>(c) >= 32) {
+      out.push_back(c);
+    }
+  }
+  return out;
 }
 
 }  // namespace test

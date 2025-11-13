@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// -- statusbarlog/test/src/statusbarlog_main.cpp
+// -- statusbarlog/test/src/statusbarlog_main.cc
 
 // clang-format off
 
@@ -26,7 +26,7 @@
 
 // clang-format on
 
-const std::string kFilename = "statusbarlog_main.cpp";
+const std::string kFilename = "statusbarlog_main.cc";
 
 void PrintWithCleanup() {
   std::cout << "Start to be kept <- " << std::flush;

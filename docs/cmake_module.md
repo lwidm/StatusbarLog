@@ -38,7 +38,7 @@ set(STATUSBARLOG_LOG_LEVEL kLogLevelInf CACHE STRING "Default StatusbarLog log l
 add_subdirectory(statusbarlog)
 
 # Your executable
-add_executable(${PROJECT_NAME} main.cpp)
+add_executable(${PROJECT_NAME} main.cc)
 target_link_libraries(${PROJECT_NAME} PRIVATE statusbarlog)
 @endcode
 
@@ -55,7 +55,7 @@ cmake --build . --parallel
 #include "statusbarlog/statusbarlog.h"
 
 int main() {
-    statusbarlog::LogInf("main.cpp", "Starting application...");
+    statusbarlog::LogInf("main.cc", "Starting application...");
 }
 @endcode
 

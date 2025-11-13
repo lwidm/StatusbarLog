@@ -191,7 +191,7 @@ I used the compilation database located at `compile_commands.json.in` together w
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// -- statusbarlog/rest/of/path.cpp
+// -- statusbarlog/rest/of/path.cc
 ```
 - Use `clang-format` with the provided root-level `.clang-format`. Ideally use
   an editor integration to format on save. For exceptions, wrap the unformatted
@@ -243,7 +243,7 @@ set(STATUSBARLOG_LOG_LEVEL kLogLevelInf CACHE STRING "Default StatusbarLog log l
 add_subdirectory(statusbarlog)
 
 # Your executable
-add_executable(${PROJECT_NAME} main.cpp)
+add_executable(${PROJECT_NAME} main.cc)
 target_link_libraries(${PROJECT_NAME} PRIVATE statusbarlog)
 @endcode
 
@@ -260,7 +260,7 @@ cmake --build . --parallel
 #include "statusbarlog/statusbarlog.h"
 
 int main() {
-    statusbarlog::LogInf("main.cpp", "Starting application...");
+    statusbarlog::LogInf("main.cc", "Starting application...");
 }
 ```
 

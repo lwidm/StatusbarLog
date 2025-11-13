@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// -- statusbarlog/src/statusbarlog.cpp
+// -- statusbarlog/src/statusbarlog.cc
 
 // clang-format off
 
@@ -46,7 +46,7 @@
 
 // clang-format on
 
-const std::string kFilename = "statusbarlog.cpp";
+const std::string kFilename = "statusbarlog.cc";
 
 namespace statusbar_log {
 
@@ -548,7 +548,7 @@ int LogV(const LogLevel log_level, const std::string& filename, const char* fmt,
             console_lock.unlock();
             registry_lock.unlock();
             printf(
-                "ERROR [statusbarlog.cpp]: LogV(...) failed updating "
+                "ERROR [statusbarlog.cc]: LogV(...) failed updating "
                 "statusbar: %s on statusbar with ID %zu at bar idx %zu",
                 why.c_str(), i, j);
             return bar_err_code - 5;

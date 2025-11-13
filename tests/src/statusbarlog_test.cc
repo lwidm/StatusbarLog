@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// -- statusbarlog/test/src/statusbarlog_test.cpp
+// -- statusbarlog/test/src/statusbarlog_test.cc
 
 // clang-format off
 
@@ -25,6 +25,8 @@
 #include "statusbarlog_test.h"
 
 // clang-format on
+
+const std::string kFilename = "statusbarlog_test.cc";
 
 // ==================================================
 // Base Test Fixture with Auto Log Filename Generation
@@ -581,6 +583,52 @@ TEST_F(StatusbarValidations, IsValidHandle) {
   err_code = statusbar_log::test::RedirectDestroyStatusbarHandle(handle2,
                                                                  log_filename2);
   EXPECT_EQ(err_code, statusbar_log::kStatusbarLogSuccess);
+}
+
+// ==================================================
+// Log validations
+// ==================================================
+
+class LogTest : public StatusbarTestBase {
+ protected:
+  void SetUp() override {
+    ASSERT_EQ(statusbar_log::kLogLevel, statusbar_log::kLogLevelInf)
+        << "Ensure tests are compiled with kLogLevelInf, otherwise some tests "
+           "will fail!";
+  }
+  void TearDown() override {}
+};
+
+TEST_F(LogTest, LogLevelsTest) {
+  std::string capture_stdout;
+
+  statusbar_log::test::RedirectToStrLog(
+      capture_stdout, statusbar_log::kLogLevelDbg, kFilename, "Debug Test");
+
+  EXPECT_STREQ(capture_stdout.c_str(), "")
+      << "Expected output of LogDbg did not match actual output (should be no "
+         "output as log level is below threshhold)";
+
+  statusbar_log::test::RedirectToStrLog(
+      capture_stdout, statusbar_log::kLogLevelInf, kFilename, "Info Test");
+
+  EXPECT_STREQ(capture_stdout.c_str(),
+               "INFO [statusbarlog_test.cc]: Info Test\n")
+      << "Expected output of LogInf did not match actual output";
+
+  statusbar_log::test::RedirectToStrLog(
+      capture_stdout, statusbar_log::kLogLevelWrn, kFilename, "Warn Test");
+
+  EXPECT_STREQ(capture_stdout.c_str(),
+               "WARNING [statusbarlog_test.cc]: Warn Test\n")
+      << "Expected output of LogWrn did not match actual output";
+
+  statusbar_log::test::RedirectToStrLog(
+      capture_stdout, statusbar_log::kLogLevelErr, kFilename, "Error Test");
+
+  EXPECT_STREQ(capture_stdout.c_str(),
+               "ERROR [statusbarlog_test.cc]: Error Test\n")
+      << "Expected output of LogErr did not match actual output";
 }
 
 // ==================================================
