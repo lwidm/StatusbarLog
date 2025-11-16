@@ -745,6 +745,56 @@ TEST_F(LogTest, LogFormatStringTest) {
                "\n");
 }
 
+class ReadStatusbarUpdateTest : public StatusbarTestBase {
+ protected:
+  std::string log_filename_;
+  statusbar_log::StatusbarHandle handle_;
+  std::vector<unsigned int> positions_;
+  std::vector<unsigned int> bar_sizes_;
+  std::vector<std::string> prefixes_;
+  std::vector<std::string> postfixes_;
+
+  void SetUp() override {
+    ASSERT_EQ(statusbar_log::kLogLevel, statusbar_log::kLogLevelInf)
+        << "Ensure tests are compiled with kLogLevelInf, otherwise some tests "
+           "will fail!";
+    this->positions_ = {1};
+    this->bar_sizes_ = {50};
+    this->prefixes_ = {"Processing"};
+    this->postfixes_ = {"items"};
+    this->log_filename_ = GetTestLogFilename();
+
+    int err_code = statusbar_log::test::RedirectCreateStatusbarHandle(
+        this->handle_, this->positions_, this->bar_sizes_, this->prefixes_,
+        this->postfixes_, this->log_filename_);
+
+    ASSERT_EQ(err_code, statusbar_log::kStatusbarLogSuccess)
+        << "Failed to create statusbar handle in fixture setup";
+    ASSERT_TRUE(handle_.valid)
+        << "Handle should be valid after creation in fixture setup";
+  }
+
+  void TearDown() override {
+    // Only destroy if the handle is still valid
+    if (handle_.valid) {
+      int err_code = statusbar_log::test::RedirectDestroyStatusbarHandle(
+          handle_, log_filename_);
+      EXPECT_EQ(err_code, statusbar_log::kStatusbarLogSuccess)
+          << "Failed to destroy statusbar handle in fixture teardown";
+    }
+  }
+};
+
+// TEST_F(ReadStatusbarUpdateTest, SimpleStatusbar) {
+//   std::string capture_stdout;
+//   statusbar_log::test::RedirectToStrUpdateStatusbar(capture_stdout,
+//                                                     this->handle_, 0, 50);
+//   EXPECT_STREQ(capture_stdout.c_str(),
+//                "INFO [statusbarlog_test.cc]: "
+//                "int:-1 u:2 sz:7 f:3.14 s:ok c:Z"
+//                "\n");
+// }
+//
 // ==================================================
 // Main function with test directory management
 // ==================================================
