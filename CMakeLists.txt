@@ -1,4 +1,5 @@
-# SPDX-License-Identifier: Apache-2.0 Copyright (c) 2025 Lukas Widmer
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2025 Lukas Widmer
 
 # -- statusbarlog/CMakeLists.txt
 
@@ -77,30 +78,42 @@ endif()
 if(MSVC)
   message(STATUS "Configuring for MSVC compiler")
 
+  # common MSVC options
   target_compile_options(${PROJECT_NAME} PRIVATE /std:c++20 /W4 /WX)
 
-  if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    target_compile_options(${PROJECT_NAME} PRIVATE /Zi /Od)
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /DEBUG")
-  elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
-    target_compile_options(${PROJECT_NAME} PRIVATE /O2 /Ob2 /fp:fast)
-  elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
-    target_compile_options(${PROJECT_NAME} PRIVATE /O2 /Ob2 /Zi /DEBUG /fp:fast)
-  endif()
+  # per-config options using generator expressions
+  target_compile_options(
+    ${PROJECT_NAME}
+    PRIVATE $<$<CONFIG:Debug>:/Zi>
+            $<$<CONFIG:Debug>:/Od>
+            $<$<CONFIG:Debug>:/DEBUG>
+            $<$<CONFIG:Release>:/O2>
+            $<$<CONFIG:Release>:/Ob2>
+            $<$<CONFIG:Release>:/fp:fast>
+            $<$<CONFIG:RelWithDebInfo>:/O2>
+            $<$<CONFIG:RelWithDebInfo>:/Ob2>
+            $<$<CONFIG:RelWithDebInfo>:/Zi>
+            $<$<CONFIG:RelWithDebInfo>:/DEBUG>
+            $<$<CONFIG:RelWithDebInfo>:/fp:fast>)
 
 else()
   message(STATUS "Configuring for GCC/Clang compiler")
   target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
+
+  # common warnings for all configs
   target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic
                                                  -Wformat)
 
-  if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    target_compile_options(${PROJECT_NAME} PRIVATE -g -O0)
-  elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
-    target_compile_options(${PROJECT_NAME} PRIVATE -O3 -ffast-math)
-  elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
-    target_compile_options(${PROJECT_NAME} PRIVATE -O2 -g -ffast-math)
-  endif()
+  # per-config flags via generator expressions
+  target_compile_options(
+    ${PROJECT_NAME}
+    PRIVATE $<$<CONFIG:Debug>:-g>
+            $<$<CONFIG:Debug>:-O0>
+            $<$<CONFIG:Release>:-O3>
+            $<$<CONFIG:Release>:-ffast-math>
+            $<$<CONFIG:RelWithDebInfo>:-O2>
+            $<$<CONFIG:RelWithDebInfo>:-g>
+            $<$<CONFIG:RelWithDebInfo>:-ffast-math>)
 endif()
 
 # Print final configuration summary
@@ -111,9 +124,15 @@ message(STATUS "  Compiler: ${CMAKE_CXX_COMPILER_ID}")
 message(STATUS "  C++ Standard: 20")
 message(STATUS "  Log Level: ${STATUSBARLOG_LOG_LEVEL}")
 if(MSVC)
-  message(STATUS "  MSVC Optimizations: /O2 /Ob2 /fp:fast (Release)")
+  message(STATUS "  MSVC flags (per-config):")
+  message(STATUS "    Debug: /Zi /Od /DEBUG")
+  message(STATUS "    Release: /O2 /Ob2 /fp:fast")
+  message(STATUS "    RelWithDebInfo: /O2 /Ob2 /Zi /DEBUG /fp:fast")
 else()
-  message(STATUS "  GCC/Clang Optimizations: -O3 -ffast-math (Release)")
+  message(STATUS "  GCC/Clang flags (per-config):")
+  message(STATUS "    Debug: -g -O0")
+  message(STATUS "    Release: -O3 -ffast-math")
+  message(STATUS "    RelWithDebInfo: -O2 -g -ffast-math")
 endif()
 message(STATUS "")
 

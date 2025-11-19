@@ -46,8 +46,8 @@ constexpr unsigned int kMaxPostfixLength = 80;
 constexpr unsigned int kMaxBarWidth = 200;
 constexpr int kStatusbarLogSuccess = 0;
 
-/// Define to disable automatic flushing (improves performance but may delay
-/// output)
+/// Set to true to disable automatic flushing (improves performance but may
+/// delay output)
 constexpr bool kStatusbarLogNoAutoFlush = false;
 
 /**

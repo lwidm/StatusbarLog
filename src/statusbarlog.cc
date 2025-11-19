@@ -345,6 +345,7 @@ int _IsValidStatusbarHandleVerbose(const StatusbarHandle& statusbar_handle,
  *         - -5: Both terminal width detection failed (Linux) AND truncation was
  *         - -6: Invalid percentage given
  *         - -7: write_lock not owned (cannot print without write_lock owned)
+ *         - -8: Sink write failed.
  * needed
  */
 int _DrawStatusbarComponent(const sink::SinkHandle& sink_handle,
@@ -413,7 +414,12 @@ int _DrawStatusbarComponent(const sink::SinkHandle& sink_handle,
 
   _MoveCursorUp(move, sink_handle);
   ClearCurrentLine(sink_handle);
-  sink::SinkWriteStr(sink_handle, status_str);
+  ssize_t written = sink::SinkWriteStr(sink_handle, status_str);
+  if (written <= 0) {
+    std::cout << "ERROR [" << kFilename << "]: "
+              << "Sink Write Failed in _DrawStatusbarComponent!\n";
+    return -8;
+  }
   _ConditionalFlush(sink_handle);
   _MoveCursorUp(-move, sink_handle);
 
@@ -515,7 +521,12 @@ int LogV(const LogLevel log_level, const std::string& filename,
 
   std::string formatted_message =
       std::string(prefix) + " [" + sanitized_filename + "]: " + message + "\n";
-  SinkWriteStr(sink_handle, formatted_message);
+  ssize_t written = sink::SinkWriteStr(sink_handle, formatted_message);
+  if (written <= 0) {
+    std::cout << "ERROR [" << kFilename << "]: "
+              << "Sink Write Failed in _DrawStatusbarComponent!\n";
+    return -6;
+  }
 
   _ConditionalFlush(sink_handle);
   _MoveCursorUp(-move, sink_handle);

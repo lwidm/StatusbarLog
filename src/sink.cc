@@ -117,6 +117,10 @@ int _ValidateSinkCreation(SinkHandle& sink_handle) {
 int IsValidSinkHandle(const SinkHandle& sink_handle) {
   const std::size_t idx = sink_handle.idx;
 
+  std::size_t dbg0 =  sink_handle.idx;
+  std::size_t dbg1 =  _sink_registry.size();
+  std::size_t dbg2 =  _sink_registry.size();
+  std::size_t dbg3 =  SIZE_MAX;
   if (!sink_handle.valid) {
     return -1;
   }
@@ -191,7 +195,7 @@ int IsValidSinkHandleVerbose(const SinkHandle& sink_handle) {
  *         - -1: Failed: Sink ostream not functional.
  *         - -2: Failed: Sink ostream became not functional after flushing.
  */
-int FlushSink(std::unique_ptr<Sink>& sink) {
+int _FlushSink(std::unique_ptr<Sink>& sink) {
   // std::lock_guard<std::mutex> lk(sink->mutex);
   if (sink->fd >= 0) {
     return kStatusbarLogSuccess;
@@ -233,7 +237,7 @@ int CreateSinkStdout(SinkHandle& sink_handle) {
     _sink_registry[sink_handle.idx]->id = _sink_handle_id_count;
   } else {
     std::unique_ptr<Sink> new_sink = std::make_unique<Sink>();
-    // std::mutex
+    sink_handle.idx = _sink_registry.size();
     new_sink->out = &std::cout;
     new_sink->owned_file.reset();
     new_sink->type = kSinkStdout;
@@ -361,57 +365,39 @@ ssize_t SinkWrite(const SinkHandle& sink_handle, const char* buf,
   std::lock_guard<std::mutex> lx(_sink_registry_mutex);
   if (!buf) return -1;
 
-  if (!IsValidSinkHandle(sink_handle)) return -2;
+  if (!(IsValidSinkHandle(sink_handle)==kStatusbarLogSuccess)) return -2;
 
-  std::unique_ptr<Sink> sink = std::move(_sink_registry[sink_handle.idx]);
+  std::unique_ptr<Sink>& sink = _sink_registry[sink_handle.idx];
 
-  // std::lock_guard<std::mutex> lock(sink->mutex);
-
-  if (len == 0) {
-    _sink_registry[sink_handle.idx] = std::move(sink);
-    return kStatusbarLogSuccess;
-  }
-  if (!sink->out->good() && sink->fd < 0) {
-    _sink_registry[sink_handle.idx] = std::move(sink);
-    return -3;
-  }
+  if (len == 0) return kStatusbarLogSuccess;
+  
+  if (!sink->out->good() && sink->fd < 0) return -3;
 
   if (sink->fd >= 0) {
 #if defined(SSIZE_MAX)
     if (len > static_cast<std::size_t>(SSIZE_MAX)) return -2;
 #endif
     ssize_t rc = ::write(sink->fd, buf, static_cast<size_t>(len));
-    _sink_registry[sink_handle.idx] = std::move(sink);
     return rc;
   }
 
-  if (!sink->out->good()) {
-    _sink_registry[sink_handle.idx] = std::move(sink);
-    return -4;
-  }
+  if (!sink->out->good()) return -4;
 
   if (len >
       static_cast<std::size_t>(std::numeric_limits<std::streamsize>::max())) {
-    _sink_registry[sink_handle.idx] = std::move(sink);
     return -5;
   }
 
   std::streambuf* sb = sink->out->rdbuf();
-  if (!sb) {
-    _sink_registry[sink_handle.idx] = std::move(sink);
-    return -6;
-  }
+  if (!sb) return -6;
 
   std::streamsize want = static_cast<std::streamsize>(len);
   std::streamsize written = sb->sputn(buf, want);
 
   if (written != want) {
     sink->out->setstate(std::ios::failbit);
-    _sink_registry[sink_handle.idx] = std::move(sink);
     return -7;
   }
-
-  _sink_registry[sink_handle.idx] = std::move(sink);
 
   return static_cast<ssize_t>(written);
 }
@@ -435,7 +421,7 @@ int DestroySinkHandle(SinkHandle& sink_handle) {
 
   std::unique_ptr<Sink> target = std::move(_sink_registry[sink_handle.idx]);
 
-  FlushSink(target);
+  _FlushSink(target);
 
   target->out = nullptr;
   if (target->owned_file) {
@@ -509,7 +495,7 @@ int get_sink_type(const SinkHandle& sink_handle, SinkType& sink_type) {
 int FlushSinkHandle(const SinkHandle& sink_handle) {
   int err = IsValidSinkHandleVerbose(sink_handle);
   if (err != kStatusbarLogSuccess) return err;
-  err = FlushSink(_sink_registry[sink_handle.idx]);
+  err = _FlushSink(_sink_registry[sink_handle.idx]);
   if (err != kStatusbarLogSuccess) {
     return err + 5;
   }
