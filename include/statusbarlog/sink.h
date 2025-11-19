@@ -54,6 +54,55 @@ typedef struct {
 } SinkHandle;
 
 /**
+ * \brief Check if the argument is a valid sink handle
+ *
+ * This functions performs a test on a SinkHandle and returns
+ * statusbar_log::kStatusbarLogSuccess (i.e. 0) if it is a valid handle and a
+ * negative number otherwise
+ *
+ * \param[in] SinkHandle struct to be checked for validity
+ *
+ * \return Returns statusbar_log::kStatusbarLogSuccess (i.e. 0) if the handle is
+ * valid, or one of these status codes:
+ *         -  statusbar_log::kStatusbarLogSuccess (i.e. 0): Valid handle
+ *         - -1: Invalid handle: Valid flag of handle set to false
+ *         - -2: Invalid handle: Handle index out of bounds in
+ * `statusbar_registry`
+ *         - -3: Invalid handle: Handle IDs don't match between handle struct
+ *         - -4: Invalid handle: Handle ID is 0 (i.e. invalid)
+ * and registry
+ *
+ * \see _IsValidHandleVerbose: Verbose version of this function
+ */
+int IsValidSinkHandle(const SinkHandle& sink_handle);
+
+/**
+ * \brief Check if the argument is a valid sink handle and prints an error
+ * message.
+ *
+ * This functions performs a test on a SinkHandle and returns
+ * statusbar_log::kStatusbarLogSuccess (i.e. 0) if it is a valid handle and a
+ * negative number otherwise. Same as _IsValidHandle but also prints an error
+ * message.
+ *
+ * \param[in] SinkHandle struct to be checked for validity
+ *
+ * \return Returns statusbar_log::kStatusbarLogSuccess (i.e. 0) if the handle is
+ * valid, or one of these status codes:
+ *         -  statusbar_log::kStatusbarLogSuccess (i.e. 0): Valid handle
+ *         - -1: Invalid handle: Valid flag of handle set to false
+ *         - -2: Invalid handle: Handle index out of bounds in
+ * `statusbar_registry`
+ *         - -3: Invalid handle: Handle IDs don't match between handle struct
+ *         - -4: Invalid handle: Handle ID is 0 (i.e. invalid)
+ *         - -5: Invalid handle: Errorcode not handled
+ * and registry
+ *
+ * \see _IsValidHandle: Non verbose version of this function
+ */
+int IsValidSinkHandleVerbose(const SinkHandle& sink_handle);
+
+/**
  * \brief Initialises a sink that wraps std::cout (does not take ownership) and
  * updates its handle.
  *
@@ -154,8 +203,8 @@ ssize_t SinkWriteStr(const SinkHandle& sink_handle, const std::string& str);
 /**
  * \brief Flush a sink using its handle
  *
- * Function tries to flush a sink using its handle. Returns kStatusbarLogSuccess on success,
- * otherwise a negative integer
+ * Function tries to flush a sink using its handle. Returns kStatusbarLogSuccess
+ * on success, otherwise a negative integer
  *
  *\returns Returns statusbar_log::kStatusbarLogSuccess (i.e. 0) on success, or
  * one of these error/warnings codes:
@@ -172,7 +221,7 @@ ssize_t SinkWriteStr(const SinkHandle& sink_handle, const std::string& str);
  *         - -5: Couldn't flush sink: Invalid handle (Errorcode not handled)
  *         - -6: Failed: Sink ostream not functional.
  *         - -7: Failed: Sink ostream became not functional after flushing.
-*/
+ */
 int FlushSinkHandle(const SinkHandle& sink_handle);
 
 /**
@@ -185,6 +234,10 @@ bool SinkIsTty(const SinkHandle& sink_handle);
  *
  * This function is used to retrieve a (unlocked) unique_lock of the mutex of
  * the sink assocated to the handle.
+ *
+ * \param[in] sink_handle Sink handle struct of which to get the unique_lock.
+ * \param[in, out]  sink_mutex_ptr Object in which the unique_lock will be
+ saved to.
  *
  * \return Returns statusbar_log::kStatusbarLogSuccess (i.e. 0) if the lock
  * retrieval succeeded, or one of these status codes:
@@ -200,16 +253,20 @@ bool SinkIsTty(const SinkHandle& sink_handle);
  * \see SinkHandle: The sink handle struct
  * \see Sink: The sink struct
  */
-int GetUniqueLock(const SinkHandle& sink_handle,
-                  std::unique_lock<std::mutex>& lock);
+int get_unique_lock(const SinkHandle& sink_handle,
+                    std::unique_lock<std::mutex>& lock);
 
 /**
- * \brief Get the sink type associated to the sink handle.
+ * \brief Get the pointer to the mutex associated to the sink handle.
  *
- * This function is used to retrieve a the sink type of the sink associated to
- * the handle
+ * This function is used to retrieve a pointer to the mutex of
+ * the sink assocated to the handle.
  *
- * \return Returns statusbar_log::kStatusbarLogSuccess (i.e. 0) if the sink type
+ * \param[in] sink_handle Sink handle struct of which to get the mutex.
+ * \param[in, out]  sink_mutex_ptr Pointer in which the mutex pointer will be
+ saved to.
+
+ * \return Returns statusbar_log::kStatusbarLogSuccess (i.e. 0) if the lock
  * retrieval succeeded, or one of these status codes:
  *         -  statusbar_log::kStatusbarLogSuccess (i.e. 0): Valid handle
  *         - -1: Failed: Invalid handle (Valid flag of handle set to false)
@@ -220,11 +277,33 @@ int GetUniqueLock(const SinkHandle& sink_handle,
  *         - -4: Failed: Invalid handle (Handle ID is 0 (i.e. invalid))
  *         - -5: Failed: Invalid handle (Errorcode not handled)
  *
- * \see SinkType: All possible sink types
  * \see SinkHandle: The sink handle struct
  * \see Sink: The sink struct
  */
-int GetSinkType(const SinkHandle& sink_handle, SinkType& sink_type);
+int get_mutex_ptr(const SinkHandle& sink_handle, std::mutex*& sink_mutex_ptr);
+
+  /**
+   * \brief Get the sink type associated to the sink handle.
+   *
+   * This function is used to retrieve a the sink type of the sink associated to
+   * the handle
+   *
+   * \return Returns statusbar_log::kStatusbarLogSuccess (i.e. 0) if the sink
+   * type retrieval succeeded, or one of these status codes:
+   *         -  statusbar_log::kStatusbarLogSuccess (i.e. 0): Valid handle
+   *         - -1: Failed: Invalid handle (Valid flag of handle set to false)
+   *         - -2: Failed: Invalid handle (Handle index out of bounds in
+   * `statusbar_registry)`
+   *         - -3: Failed: Invalid handle (Handle IDs don't match between handle
+   * struct)
+   *         - -4: Failed: Invalid handle (Handle ID is 0 (i.e. invalid))
+   *         - -5: Failed: Invalid handle (Errorcode not handled)
+   *
+   * \see SinkType: All possible sink types
+   * \see SinkHandle: The sink handle struct
+   * \see Sink: The sink struct
+   */
+  int get_sink_type(const SinkHandle& sink_handle, SinkType& sink_type);
 
 }  // namespace sink
 }  // namespace statusbar_log

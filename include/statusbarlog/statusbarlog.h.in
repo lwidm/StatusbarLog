@@ -122,40 +122,32 @@ typedef struct {
 /**
  * \brief Saves the current cursor position in the terminal
  */
-void SaveCursorPosition();
+void SaveCursorPosition(sink::SinkHandle sink_handle);
 
 /**
  * \brief Restores the previously saved cursor position in the terminal
  */
-void RestoreCursorPosition();
+void RestoreCursorPosition(sink::SinkHandle sink_handle);
 
 /**
  * \brief Clears from the current cursor position to the end of the line
  */
-void ClearToEndOfLine();
+void ClearToEndOfLine(sink::SinkHandle sink_handle);
 
 /**
  * \brief Clears from the current cursor position to the end of the line
  */
-void ClearFromStartOfLine();
+void ClearFromStartOfLine(sink::SinkHandle sink_handle);
 
 /**
  * \brief Clear entire current line
  */
-void ClearLine();
+void ClearLine(sink::SinkHandle sink_handle);
 
 /**
  * \brief More robust version with cursor positioning
  */
-void ClearCurrentLine();
-
-/**
- * \brief Manually flush the output buffer
- *
- * Useful when statusbar_log::kStatusbarLogNoAutoFlush is defined to force
- * output
- */
-void FlushOutput();
+void ClearCurrentLine(sink::SinkHandle sink_handle);
 
 /**
  * \brief Logs a message if its level ≤ statusbar_log::kLogLevel
@@ -166,12 +158,14 @@ void FlushOutput();
  * \param[in] fmt printf-style format string.
  * \param[in] args Additional format arguments.
  *
- * \return statusbar_log::kStatusbarLogSuccess (i.e. 0) on success, or one of these status codes:
+ * \return statusbar_log::kStatusbarLogSuccess (i.e. 0) on success, or one of
+ * these status codes:
  *         -  statusbar_log::kStatusbarLogSuccess (i.e. 0): Successfull log
  *         - -1: Invalid statusbar handle: Valid flag of handle set to false
  *         - -2: Invalid statusbar handle: Handle index out of bounds in
  * `statusbar_registry`
- *         - -3: Invalid statusbar handle: Handle IDs don't match between handle struct
+ *         - -3: Invalid statusbar handle: Handle IDs don't match between handle
+ * struct
  *         - -4: Invalid statusbar handle: Handle ID is 0 (i.e. invalid)
  *         - -5: Invalid statusbar handle: Errorcode not handled
  * and registry
@@ -182,7 +176,8 @@ void FlushOutput();
  * \see statusbar_log::kLogLevel: Macro to set the global logging threshold.
  * \see PrintErr: Function for printing error messages -> \todo
  */
-int LogV(LogLevel log_level, const std::string& filename, const char* fmt, va_list args);
+int LogV(const LogLevel log_level, const std::string& filename,
+         sink::SinkHandle sink_handle, const char* fmt, va_list args);
 
 /**
  * \brief variadic wrapper to LogV
@@ -190,24 +185,12 @@ int LogV(LogLevel log_level, const std::string& filename, const char* fmt, va_li
  * Logs a message if its level <= statusbar_log::kLogLevel
  *
  * \see LogV for more detail
-*/
-inline int Log(LogLevel log_level, const std::string& filename, const char* fmt, ...) {
-  va_list args;
-  va_start(args, fmt);
-  return LogV(log_level, filename, fmt, args);
-  va_end(args);
-}
-
-
-/**
- * \brief Shortcut for logging warnings.
- *
- *\see statusbar_log::Log: General logging function
  */
-inline int LogErr(const std::string& filename, const char* fmt, ...) {
+inline int Log(LogLevel log_level, const std::string& filename,
+               sink::SinkHandle sink_handle, const char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
-  return LogV(kLogLevelErr, filename, fmt, args);
+  return LogV(log_level, filename, sink_handle, fmt, args);
   va_end(args);
 }
 
@@ -216,10 +199,24 @@ inline int LogErr(const std::string& filename, const char* fmt, ...) {
  *
  *\see statusbar_log::Log: General logging function
  */
-inline int LogWrn(const std::string& filename, const char* fmt, ...) {
+inline int LogErr(const std::string& filename, sink::SinkHandle sink_handle,
+                  const char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
-  return LogV(kLogLevelWrn, filename, fmt, args);
+  return LogV(kLogLevelErr, filename, sink_handle, fmt, args);
+  va_end(args);
+}
+
+/**
+ * \brief Shortcut for logging warnings.
+ *
+ *\see statusbar_log::Log: General logging function
+ */
+inline int LogWrn(const std::string& filename, sink::SinkHandle sink_handle,
+                  const char* fmt, ...) {
+  va_list args;
+  va_start(args, fmt);
+  return LogV(kLogLevelWrn, filename, sink_handle, fmt, args);
   va_end(args);
 }
 
@@ -228,10 +225,11 @@ inline int LogWrn(const std::string& filename, const char* fmt, ...) {
  *
  *\see statusbar_log::Log: General logging function
  */
-inline int LogInf(const std::string& filename, const char* fmt, ...) {
+inline int LogInf(const std::string& filename, sink::SinkHandle sink_handle,
+                  const char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
-  return LogV(kLogLevelInf, filename, fmt, args);
+  return LogV(kLogLevelInf, filename, sink_handle, fmt, args);
   va_end(args);
 }
 
@@ -240,10 +238,11 @@ inline int LogInf(const std::string& filename, const char* fmt, ...) {
  *
  *\see statusbar_log::Log: General logging function
  */
-inline int LogDbg(const std::string& filename, const char* fmt, ...) {
+inline int LogDbg(const std::string& filename, sink::SinkHandle sink_handle,
+                  const char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
-  return LogV(kLogLevelDbg, filename, fmt, args);
+  return LogV(kLogLevelDbg, filename, sink_handle, fmt, args);
   va_end(args);
 }
 
@@ -259,7 +258,8 @@ inline int LogDbg(const std::string& filename, const char* fmt, ...) {
  *  "prefix1 string"[########/       ] 50% "postfix1 string"
  *  "prefix2 string"[#/        ] 10% "postfix2 string"
  *
- * \param[out] statusbar_handle Struct to initialize.
+ * \param[out] StatusbarHandle Struct to initialize.
+ * \param[in] SinkHandle Struct to use for the statusbar.
  * \param[in] _positions Vertical positions (1=topmost) of each bar. For e.g. if
  * you want two bars stacked on top of each other you would pass {2, 1} (2: top
  * bar, 1: lower bar).
@@ -271,9 +271,10 @@ inline int LogDbg(const std::string& filename, const char* fmt, ...) {
  * \return Returns statusbar_log::kStatusbarLogSuccess (i.e. 0) on success, or
  * one of these error/warning codes:
  *         -  statusbar_log::kStatusbarLogSuccess (i.e. 0): Success (no errors)
- *         - -1: Failed to create statusbar handle (handle already valid)
- *         - -2: Failed to create statusbar handle (invalid inputs)
- *         - -3: Failed to create statusbar handle (handle registry exceeds
+ *         - -1: Failed to create statusbar handle (Sink handle invalid)
+ *         - -2: Failed to create statusbar handle (handle already valid)
+ *         - -3: Failed to create statusbar handle (invalid inputs)
+ *         - -4: Failed to create statusbar handle (handle registry exceeds
  * maximum element limit)
  *
  * \warning Don't forget to destroy the statusbar_handle after use.
@@ -285,6 +286,7 @@ inline int LogDbg(const std::string& filename, const char* fmt, ...) {
  * \see DestroyStatusbarHandle: Destroying statusbar_handle after use.
  */
 int CreateStatusbarHandle(StatusbarHandle& statusbar_handle,
+                          const sink::SinkHandle sink_handle,
                           const std::vector<unsigned int> _positions,
                           const std::vector<unsigned int> _bar_sizes,
                           const std::vector<std::string> _prefixes,

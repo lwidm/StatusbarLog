@@ -29,6 +29,7 @@
 #include <regex>
 #include <string>
 
+#include "statusbarlog/sink.h"
 #include "statusbarlog/statusbarlog.h"
 #include "statusbarlog_test.h"
 
@@ -267,6 +268,7 @@ int _RestoreCaptureStdoutToStr(std::string& out) {
 
 int RedirectCreateStatusbarHandle(
     statusbar_log::StatusbarHandle& statusbar_handle,
+    const statusbar_log::sink::SinkHandle& sink_handle,
     const std::vector<unsigned int> _positions,
     const std::vector<unsigned int> _bar_sizes,
     const std::vector<std::string> _prefixes,
@@ -274,7 +276,8 @@ int RedirectCreateStatusbarHandle(
     const std::string& log_filename) {
   _CaptureStdoutToFile(log_filename);
   int err_code = statusbar_log::CreateStatusbarHandle(
-      statusbar_handle, _positions, _bar_sizes, _prefixes, _postfixes);
+      statusbar_handle, sink_handle, _positions, _bar_sizes, _prefixes,
+      _postfixes);
   _RestoreCaptureStdout();
   return err_code;
 }
@@ -307,12 +310,14 @@ int RedirectToStrUpdateStatusbar(
   return err_code;
 }
 
-int RedirectToStrLog(std::string& capture_stdout, LogLevel log_level,
+int RedirectToStrLog(std::string& capture_stdout,
+    const statusbar_log::sink::SinkHandle& sink_handle,
+                     LogLevel log_level,
                      const std::string filename, const char* fmt, ...) {
   _CaptureStdoutToPipe();
   va_list args;
   va_start(args, fmt);
-  int err_code = LogV(log_level, filename, fmt, args);
+  int err_code = LogV(log_level, filename, sink_handle, fmt, args);
   va_end(args);
   _RestoreCaptureStdoutToStr(capture_stdout);
   std::string capture_stdout_cleaned = StripAnsiEscapeSequences(capture_stdout);

@@ -44,6 +44,7 @@ std::string GenerateTestLogFilename(const std::string& test_suite,
 
 int RedirectCreateStatusbarHandle(
     statusbar_log::StatusbarHandle& statusbar_handle,
+    const statusbar_log::sink::SinkHandle& sink_handle,
     const std::vector<unsigned int> _positions,
     const std::vector<unsigned int> _bar_sizes,
     const std::vector<std::string> _prefixes,
@@ -62,10 +63,12 @@ int RedirectToStrUpdateStatusbar(
     statusbar_log::StatusbarHandle& statusbar_handle, const std::size_t idx,
     const double percent);
 
-int RedirectToStrLog(std::string& capture_stdout, LogLevel log_level,
-                     const std::string filename, const char* fmt, ...);
+int RedirectToStrLog(std::string& capture_stdout,
+                     const statusbar_log::sink::SinkHandle& sink_handle,
+                     LogLevel log_level, const std::string filename,
+                     const char* fmt, ...);
 
-std::string StripAnsiEscapeSequences(const std::string&s);
+std::string StripAnsiEscapeSequences(const std::string& s);
 
 }  // namespace test
 }  // namespace statusbar_log

@@ -40,7 +40,7 @@
 
 // clang-format on
 
-const std::string kFilename = "statusbarlog.cc";
+const std::string kFilename = "sink.cc";
 
 namespace statusbar_log {
 namespace sink {
@@ -76,27 +76,45 @@ static std::mutex _sink_registry_mutex;
 static std::mutex _sink_id_count_mutex;
 
 /**
- * \brief Check if the argument is a valid sink handle
+ * \brief Checks if a sink handle can be used for creating a new sink.
  *
- * This functions performs a test on a SinkHandle and returns
- * statusbar_log::kStatusbarLogSuccess (i.e. 0) if it is a valid handle and a
- * negative number otherwise
+ * This functions checks if the input handle is valid. If so the handle can not
+ * be used for sink creation (as it already corresponds to another sink) and
+ * returns a negative value. If the maximum number of sinks is reached this
+ * function also returns a negative number.
  *
- * \param[in] SinkHandle struct to be checked for validity
+ * \param[in,out] sink_handle The handle to be checked for sink creation
  *
- * \return Returns statusbar_log::kStatusbarLogSuccess (i.e. 0) if the handle is
- * valid, or one of these status codes:
- *         -  statusbar_log::kStatusbarLogSuccess (i.e. 0): Valid handle
- *         - -1: Invalid handle: Valid flag of handle set to false
- *         - -2: Invalid handle: Handle index out of bounds in
- * `statusbar_registry`
- *         - -3: Invalid handle: Handle IDs don't match between handle struct
- *         - -4: Invalid handle: Handle ID is 0 (i.e. invalid)
- * and registry
- *
- * \see _IsValidHandleVerbose: Verbose version of this function
+ * \return Returns statusbar_log::kStatusbarLogSuccess (i.e. 0) on success, or
+ * one of these error/warning codes:
+ *         -  statusbar_log::kStatusbarLogSuccess (i.e. 0): Success (no errors)
+ *         - -1: Failed to create sink handle (handle already valid)
+ *         - -2: Failed to create sink handle (handle registry exceeds
  */
-int _IsValidHandle(const SinkHandle& sink_handle) {
+int _ValidateSinkCreation(SinkHandle& sink_handle) {
+  const int err = IsValidSinkHandle(sink_handle);
+  if (err == kStatusbarLogSuccess) {
+    std::cout << "ERROR [" << kFilename << "]: "
+              << "Handle already is valid, cannot use it to create a new sink";
+    return -1;
+  }
+  sink_handle.valid = false;
+  sink_handle.id = 0;
+
+  if (_sink_registry.size() - _sink_free_handles.size() >= kMaxSinkHandles) {
+    std::cout
+        << "ERROR [" << kFilename << "]: "
+        << "Failed to create sink handle. Maximum number of sink handles ("
+        << kMaxSinkHandles << ") reached";
+    return -2;
+  }
+
+  return kStatusbarLogSuccess;
+}
+
+}  // namespace
+
+int IsValidSinkHandle(const SinkHandle& sink_handle) {
   const std::size_t idx = sink_handle.idx;
 
   if (!sink_handle.valid) {
@@ -116,59 +134,44 @@ int _IsValidHandle(const SinkHandle& sink_handle) {
   return kStatusbarLogSuccess;
 }
 
-/**
- * \brief Check if the argument is a valid sink handle and prints an error
- * message.
- *
- * This functions performs a test on a SinkHandle and returns
- * statusbar_log::kStatusbarLogSuccess (i.e. 0) if it is a valid handle and a
- * negative number otherwise. Same as _IsValidHandle but also prints an error
- * message.
- *
- * \param[in] SinkHandle struct to be checked for validity
- *
- * \return Returns statusbar_log::kStatusbarLogSuccess (i.e. 0) if the handle is
- * valid, or one of these status codes:
- *         -  statusbar_log::kStatusbarLogSuccess (i.e. 0): Valid handle
- *         - -1: Invalid handle: Valid flag of handle set to false
- *         - -2: Invalid handle: Handle index out of bounds in
- * `statusbar_registry`
- *         - -3: Invalid handle: Handle IDs don't match between handle struct
- *         - -4: Invalid handle: Handle ID is 0 (i.e. invalid)
- *         - -5: Invalid handle: Errorcode not handled
- * and registry
- *
- * \see _IsValidHandle: Non verbose version of this function
- */
-int _IsValidHandleVerbose(const SinkHandle& sink_handle) {
-  const int is_valid_handle = _IsValidHandle(sink_handle);
+int IsValidSinkHandleVerbose(const SinkHandle& sink_handle) {
+  const int is_valid_handle = IsValidSinkHandle(sink_handle);
   if (is_valid_handle == -1) {
-    LogWrn(kFilename,
-           "Invalid handle: Valid flag set to false (idx: %zu, ID: %u)",
-           sink_handle.idx, sink_handle.id);
+    std::cout << "\033[999B\n";
+    std::cout << "WARNING [" << kFilename
+              << "]: Invalid sink handle: Valid flag set to false (idx: "
+              << sink_handle.idx << ", ID: " << sink_handle.id << ")\n";
     return -1;
   }
 
   else if (is_valid_handle == -2) {
-    LogWrn(kFilename,
-           "Invalid Handle: Handle index %zu out of bounds (max %zu)",
-           sink_handle.idx, _sink_registry.size());
+    std::cout << "\033[999B\n";
+    std::cout << "WARNING [" << kFilename
+              << "]: Invalid sink handle: Handle index " << sink_handle.idx
+              << " out of bounds (max " << _sink_registry.size() << ")\n";
     return -2;
   }
 
   else if (is_valid_handle == -3) {
-    LogWrn(kFilename, "Invalid Handle: ID mismatch: handle %u vs registry %u",
-           sink_handle.id, _sink_registry[sink_handle.idx]->id);
+    std::cout << "\033[999B\n";
+    std::cout << "WARNING [" << kFilename
+              << "]: " << "Invalid sink Handle: ID mismatch: handle "
+              << sink_handle.id << " vs registry "
+              << _sink_registry[sink_handle.idx]->id;
     return -3;
   }
 
-  else if (is_valid_handle != -4) {
-    LogWrn(kFilename, "Invalid Handle: ID is 0 (i.e. invalid)");
+  else if (is_valid_handle == -4) {
+    std::cout << "\033[999B\n";
+    std::cout << "WARNING [" << kFilename
+              << "]: " << "Invalid sink Handle: ID is 0 (i.e. invalid)";
     return -4;
   }
 
   else if (is_valid_handle != kStatusbarLogSuccess) {
-    LogWrn(kFilename, "Invalid Handle: Errorcode not handled!");
+    std::cout << "\033[999B\n";
+    std::cout << "WARNING [" << kFilename
+              << "]: " << "Invalid sink Handle: Errorcode not handled!";
     return -5;
   }
 
@@ -176,66 +179,27 @@ int _IsValidHandleVerbose(const SinkHandle& sink_handle) {
 }
 
 /**
- * \brief Checks if a sink handle can be used for creating a new sink.
+ * \brief Flush the sink
  *
- * This functions checks if the input handle is valid. If so the handle can not
- * be used for sink creation (as it already corresponds to another sink) and
- * returns a negative value. If the maximum number of sinks is reached this
- * function also returns a negative number.
+ * Function tries to flush a sink. Returns kStatusbarLogSuccess on success,
+ * otherwise a negative integer
  *
- * \param[in,out] sink_handle The handle to be checked for sink creation
- *
- * \return Returns statusbar_log::kStatusbarLogSuccess (i.e. 0) on success, or
- * one of these error/warning codes:
- *         -  statusbar_log::kStatusbarLogSuccess (i.e. 0): Success (no errors)
- *         - -1: Failed to create sink handle (handle already valid)
- *         - -2: Failed to create sink handle (handle registry exceeds
+ *\returns Returns statusbar_log::kStatusbarLogSuccess (i.e. 0) on success, or
+ * one of these error/warnings codes:
+ *         - statusbar_log::kStatusbarLogSuccess (i.e. 0): Successfully flushed
+ * sink.
+ *         - -1: Failed: Sink ostream not functional.
+ *         - -2: Failed: Sink ostream became not functional after flushing.
  */
-int _ValidateSinkCreation(SinkHandle& sink_handle) {
-  const int err = _IsValidHandle(sink_handle);
-  if (err == kStatusbarLogSuccess) {
-    LogErr(kFilename,
-           "Handle already is valid, cannot use it to create a new sink");
-    return -1;
-  }
-  sink_handle.valid = false;
-  sink_handle.id = 0;
-
-  if (_sink_registry.size() - _sink_free_handles.size() >= kMaxSinkHandles) {
-    LogErr(kFilename,
-           "Failed to create sink handle. Maximum number of sink handles (%zu) "
-           "reached",
-           kMaxSinkHandles);
-    return -2;
-  }
-
-  return kStatusbarLogSuccess;
-}
-
-/**
-* \brief Flush the sink
-*
-* Function tries to flush a sink. Returns kStatusbarLogSuccess on success,
-* otherwise a negative integer
-*
-*\returns Returns statusbar_log::kStatusbarLogSuccess (i.e. 0) on success, or
-* one of these error/warnings codes:
-*         - statusbar_log::kStatusbarLogSuccess (i.e. 0): Successfully flushed
-* sink.
-*         - -1: Failed: Sink ostream not functional.
-*         - -2: Failed: Sink ostream became not functional after flushing.
-*/
 int FlushSink(std::unique_ptr<Sink>& sink) {
-  std::lock_guard<std::mutex> lk(sink->mutex);
+  // std::lock_guard<std::mutex> lk(sink->mutex);
   if (sink->fd >= 0) {
-    return 0;
+    return kStatusbarLogSuccess;
   }
   if (!sink->out->good()) return -1;
   sink->out->flush();
   return sink->out->good() ? 0 : -2;
 }
-
-}  // namespace
 
 int CreateSinkStdout(SinkHandle& sink_handle) {
   const int err = _ValidateSinkCreation(sink_handle);
@@ -251,8 +215,10 @@ int CreateSinkStdout(SinkHandle& sink_handle) {
 
   _sink_handle_id_count++;
   if (_sink_handle_id_count == 0) {
-    LogWrn(kFilename,
-           "Max number of possible sink handle ids reached, looping back to 1");
+    std::cout << "WARNING [" << kFilename
+              << "]: Max number of possible sink handle ids reached, looping "
+                 "back to 1\n";
+    _sink_handle_id_count++;
   }
 
   if (!_sink_free_handles.empty()) {
@@ -295,8 +261,9 @@ int CreateSinkFile(SinkHandle& sink_handle, const std::string& path) {
 
   _sink_handle_id_count++;
   if (_sink_handle_id_count == 0) {
-    LogWrn(kFilename,
-           "Max number of possible sink handle ids reached, looping back to 1");
+    std::cout << "WARNING [" << kFilename
+              << "]: Max number of possible sink handle ids reached, looping "
+                 "back to 1\n";
   }
 
   std::unique_ptr<std::ofstream> f;
@@ -349,8 +316,9 @@ int CreateSinkOstream(SinkHandle& sink_handle, std::ostream& os) {
 
   _sink_handle_id_count++;
   if (_sink_handle_id_count == 0) {
-    LogWrn(kFilename,
-           "Max number of possible sink handle ids reached, looping back to 1");
+    std::cout << "WARNING [" << kFilename
+              << "]: Max number of possible sink handle ids reached, looping "
+                 "back to 1\n";
   }
 
   int fd;
@@ -388,54 +356,82 @@ int CreateSinkOstream(SinkHandle& sink_handle, std::ostream& os) {
   return kStatusbarLogSuccess;
 }
 
-ssize_t SinkWrite(Sink& sink, const char* buf, std::size_t len) {
+ssize_t SinkWrite(const SinkHandle& sink_handle, const char* buf,
+                  std::size_t len) {
+  std::lock_guard<std::mutex> lx(_sink_registry_mutex);
   if (!buf) return -1;
 
-  std::lock_guard<std::mutex> lock(sink.mutex);
+  if (!IsValidSinkHandle(sink_handle)) return -2;
 
-  if (len == 0) return 0;
-  if (!sink.out->good() && sink.fd < 0) return -1;
+  std::unique_ptr<Sink> sink = std::move(_sink_registry[sink_handle.idx]);
 
-  if (sink.fd >= 0) {
+  // std::lock_guard<std::mutex> lock(sink->mutex);
+
+  if (len == 0) {
+    _sink_registry[sink_handle.idx] = std::move(sink);
+    return kStatusbarLogSuccess;
+  }
+  if (!sink->out->good() && sink->fd < 0) {
+    _sink_registry[sink_handle.idx] = std::move(sink);
+    return -3;
+  }
+
+  if (sink->fd >= 0) {
 #if defined(SSIZE_MAX)
     if (len > static_cast<std::size_t>(SSIZE_MAX)) return -2;
 #endif
-    ssize_t rc = ::write(sink.fd, buf, static_cast<size_t>(len));
+    ssize_t rc = ::write(sink->fd, buf, static_cast<size_t>(len));
+    _sink_registry[sink_handle.idx] = std::move(sink);
     return rc;
   }
 
-  if (!sink.out->good()) return -3;
-
-  if (len >
-      static_cast<std::size_t>(std::numeric_limits<std::streamsize>::max())) {
+  if (!sink->out->good()) {
+    _sink_registry[sink_handle.idx] = std::move(sink);
     return -4;
   }
 
-  std::streambuf* sb = sink.out->rdbuf();
-  if (!sb) return -5;
+  if (len >
+      static_cast<std::size_t>(std::numeric_limits<std::streamsize>::max())) {
+    _sink_registry[sink_handle.idx] = std::move(sink);
+    return -5;
+  }
+
+  std::streambuf* sb = sink->out->rdbuf();
+  if (!sb) {
+    _sink_registry[sink_handle.idx] = std::move(sink);
+    return -6;
+  }
 
   std::streamsize want = static_cast<std::streamsize>(len);
   std::streamsize written = sb->sputn(buf, want);
 
   if (written != want) {
-    sink.out->setstate(std::ios::failbit);
-    return -6;
+    sink->out->setstate(std::ios::failbit);
+    _sink_registry[sink_handle.idx] = std::move(sink);
+    return -7;
   }
+
+  _sink_registry[sink_handle.idx] = std::move(sink);
+
   return static_cast<ssize_t>(written);
 }
 
+ssize_t SinkWriteStr(const SinkHandle& sink_handle, const std::string& str) {
+  return SinkWrite(sink_handle, str.c_str(), str.size());
+}
+
 int DestroySinkHandle(SinkHandle& sink_handle) {
-  int err = _IsValidHandleVerbose(sink_handle);
+  int err = IsValidSinkHandleVerbose(sink_handle);
   if (err != kStatusbarLogSuccess) {
-    LogErr(kFilename, "Failed to destory statusbar_handle!");
+    std::cout << "ERROR [" << kFilename
+              << "]: Failed to destory statusbar_handle!\n";
     return err;
   }
 
-  std::unique_lock<std::mutex> sink_lock;
-  GetUniqueLock(sink_handle, sink_lock);
-  std::unique_lock<std::mutex> registry_lock(_sink_registry_mutex,
-                                             std::defer_lock);
-  std::lock(sink_lock, registry_lock);
+  // std::unique_lock<std::mutex> sink_lock;
+  // get_unique_lock(sink_handle, sink_lock);
+  // std::lock(sink_lock, registry_lock);
+  std::lock_guard<std::mutex> registry_lock(_sink_registry_mutex);
 
   std::unique_ptr<Sink> target = std::move(_sink_registry[sink_handle.idx]);
 
@@ -463,43 +459,59 @@ int DestroySinkHandle(SinkHandle& sink_handle) {
   return kStatusbarLogSuccess;
 }
 
-ssize_t SinkWriteStr(Sink& sink, const std::string& str) {
-  return SinkWrite(sink, str.c_str(), str.size());
-}
+bool SinkIsTty(const SinkHandle& sink_handle) {
+  std::lock_guard<std::mutex> lx(_sink_registry_mutex);
+  int err = IsValidSinkHandleVerbose(sink_handle);
+  if (err != kStatusbarLogSuccess) return false;
 
-bool SinkIsTty(Sink& sink) {
-  if (sink.fd >= 0) {
-    return ::isatty(sink.fd) != 0;
+  auto& sink = _sink_registry[sink_handle.idx];  // reference, no move
+  if (!sink) return false;
+
+  if (sink->fd >= 0) {
+    return ::isatty(sink->fd) != 0;
   }
-  if (sink.out == &std::cout) return ::isatty(fileno(stdout));
-  if (sink.out == &std::cerr) return ::isatty(fileno(stderr));
+  if (sink->out == &std::cout) {
+    return ::isatty(fileno(stdout));
+  }
+  if (sink->out == &std::cerr) {
+    return ::isatty(fileno(stderr));
+  }
+
   return false;
 }
 
-int GetUniqueLock(const SinkHandle& sink_handle,
-                  std::unique_lock<std::mutex>& lock) {
-  int err = _IsValidHandleVerbose(sink_handle);
+int get_unique_lock(const SinkHandle& sink_handle,
+                    std::unique_lock<std::mutex>& sink_lock) {
+  int err = IsValidSinkHandleVerbose(sink_handle);
   if (err != kStatusbarLogSuccess) return err;
   std::lock_guard<std::mutex> lx(_sink_registry_mutex);
-  lock = std::unique_lock<std::mutex>(_sink_registry[sink_handle.idx]->mutex,
-                                      std::defer_lock);
-  return 0;
+  sink_lock = std::unique_lock<std::mutex>(
+      _sink_registry[sink_handle.idx]->mutex, std::defer_lock);
+  return kStatusbarLogSuccess;
 }
 
-int GetSinkType(const SinkHandle& sink_handle, SinkType& sink_type) {
-  int err = _IsValidHandleVerbose(sink_handle);
+int get_mutex_ptr(const SinkHandle& sink_handle, std::mutex*& sink_mutex_ptr) {
+  int err = IsValidSinkHandleVerbose(sink_handle);
+  if (err != kStatusbarLogSuccess) return err;
+  std::lock_guard<std::mutex> lx(_sink_registry_mutex);
+  sink_mutex_ptr = &_sink_registry[sink_handle.idx]->mutex;
+  return kStatusbarLogSuccess;
+}
+
+int get_sink_type(const SinkHandle& sink_handle, SinkType& sink_type) {
+  int err = IsValidSinkHandleVerbose(sink_handle);
   if (err != kStatusbarLogSuccess) return err;
   std::lock_guard<std::mutex> lx(_sink_registry_mutex);
   sink_type = _sink_registry[sink_handle.idx]->type;
-  return 0;
+  return kStatusbarLogSuccess;
 }
 
 int FlushSinkHandle(const SinkHandle& sink_handle) {
-  int err = _IsValidHandleVerbose(sink_handle);
+  int err = IsValidSinkHandleVerbose(sink_handle);
   if (err != kStatusbarLogSuccess) return err;
   err = FlushSink(_sink_registry[sink_handle.idx]);
   if (err != kStatusbarLogSuccess) {
-    return err+5;
+    return err + 5;
   }
   return kStatusbarLogSuccess;
 }

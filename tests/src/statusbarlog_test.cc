@@ -22,6 +22,7 @@
 #include <string>
 
 #include "statusbarlog/statusbarlog.h"
+#include "statusbarlog/sink.h"
 #include "statusbarlog_test.h"
 
 // clang-format on
@@ -34,11 +35,16 @@ const std::string kFilename = "statusbarlog_test.cc";
 
 class StatusbarTestBase : public ::testing::Test {
  protected:
+  statusbar_log::sink::SinkHandle sink_handle_;
   std::string GetTestLogFilename() {
     const auto* test_info =
         ::testing::UnitTest::GetInstance()->current_test_info();
     return statusbar_log::test::GenerateTestLogFilename(
         test_info->test_suite_name(), test_info->name());
+  }
+  void SetUp() override { statusbar_log::sink::CreateSinkStdout(sink_handle_); }
+  void TearDown() override {
+    statusbar_log::sink::DestroySinkHandle(sink_handle_);
   }
 };
 
@@ -46,11 +52,7 @@ class StatusbarTestBase : public ::testing::Test {
 // HandleManagementTest
 // ==================================================
 
-class HandleManagementTest : public StatusbarTestBase {
- protected:
-  void SetUp() override {}
-  void TearDown() override {}
-};
+class HandleManagementTest : public StatusbarTestBase {};
 
 TEST_F(HandleManagementTest, CreateSingleBarHandle) {
   statusbar_log::StatusbarHandle handle;
@@ -61,7 +63,8 @@ TEST_F(HandleManagementTest, CreateSingleBarHandle) {
 
   const std::string log_filename = GetTestLogFilename();
   int err_code = statusbar_log::test::RedirectCreateStatusbarHandle(
-      handle, positions, bar_sizes, prefixes, postfixes, log_filename);
+      handle, this->sink_handle_, positions, bar_sizes, prefixes, postfixes,
+      log_filename);
   ASSERT_EQ(err_code, statusbar_log::kStatusbarLogSuccess)
       << "CreateStatusbarHandle should return "
          "statusbar_log::kStatusbarLogSuccess";
@@ -94,7 +97,8 @@ TEST_F(HandleManagementTest, CreateMultiBarHandle) {
 
   const std::string log_filename = GetTestLogFilename();
   int err_code = statusbar_log::test::RedirectCreateStatusbarHandle(
-      handle, positions, bar_sizes, prefixes, postfixes, log_filename);
+      handle, this->sink_handle_, positions, bar_sizes, prefixes, postfixes,
+      log_filename);
 
   EXPECT_NE(handle.id, 0) << "Handle should have a non-zero ID assigned";
   EXPECT_LT(handle.id, SIZE_MAX) << "Handle index should be a valid value";
@@ -124,7 +128,8 @@ TEST_F(HandleManagementTest, CreateHandle_InvalidInputSizes) {
 
     const std::string log_filename = GetTestLogFilename();
     int err_code = statusbar_log::test::RedirectCreateStatusbarHandle(
-        handle, positions, bar_sizes, prefixes, postfixes, log_filename);
+        handle, this->sink_handle_, positions, bar_sizes, prefixes, postfixes,
+        log_filename);
 
     EXPECT_NE(err_code, statusbar_log::kStatusbarLogSuccess)
         << "Should fail when positions vector (size " << positions.size()
@@ -144,7 +149,8 @@ TEST_F(HandleManagementTest, CreateHandle_InvalidInputSizes) {
 
     const std::string log_filename = GetTestLogFilename();
     int err_code = statusbar_log::test::RedirectCreateStatusbarHandle(
-        handle, positions, bar_sizes, prefixes, postfixes, log_filename);
+        handle, this->sink_handle_, positions, bar_sizes, prefixes, postfixes,
+        log_filename);
 
     EXPECT_NE(err_code, statusbar_log::kStatusbarLogSuccess)
         << "Should fail when bar_sizes vector (size " << bar_sizes.size()
@@ -164,7 +170,8 @@ TEST_F(HandleManagementTest, CreateHandle_InvalidInputSizes) {
 
     const std::string log_filename = GetTestLogFilename();
     int err_code = statusbar_log::test::RedirectCreateStatusbarHandle(
-        handle, positions, bar_sizes, prefixes, postfixes, log_filename);
+        handle, this->sink_handle_, positions, bar_sizes, prefixes, postfixes,
+        log_filename);
 
     EXPECT_NE(err_code, statusbar_log::kStatusbarLogSuccess)
         << "Should fail when prefixes vector (size " << prefixes.size()
@@ -184,7 +191,8 @@ TEST_F(HandleManagementTest, CreateHandle_InvalidInputSizes) {
 
     const std::string log_filename = GetTestLogFilename();
     int err_code = statusbar_log::test::RedirectCreateStatusbarHandle(
-        handle, positions, bar_sizes, prefixes, postfixes, log_filename);
+        handle, this->sink_handle_, positions, bar_sizes, prefixes, postfixes,
+        log_filename);
 
     EXPECT_NE(err_code, statusbar_log::kStatusbarLogSuccess)
         << "Should fail when postfixes vector (size " << postfixes.size()
@@ -209,7 +217,8 @@ TEST_F(HandleManagementTest, CreateHandle_MaxActiveHandlesLimit) {
 
     const std::string log_filename = GetTestLogFilename();
     int err_code = statusbar_log::test::RedirectCreateStatusbarHandle(
-        handle, positions, bar_sizes, prefixes, postfixes, log_filename);
+        handle, this->sink_handle_, positions, bar_sizes, prefixes, postfixes,
+        log_filename);
 
     if (err_code == statusbar_log::kStatusbarLogSuccess) {
       // Successfully created - should only happen up to
@@ -254,7 +263,8 @@ TEST_F(HandleManagementTest, CreateHandle_MaxActiveHandlesLimit) {
     std::vector<std::string> postfixes = {"works"};
 
     err_code = statusbar_log::test::RedirectCreateStatusbarHandle(
-        new_handle, positions, bar_sizes, prefixes, postfixes, log_filename);
+        new_handle, this->sink_handle_, positions, bar_sizes, prefixes,
+        postfixes, log_filename);
 
     EXPECT_EQ(err_code, statusbar_log::kStatusbarLogSuccess)
         << "Should be able to create new handle after destroying one";
@@ -277,7 +287,8 @@ TEST_F(HandleManagementTest, DestroyValidHandle) {
 
   const std::string log_filename = GetTestLogFilename();
   int err_code = statusbar_log::test::RedirectCreateStatusbarHandle(
-      handle, positions, bar_sizes, prefixes, postfixes, log_filename);
+      handle, this->sink_handle_, positions, bar_sizes, prefixes, postfixes,
+      log_filename);
 
   EXPECT_EQ(err_code, statusbar_log::kStatusbarLogSuccess)
       << "CreateStatusbarHandle should return "
@@ -307,7 +318,8 @@ TEST_F(HandleManagementTest, DestroyInvalidHandle) {
       << "Should not be able to destroy a statusbar before it has been created";
 
   err_code = statusbar_log::test::RedirectCreateStatusbarHandle(
-      handle, positions, bar_sizes, prefixes, postfixes, log_filename);
+      handle, this->sink_handle_, positions, bar_sizes, prefixes, postfixes,
+      log_filename);
   ASSERT_EQ(err_code, statusbar_log::kStatusbarLogSuccess)
       << "CreateStatusbarHandle should return "
          "statusbar_log::kStatusbarLogSuccess";
@@ -340,7 +352,8 @@ TEST_F(HandleManagementTest, DestroyAlreadyDestroyedHandle) {
 
   const std::string log_filename = GetTestLogFilename();
   int err_code = statusbar_log::test::RedirectCreateStatusbarHandle(
-      handle, positions, bar_sizes, prefixes, postfixes, log_filename);
+      handle, this->sink_handle_, positions, bar_sizes, prefixes, postfixes,
+      log_filename);
   ASSERT_EQ(err_code, statusbar_log::kStatusbarLogSuccess)
       << "CreateStatusbarHandle should return "
          "statusbar_log::kStatusbarLogSuccess";
@@ -366,50 +379,53 @@ TEST_F(HandleManagementTest, DestroyAlreadyDestroyedHandle) {
 
 class StatusbarUpdateTest : public StatusbarTestBase {
  protected:
-  std::string log_filename;
-  statusbar_log::StatusbarHandle handle;
-  std::vector<unsigned int> positions;
-  std::vector<unsigned int> bar_sizes;
-  std::vector<std::string> prefixes;
-  std::vector<std::string> postfixes;
+  statusbar_log::sink::SinkHandle sink_handle_;
+  std::string log_filename_;
+  statusbar_log::StatusbarHandle handle_;
+  std::vector<unsigned int> positions_;
+  std::vector<unsigned int> bar_sizes_;
+  std::vector<std::string> prefixes_;
+  std::vector<std::string> postfixes_;
 
   void SetUp() override {
-    this->positions = {1};
-    this->bar_sizes = {50};
-    this->prefixes = {"Processing"};
-    this->postfixes = {"items"};
-    this->log_filename = GetTestLogFilename();
+    statusbar_log::sink::CreateSinkStdout(this->sink_handle_);
+    this->positions_ = {1};
+    this->bar_sizes_ = {50};
+    this->prefixes_ = {"Processing"};
+    this->postfixes_ = {"items"};
+    this->log_filename_ = GetTestLogFilename();
 
     int err_code = statusbar_log::test::RedirectCreateStatusbarHandle(
-        this->handle, this->positions, this->bar_sizes, this->prefixes,
-        this->postfixes, this->log_filename);
+        this->handle_, this->sink_handle_, this->positions_, this->bar_sizes_,
+        this->prefixes_, this->postfixes_, this->log_filename_);
 
     ASSERT_EQ(err_code, statusbar_log::kStatusbarLogSuccess)
         << "Failed to create statusbar handle in fixture setup";
-    ASSERT_TRUE(handle.valid)
+    ASSERT_TRUE(handle_.valid)
         << "Handle should be valid after creation in fixture setup";
   }
 
   void TearDown() override {
     // Only destroy if the handle is still valid
-    if (handle.valid) {
+    if (handle_.valid) {
       int err_code = statusbar_log::test::RedirectDestroyStatusbarHandle(
-          handle, log_filename);
+          handle_, log_filename_);
       EXPECT_EQ(err_code, statusbar_log::kStatusbarLogSuccess)
           << "Failed to destroy statusbar handle in fixture teardown";
     }
+    statusbar_log::sink::DestroySinkHandle(this->sink_handle_);
   }
 
   void UpdateBarAndVerify(size_t bar_index, double percentage) {
     int err_code = statusbar_log::test::RedirectUpdateStatusbar(
-        this->handle, bar_index, percentage, log_filename);
+        this->handle_, bar_index, percentage, log_filename_);
     EXPECT_EQ(err_code, statusbar_log::kStatusbarLogSuccess)
         << "Failed to update bar at index " << bar_index << " with percentage "
         << percentage;
   }
   void updateBarAndVerifyFailure(size_t bar_index, double percentage) {
     int err_code = statusbar_log::test::RedirectUpdateStatusbar(
-        this->handle, bar_index, percentage, log_filename);
+        this->handle_, bar_index, percentage, log_filename_);
     EXPECT_NE(err_code, statusbar_log::kStatusbarLogSuccess)
         << "Should have failed to update bar with index " << bar_index
         << " with percentage " << percentage;
@@ -433,19 +449,19 @@ TEST_F(StatusbarUpdateTest, UpdateBoundaryPercentages) {
 
 TEST_F(StatusbarUpdateTest, UpdateMultipleBarsInHandle) {
   int err = statusbar_log::test::RedirectDestroyStatusbarHandle(
-      this->handle, this->log_filename);
+      this->handle_, this->log_filename_);
   ASSERT_EQ(err, statusbar_log::kStatusbarLogSuccess)
       << "Failed to destroy statusbar handle "
          "in UpdateMultipleBarsInHandle test";
 
-  this->positions = {2, 1};
-  this->bar_sizes = {50, 25};
-  this->prefixes = {"second", "first"};
-  this->postfixes = {"items", "things"};
+  this->positions_ = {2, 1};
+  this->bar_sizes_ = {50, 25};
+  this->prefixes_ = {"second", "first"};
+  this->postfixes_ = {"items", "things"};
 
   int err_code = statusbar_log::test::RedirectCreateStatusbarHandle(
-      this->handle, this->positions, this->bar_sizes, this->prefixes,
-      this->postfixes, this->log_filename);
+      this->handle_, this->sink_handle_, this->positions_, this->bar_sizes_,
+      this->prefixes_, this->postfixes_, this->log_filename_);
 
   ASSERT_EQ(err_code, statusbar_log::kStatusbarLogSuccess)
       << "Failed to create multiple statusbars in UpdateMultipleBarsInHandle "
@@ -475,7 +491,8 @@ TEST_F(StatusbarUpdateTest, InvalidUpdates) {
 
   const std::string log_filename2 = GetTestLogFilename();
   int err_code = statusbar_log::test::RedirectCreateStatusbarHandle(
-      handle2, positions2, bar_sizes2, prefixes2, postfixes2, log_filename2);
+      handle2, this->sink_handle_, positions2, bar_sizes2, prefixes2,
+      postfixes2, log_filename2);
   ASSERT_EQ(err_code, statusbar_log::kStatusbarLogSuccess)
       << "CreateStatusbarHandle should return "
          "statusbar_log::kStatusbarLogSuccess";
@@ -501,28 +518,33 @@ TEST_F(StatusbarUpdateTest, InvalidUpdates) {
 
 class StatusbarValidations : public StatusbarTestBase {
  protected:
+  statusbar_log::sink::SinkHandle sink_handle_;
   std::string log_filename;
-  statusbar_log::StatusbarHandle handle;
-  std::vector<unsigned int> positions;
-  std::vector<unsigned int> bar_sizes;
-  std::vector<std::string> prefixes;
-  std::vector<std::string> postfixes;
+  statusbar_log::StatusbarHandle handle_;
+  std::vector<unsigned int> positions_;
+  std::vector<unsigned int> bar_sizes_;
+  std::vector<std::string> prefixes_;
+  std::vector<std::string> postfixes_;
 
   void SetUp() override {
-    this->positions = {1};
-    this->bar_sizes = {50};
-    this->prefixes = {"Processing"};
-    this->postfixes = {"items"};
+    statusbar_log::sink::CreateSinkStdout(this->sink_handle_);
+    this->positions_ = {1};
+    this->bar_sizes_ = {50};
+    this->prefixes_ = {"Processing"};
+    this->postfixes_ = {"items"};
     this->log_filename = GetTestLogFilename();
 
     int err_code = statusbar_log::test::RedirectCreateStatusbarHandle(
-        this->handle, this->positions, this->bar_sizes, this->prefixes,
-        this->postfixes, this->log_filename);
+        this->handle_, this->sink_handle_, this->positions_, this->bar_sizes_,
+        this->prefixes_, this->postfixes_, this->log_filename);
 
     ASSERT_EQ(err_code, statusbar_log::kStatusbarLogSuccess)
         << "Failed to create statusbar handle in fixture setup";
-    ASSERT_TRUE(handle.valid)
+    ASSERT_TRUE(handle_.valid)
         << "Handle should be valid after creation in fixture setup";
+  }
+  void TearDown() override {
+    statusbar_log::sink::CreateSinkStdout(this->sink_handle_);
   }
 };
 
@@ -535,50 +557,51 @@ TEST_F(StatusbarValidations, IsValidHandle) {
 
   std::string log_filename2 = GetTestLogFilename();
   int err_code = statusbar_log::test::RedirectCreateStatusbarHandle(
-      handle2, positions, bar_sizes, prefixes, postfixes, log_filename2);
+      handle2, this->sink_handle_, positions, bar_sizes, prefixes, postfixes,
+      log_filename2);
   ASSERT_EQ(err_code, statusbar_log::kStatusbarLogSuccess)
       << "Failed to create statusbar handle";
   ASSERT_TRUE(handle2.valid) << "Handle should be valid after creation";
 
-  handle.valid = false;
+  handle_.valid = false;
   err_code = statusbar_log::test::RedirectDestroyStatusbarHandle(
-      handle, this->log_filename);
+      handle_, this->log_filename);
   EXPECT_EQ(err_code, -1);
 
-  handle.valid = true;
-  int idx_backup = handle.idx;
-  handle.idx = SIZE_MAX;
+  handle_.valid = true;
+  int idx_backup = handle_.idx;
+  handle_.idx = SIZE_MAX;
   err_code = statusbar_log::test::RedirectDestroyStatusbarHandle(
-      handle, this->log_filename);
+      handle_, this->log_filename);
   EXPECT_EQ(err_code, -2);
 
-  handle.idx = 99999;
+  handle_.idx = 99999;
   err_code = statusbar_log::test::RedirectDestroyStatusbarHandle(
-      handle, this->log_filename);
+      handle_, this->log_filename);
   EXPECT_EQ(err_code, -2);
 
-  handle.idx = idx_backup + 1;
+  handle_.idx = idx_backup + 1;
   err_code = statusbar_log::test::RedirectDestroyStatusbarHandle(
-      handle, this->log_filename);
+      handle_, this->log_filename);
   EXPECT_EQ(err_code, -3);
 
-  handle.idx = idx_backup;
-  int ID_backup = handle.id;
-  handle.id = handle2.id;
+  handle_.idx = idx_backup;
+  int ID_backup = handle_.id;
+  handle_.id = handle2.id;
   err_code = statusbar_log::test::RedirectDestroyStatusbarHandle(
-      handle, this->log_filename);
+      handle_, this->log_filename);
   EXPECT_EQ(err_code, -3);
 
-  handle.id = ID_backup + 1;
+  handle_.id = ID_backup + 1;
   err_code = statusbar_log::test::RedirectDestroyStatusbarHandle(
-      handle, this->log_filename);
+      handle_, this->log_filename);
   EXPECT_EQ(err_code, -3);
 
   // BUG : Cant test err_code -4
 
-  handle.id = ID_backup;
+  handle_.id = ID_backup;
   err_code = statusbar_log::test::RedirectDestroyStatusbarHandle(
-      handle, this->log_filename);
+      handle_, this->log_filename);
   EXPECT_EQ(err_code, statusbar_log::kStatusbarLogSuccess);
   err_code = statusbar_log::test::RedirectDestroyStatusbarHandle(handle2,
                                                                  log_filename2);
@@ -591,40 +614,48 @@ TEST_F(StatusbarValidations, IsValidHandle) {
 
 class LogTest : public StatusbarTestBase {
  protected:
+  statusbar_log::sink::SinkHandle sink_handle_;
   void SetUp() override {
+    statusbar_log::sink::CreateSinkStdout(this->sink_handle_);
     ASSERT_EQ(statusbar_log::kLogLevel, statusbar_log::kLogLevelInf)
         << "Ensure tests are compiled with kLogLevelInf, otherwise some tests "
            "will fail!";
   }
-  void TearDown() override {}
+  void TearDown() override {
+    statusbar_log::sink::DestroySinkHandle(this->sink_handle_);
+  }
 };
 
 TEST_F(LogTest, LogLevelsTest) {
   std::string capture_stdout;
 
-  statusbar_log::test::RedirectToStrLog(
-      capture_stdout, statusbar_log::kLogLevelDbg, kFilename, "Debug Test");
+  statusbar_log::test::RedirectToStrLog(capture_stdout, this->sink_handle_,
+                                        statusbar_log::kLogLevelDbg, kFilename,
+                                        "Debug Test");
 
   EXPECT_STREQ(capture_stdout.c_str(), "")
       << "Expected output of LogDbg did not match actual output (should be no "
          "output as log level is below threshhold)";
 
-  statusbar_log::test::RedirectToStrLog(
-      capture_stdout, statusbar_log::kLogLevelInf, kFilename, "Info Test");
+  statusbar_log::test::RedirectToStrLog(capture_stdout, this->sink_handle_,
+                                        statusbar_log::kLogLevelInf, kFilename,
+                                        "Info Test");
 
   EXPECT_STREQ(capture_stdout.c_str(),
                "INFO [statusbarlog_test.cc]: Info Test\n")
       << "Expected output of LogInf did not match actual output";
 
-  statusbar_log::test::RedirectToStrLog(
-      capture_stdout, statusbar_log::kLogLevelWrn, kFilename, "Warn Test");
+  statusbar_log::test::RedirectToStrLog(capture_stdout, this->sink_handle_,
+                                        statusbar_log::kLogLevelWrn, kFilename,
+                                        "Warn Test");
 
   EXPECT_STREQ(capture_stdout.c_str(),
                "WARNING [statusbarlog_test.cc]: Warn Test\n")
       << "Expected output of LogWrn did not match actual output";
 
-  statusbar_log::test::RedirectToStrLog(
-      capture_stdout, statusbar_log::kLogLevelErr, kFilename, "Error Test");
+  statusbar_log::test::RedirectToStrLog(capture_stdout, this->sink_handle_,
+                                        statusbar_log::kLogLevelErr, kFilename,
+                                        "Error Test");
 
   EXPECT_STREQ(capture_stdout.c_str(),
                "ERROR [statusbarlog_test.cc]: Error Test\n")
@@ -635,7 +666,8 @@ TEST_F(LogTest, LogFormatStringTest) {
   std::string capture_stdout;
 
   statusbar_log::test::RedirectToStrLog(
-      capture_stdout, statusbar_log::kLogLevelInf, kFilename,
+      capture_stdout, this->sink_handle_, statusbar_log::kLogLevelInf,
+      kFilename,
       "int: %i, unsigned: %u, hex: %#x, oct: %#o, short: %hd, long: %ld, long "
       "long: %lld",
       -1, 2u, 255u, 8u, (short)3, -1234567890L, 1234567890123LL);
@@ -647,8 +679,8 @@ TEST_F(LogTest, LogFormatStringTest) {
                "\n");
 
   statusbar_log::test::RedirectToStrLog(
-      capture_stdout, statusbar_log::kLogLevelInf, kFilename,
-      "size_t: %zu, ssize_t: %zd", (size_t)42, (ssize_t)-5);
+      capture_stdout, this->sink_handle_, statusbar_log::kLogLevelInf,
+      kFilename, "size_t: %zu, ssize_t: %zd", (size_t)42, (ssize_t)-5);
 
   EXPECT_STREQ(capture_stdout.c_str(),
                "INFO [statusbarlog_test.cc]: "
@@ -656,8 +688,8 @@ TEST_F(LogTest, LogFormatStringTest) {
                "\n");
 
   statusbar_log::test::RedirectToStrLog(
-      capture_stdout, statusbar_log::kLogLevelInf, kFilename,
-      "unsigned (wrap): %u", (unsigned int)(-1));
+      capture_stdout, this->sink_handle_, statusbar_log::kLogLevelInf,
+      kFilename, "unsigned (wrap): %u", (unsigned int)(-1));
 
   EXPECT_STREQ(capture_stdout.c_str(),
                "INFO [statusbarlog_test.cc]: "
@@ -666,15 +698,16 @@ TEST_F(LogTest, LogFormatStringTest) {
 
   double v = 1234.56789;
 
-  statusbar_log::test::RedirectToStrLog(
-      capture_stdout, statusbar_log::kLogLevelInf, kFilename, "v %%f: %f", v);
+  statusbar_log::test::RedirectToStrLog(capture_stdout, this->sink_handle_,
+                                        statusbar_log::kLogLevelInf, kFilename,
+                                        "v %%f: %f", v);
 
   EXPECT_STREQ(capture_stdout.c_str(),
                "INFO [statusbarlog_test.cc]: "
                "v %f: 1234.567890"
                "\n");
 
-  statusbar_log::test::RedirectToStrLog(capture_stdout,
+  statusbar_log::test::RedirectToStrLog(capture_stdout, this->sink_handle_,
                                         statusbar_log::kLogLevelInf, kFilename,
                                         "v %%.2f: %.2f", v);
 
@@ -683,7 +716,7 @@ TEST_F(LogTest, LogFormatStringTest) {
                "v %.2f: 1234.57"
                "\n");
 
-  statusbar_log::test::RedirectToStrLog(capture_stdout,
+  statusbar_log::test::RedirectToStrLog(capture_stdout, this->sink_handle_,
                                         statusbar_log::kLogLevelInf, kFilename,
                                         "v %%+09.2f: %+09.2f", v);
 
@@ -692,7 +725,7 @@ TEST_F(LogTest, LogFormatStringTest) {
                "v %+09.2f: +01234.57"
                "\n");
 
-  statusbar_log::test::RedirectToStrLog(capture_stdout,
+  statusbar_log::test::RedirectToStrLog(capture_stdout, this->sink_handle_,
                                         statusbar_log::kLogLevelInf, kFilename,
                                         "v %%e: %e, v %%E: %E", v, v);
 
@@ -703,7 +736,7 @@ TEST_F(LogTest, LogFormatStringTest) {
 
   long double w = 1.234567890123456789L;
 
-  statusbar_log::test::RedirectToStrLog(capture_stdout,
+  statusbar_log::test::RedirectToStrLog(capture_stdout, this->sink_handle_,
                                         statusbar_log::kLogLevelInf, kFilename,
                                         "long double Lf: %Lf", w);
 
@@ -717,8 +750,8 @@ TEST_F(LogTest, LogFormatStringTest) {
   char c = 'A';
 
   statusbar_log::test::RedirectToStrLog(
-      capture_stdout, statusbar_log::kLogLevelInf, kFilename,
-      "str: %s, c_str: %s, char: %c", s.c_str(), cs, c);
+      capture_stdout, this->sink_handle_, statusbar_log::kLogLevelInf,
+      kFilename, "str: %s, c_str: %s, char: %c", s.c_str(), cs, c);
 
   EXPECT_STREQ(capture_stdout.c_str(),
                "INFO [statusbarlog_test.cc]: "
@@ -726,15 +759,15 @@ TEST_F(LogTest, LogFormatStringTest) {
                "\n");
 
   statusbar_log::test::RedirectToStrLog(
-      capture_stdout, statusbar_log::kLogLevelInf, kFilename,
-      "[%10s] [%-10s] [%.3s]", "hi", "left", "truncate");
+      capture_stdout, this->sink_handle_, statusbar_log::kLogLevelInf,
+      kFilename, "[%10s] [%-10s] [%.3s]", "hi", "left", "truncate");
 
   EXPECT_STREQ(capture_stdout.c_str(),
                "INFO [statusbarlog_test.cc]: "
                "[        hi] [left      ] [tru]"
                "\n");
 
-  statusbar_log::test::RedirectToStrLog(capture_stdout,
+  statusbar_log::test::RedirectToStrLog(capture_stdout, this->sink_handle_,
                                         statusbar_log::kLogLevelInf, kFilename,
                                         "int:%i u:%u sz:%zu f:%.2f s:%s c:%c",
                                         -1, 2u, (size_t)7, 3.14159, "ok", 'Z');
@@ -747,6 +780,7 @@ TEST_F(LogTest, LogFormatStringTest) {
 
 class ReadStatusbarUpdateTest : public StatusbarTestBase {
  protected:
+  statusbar_log::sink::SinkHandle sink_handle_;
   std::string log_filename_;
   statusbar_log::StatusbarHandle handle_;
   std::vector<unsigned int> positions_;
@@ -755,6 +789,7 @@ class ReadStatusbarUpdateTest : public StatusbarTestBase {
   std::vector<std::string> postfixes_;
 
   void SetUp() override {
+    statusbar_log::sink::CreateSinkStdout(this->sink_handle_);
     ASSERT_EQ(statusbar_log::kLogLevel, statusbar_log::kLogLevelInf)
         << "Ensure tests are compiled with kLogLevelInf, otherwise some tests "
            "will fail!";
@@ -765,8 +800,8 @@ class ReadStatusbarUpdateTest : public StatusbarTestBase {
     this->log_filename_ = GetTestLogFilename();
 
     int err_code = statusbar_log::test::RedirectCreateStatusbarHandle(
-        this->handle_, this->positions_, this->bar_sizes_, this->prefixes_,
-        this->postfixes_, this->log_filename_);
+        this->handle_, this->sink_handle_, this->positions_, this->bar_sizes_,
+        this->prefixes_, this->postfixes_, this->log_filename_);
 
     ASSERT_EQ(err_code, statusbar_log::kStatusbarLogSuccess)
         << "Failed to create statusbar handle in fixture setup";
@@ -782,6 +817,7 @@ class ReadStatusbarUpdateTest : public StatusbarTestBase {
       EXPECT_EQ(err_code, statusbar_log::kStatusbarLogSuccess)
           << "Failed to destroy statusbar handle in fixture teardown";
     }
+    statusbar_log::sink::DestroySinkHandle(this->sink_handle_);
   }
 };
 

@@ -1,5 +1,4 @@
-# SPDX-License-Identifier: Apache-2.0
-# Copyright (c) 2025 Lukas Widmer
+# SPDX-License-Identifier: Apache-2.0 Copyright (c) 2025 Lukas Widmer
 
 # -- statusbarlog/CMakeLists.txt
 
@@ -68,29 +67,40 @@ target_include_directories(
 
 message(STATUS "Detected C++ compiler: ${CMAKE_CXX_COMPILER_ID}")
 
+# -----------------------------------------------------------------------------
+# Compiler flags per build type
+# -----------------------------------------------------------------------------
 if(WIN32)
-  target_compile_definitions(statusbarlog PRIVATE NOMINMAX)
+  target_compile_definitions(${PROJECT_NAME} PRIVATE NOMINMAX)
 endif()
 
 if(MSVC)
-  message(STATUS "Configuring for MSVC compiler with Windows optimizations")
+  message(STATUS "Configuring for MSVC compiler")
 
-  target_compile_options(
-    ${PROJECT_NAME} PRIVATE /std:c++20 /W4 /WX $<$<CONFIG:Release>:/O2 /Ob2
-                            /fp:fast>)
+  target_compile_options(${PROJECT_NAME} PRIVATE /std:c++20 /W4 /WX)
+
+  if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    target_compile_options(${PROJECT_NAME} PRIVATE /Zi /Od)
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /DEBUG")
+  elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
+    target_compile_options(${PROJECT_NAME} PRIVATE /O2 /Ob2 /fp:fast)
+  elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+    target_compile_options(${PROJECT_NAME} PRIVATE /O2 /Ob2 /Zi /DEBUG /fp:fast)
+  endif()
 
 else()
-  message(STATUS "Configuring for GCC/Clang compiler with Unix optimizations")
-
+  message(STATUS "Configuring for GCC/Clang compiler")
   target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
-  target_compile_options(
-    ${PROJECT_NAME}
-    PRIVATE -std=c++20 $<$<CXX_COMPILER_ID:GNU>:-fno-extensions>
-            $<$<CONFIG:Release>:-O3 -ffast-math>)
+  target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic
+                                                 -Wformat)
 
-  target_compile_options(
-    ${PROJECT_NAME} PRIVATE $<$<CXX_COMPILER_ID:GNU,CLANG,AppleClang>:-Wall
-                            -Wextra -Wpedantic -Wformat>)
+  if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    target_compile_options(${PROJECT_NAME} PRIVATE -g -O0)
+  elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
+    target_compile_options(${PROJECT_NAME} PRIVATE -O3 -ffast-math)
+  elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+    target_compile_options(${PROJECT_NAME} PRIVATE -O2 -g -ffast-math)
+  endif()
 endif()
 
 # Print final configuration summary
@@ -146,7 +156,7 @@ write_basic_package_version_file(
   COMPATIBILITY SameMajorVersion)
 
 # =============================================================================
-# Copy compile_commands.json (Development conveniece)
+# Copy compile_commands.json (Development convenience)
 # =============================================================================
 
 # Only do this for the main project, not when used as submodule
