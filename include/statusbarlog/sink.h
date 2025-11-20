@@ -152,7 +152,7 @@ int CreateSinkStdout(SinkHandle& sink_handle);
  * \see _sink_registry: The registry for sink struct in use.
  * \see _sink_free_handles: The registry for free sink handles.
  */
-int CreateSinkFile(SinkHandle& sink_handle, const std::string& path);
+int CreateSinkFile(SinkHandle& sink_handle, const std::string path);
 
 /**
  * \brief Destorys a Sink using its handle and invalidates it.
@@ -282,28 +282,66 @@ int get_unique_lock(const SinkHandle& sink_handle,
  */
 int get_mutex_ptr(const SinkHandle& sink_handle, std::mutex*& sink_mutex_ptr);
 
-  /**
-   * \brief Get the sink type associated to the sink handle.
-   *
-   * This function is used to retrieve a the sink type of the sink associated to
-   * the handle
-   *
-   * \return Returns statusbar_log::kStatusbarLogSuccess (i.e. 0) if the sink
-   * type retrieval succeeded, or one of these status codes:
-   *         -  statusbar_log::kStatusbarLogSuccess (i.e. 0): Valid handle
-   *         - -1: Failed: Invalid handle (Valid flag of handle set to false)
-   *         - -2: Failed: Invalid handle (Handle index out of bounds in
-   * `statusbar_registry)`
-   *         - -3: Failed: Invalid handle (Handle IDs don't match between handle
-   * struct)
-   *         - -4: Failed: Invalid handle (Handle ID is 0 (i.e. invalid))
-   *         - -5: Failed: Invalid handle (Errorcode not handled)
-   *
-   * \see SinkType: All possible sink types
-   * \see SinkHandle: The sink handle struct
-   * \see Sink: The sink struct
-   */
-  int get_sink_type(const SinkHandle& sink_handle, SinkType& sink_type);
+/**
+ * \brief Get the sink type associated to the sink handle.
+ *
+ * This function is used to retrieve a the sink type of the sink associated to
+ * the handle
+ *
+ * \param[in] sink_handle Sink handle struct of which to get the type.
+ * \param[in, out] sink_type SinkType struct in which to save type.
+ *
+ * \return Returns statusbar_log::kStatusbarLogSuccess (i.e. 0) if the sink
+ * type retrieval succeeded, or one of these status codes:
+ *         -  statusbar_log::kStatusbarLogSuccess (i.e. 0): Valid handle
+ *         - -1: Failed: Invalid handle (Valid flag of handle set to false)
+ *         - -2: Failed: Invalid handle (Handle index out of bounds in
+ * `statusbar_registry)`
+ *         - -3: Failed: Invalid handle (Handle IDs don't match between handle
+ * struct)
+ *         - -4: Failed: Invalid handle (Handle ID is 0 (i.e. invalid))
+ *         - -5: Failed: Invalid handle (Errorcode not handled)
+ *
+ * \see SinkType: All possible sink types
+ * \see SinkHandle: The sink handle struct
+ * \see Sink: The sink struct
+ */
+int get_sink_type(const SinkHandle& sink_handle, SinkType& sink_type);
+
+/**
+ * \brief Move the cursor for the given sink up (positive) or down (negative).
+ *
+ * For TTY sinks this emits the ANSI sequence "\033[<N>A" to move the cursor up
+ * N lines. For moving down it writes N newline characters.
+ *
+ * Behavior:
+ * - If the sink has a valid file descriptor (fd >= 0) writes directly to that
+ *   fd.
+ * - If the sink wraps std::cout or std::cerr, writes to fileno(stdout|stderr).
+ * - If the sink is an arbitrary ostream (file or wrapped ostream), the
+ *
+ * \param[in] sink_handle Sink handle struct of which to get the type.
+ * \param[in] move number of lines to move up (positive value) or down (negative
+ * value).
+ *
+ * This function avoids blocking and therefore reduces the risk of deadlocks
+ * when called from code that may already hold a sink lock.
+ *
+ * \return Returns statusbar_log::kStatusbarLogSuccess (i.e. 0) on success.
+ * Otherwise one of these status codes:
+ *         -  statusbar_log::kStatusbarLogSuccess (i.e. 0): Valid handle
+ *         - -1: Failed: Invalid handle (Valid flag of handle set to false)
+ *         - -2: Failed: Invalid handle (Handle index out of bounds in
+ * `statusbar_registry)`
+ *         - -3: Failed: Invalid handle (Handle IDs don't match between handle
+ * struct)
+ *         - -4: Failed: Invalid handle (Handle ID is 0 (i.e. invalid))
+ *         - -5: Failed: Invalid handle (Errorcode not handled)
+ *         - -6: Failed: Could not obtain sink pointer from registry.
+ *         - -7: Failed: Failed to write to fd-backed sink.
+ *         - -8: Failed: Failed to open file (trying to move up).
+ */
+int MoveCursorUp(const SinkHandle& sink_handle, int move);
 
 }  // namespace sink
 }  // namespace statusbar_log

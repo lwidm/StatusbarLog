@@ -18,16 +18,16 @@
 
 #include "statusbarlog/sink.h"
 
-#include <cstdio>
-#include <cstring>
-#include <ios>
-
 #ifdef _WIN32
 #include <windows.h>
 #else
 #include <unistd.h>
 #endif
 
+#include <cstdio>
+#include <cstring>
+#include <filesystem>
+#include <ios>
 #include <fstream>
 #include <iostream>
 #include <memory>
@@ -61,8 +61,9 @@ typedef struct {
   std::mutex mutex;
   std::ostream* out;  ///< actual output stream used for printing
   std::unique_ptr<std::ofstream>
-      owned_file;  ///< Some sinks need to own a file (nullptr otherwise)
-  SinkType type;   ///< The sinks type
+      owned_file;    ///< Some sinks need to own a file (nullptr otherwise)
+  SinkType type;     ///< The sinks type
+  std::string path;  ///< path for file-backed sinks (empty otherwise)
   int fd;  ///< File descriptor, used for differenciating between cout and cerr
            ///< (-1 if not applicable)
   unsigned int id;  ///< id of the struct, used for validating handles
@@ -117,10 +118,6 @@ int _ValidateSinkCreation(SinkHandle& sink_handle) {
 int IsValidSinkHandle(const SinkHandle& sink_handle) {
   const std::size_t idx = sink_handle.idx;
 
-  std::size_t dbg0 =  sink_handle.idx;
-  std::size_t dbg1 =  _sink_registry.size();
-  std::size_t dbg2 =  _sink_registry.size();
-  std::size_t dbg3 =  SIZE_MAX;
   if (!sink_handle.valid) {
     return -1;
   }
@@ -232,6 +229,7 @@ int CreateSinkStdout(SinkHandle& sink_handle) {
     // std::mutex
     _sink_registry[sink_handle.idx]->out = &std::cout;
     _sink_registry[sink_handle.idx]->owned_file.reset();
+    _sink_registry[sink_handle.idx]->path.clear();
     _sink_registry[sink_handle.idx]->type = kSinkStdout;
     _sink_registry[sink_handle.idx]->fd = fileno(stdout);
     _sink_registry[sink_handle.idx]->id = _sink_handle_id_count;
@@ -240,6 +238,7 @@ int CreateSinkStdout(SinkHandle& sink_handle) {
     sink_handle.idx = _sink_registry.size();
     new_sink->out = &std::cout;
     new_sink->owned_file.reset();
+    new_sink->path.clear();
     new_sink->type = kSinkStdout;
     new_sink->fd = fileno(stdout);
     new_sink->id = _sink_handle_id_count;
@@ -251,7 +250,7 @@ int CreateSinkStdout(SinkHandle& sink_handle) {
   return kStatusbarLogSuccess;
 }
 
-int CreateSinkFile(SinkHandle& sink_handle, const std::string& path) {
+int CreateSinkFile(SinkHandle& sink_handle, const std::string path) {
   const int err = _ValidateSinkCreation(sink_handle);
   if (err != kStatusbarLogSuccess) {
     return err;
@@ -287,6 +286,7 @@ int CreateSinkFile(SinkHandle& sink_handle, const std::string& path) {
     // std::mutex
     _sink_registry[sink_handle.idx]->out = f.get();
     _sink_registry[sink_handle.idx]->owned_file = std::move(f);
+    _sink_registry[sink_handle.idx]->path = path;
     _sink_registry[sink_handle.idx]->type = kSinkFileOwned;
     _sink_registry[sink_handle.idx]->fd = -1;
     _sink_registry[sink_handle.idx]->id = _sink_handle_id_count;
@@ -295,6 +295,7 @@ int CreateSinkFile(SinkHandle& sink_handle, const std::string& path) {
     // std::mutex
     new_sink->out = f.get();
     new_sink->owned_file = std::move(f);
+    new_sink->path = path;
     new_sink->type = kSinkFileOwned;
     new_sink->fd = -1;
     new_sink->id = _sink_handle_id_count;
@@ -341,6 +342,7 @@ int CreateSinkOstream(SinkHandle& sink_handle, std::ostream& os) {
     // std::mutex
     _sink_registry[sink_handle.idx]->out = &os;
     _sink_registry[sink_handle.idx]->owned_file.reset();
+    _sink_registry[sink_handle.idx]->path.clear();
     _sink_registry[sink_handle.idx]->type = kSinkOstreamWrapped;
     _sink_registry[sink_handle.idx]->fd = fd;
     _sink_registry[sink_handle.idx]->id = _sink_handle_id_count;
@@ -349,6 +351,7 @@ int CreateSinkOstream(SinkHandle& sink_handle, std::ostream& os) {
     // std::mutex
     new_sink->out = &os;
     new_sink->owned_file.reset();
+    new_sink->path.clear();
     new_sink->type = kSinkOstreamWrapped;
     new_sink->fd = fd;
     new_sink->id = _sink_handle_id_count;
@@ -365,12 +368,12 @@ ssize_t SinkWrite(const SinkHandle& sink_handle, const char* buf,
   std::lock_guard<std::mutex> lx(_sink_registry_mutex);
   if (!buf) return -1;
 
-  if (!(IsValidSinkHandle(sink_handle)==kStatusbarLogSuccess)) return -2;
+  if (!(IsValidSinkHandle(sink_handle) == kStatusbarLogSuccess)) return -2;
 
   std::unique_ptr<Sink>& sink = _sink_registry[sink_handle.idx];
 
   if (len == 0) return kStatusbarLogSuccess;
-  
+
   if (!sink->out->good() && sink->fd < 0) return -3;
 
   if (sink->fd >= 0) {
@@ -498,6 +501,86 @@ int FlushSinkHandle(const SinkHandle& sink_handle) {
   err = _FlushSink(_sink_registry[sink_handle.idx]);
   if (err != kStatusbarLogSuccess) {
     return err + 5;
+  }
+  return kStatusbarLogSuccess;
+}
+
+int MoveCursorUp(const SinkHandle& sink_handle, int move) {
+  if (move == 0) return kStatusbarLogSuccess;
+
+  {
+    std::lock_guard<std::mutex> registry_lock(_sink_registry_mutex);
+    int valid = IsValidSinkHandle(sink_handle);
+    if (valid != kStatusbarLogSuccess) return valid;
+  }
+
+  Sink* s = _sink_registry[sink_handle.idx].get();
+  if (!s) return -6;
+
+  // Case 1: we have an fd (covers stdout/stderr and any fd-backed sinks).
+  if (s->fd >= 0) {
+    std::string seq;
+    if (move > 0) {
+      seq = "\033[" + std::to_string(move) + "A";  // move up
+    } else {
+      seq.assign(static_cast<size_t>(-move), '\n');  // move down -> newlines
+    }
+    ssize_t rc = ::write(s->fd, seq.data(), seq.size());
+    return (rc < 0) ? -7 : kStatusbarLogSuccess;
+  }
+
+  // Case 2: sink owns a file (CreateSinkFile -> kSinkFileOwned).
+  if (s->type == kSinkFileOwned) {
+    if (move > 0) {
+      std::ofstream* file = s->owned_file.get();
+      (*file).flush();
+      std::ifstream in(s->path, std::ios::binary);
+      if (!in) return -8;
+
+      in.seekg(0, std::ios::end);
+      std::streamoff pos = in.tellg();
+      if (pos <= 0) {
+        return kStatusbarLogSuccess;
+      }
+
+      int lines_to_remove = move;
+      while (pos > 0 && lines_to_remove > 0) {
+        --pos;
+        in.seekg(pos);
+        char c;
+        in.get(c);
+        if (!in) break;
+        if (c == '\n') {
+          --lines_to_remove;
+        }
+      }
+
+      try {
+        std::filesystem::resize_file(
+            s->path, (pos > 0) ? static_cast<std::uintmax_t>(pos) : 0);
+      } catch (const std::exception&) {
+        return -9;
+      }
+      return kStatusbarLogSuccess;
+    } else {
+      std::string buf(-move, '\n');
+      SinkWriteStr(sink_handle, buf);
+    }
+  }
+
+  // Case 3: wrapped ostream (kSinkOstreamWrapped or other non-fd)
+  if (s->type == kSinkOstreamWrapped || s->out != nullptr) {
+    std::string seq;
+    if (move > 0) {
+      seq = "\033[" + std::to_string(move) + "A";  // move up
+    } else {
+      seq.assign(static_cast<size_t>(-move), '\n');  // move down -> newlines
+    }
+    ssize_t rc = ::write(s->fd, seq.data(), seq.size());
+    return (rc < 0) ? -7 : kStatusbarLogSuccess;
+  } else {
+    std::string buf(-move, '\n');
+    SinkWriteStr(sink_handle, buf);
   }
   return kStatusbarLogSuccess;
 }

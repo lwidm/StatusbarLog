@@ -91,7 +91,6 @@ unsigned int _statusbar_handle_id_count = 0;
 
 static std::mutex _statusbar_registry_mutex;
 static std::mutex _statusbar_id_count_mutex;
-static std::mutex _console_mutex;
 
 /**
  * \brief Conditionally flushes the output based on
@@ -101,23 +100,6 @@ void _ConditionalFlush(sink::SinkHandle sink_handle) {
   if (!kStatusbarLogNoAutoFlush) {
     sink::FlushSinkHandle(sink_handle);
   }
-}
-
-/**
- * \brief Function used only by the StatusbarLog module to move the cursor up X
- * lines in the standard output terminal
- *
- * \param[in] move: How many lines to move upwards. Negative values mean moving
- * down.
- *
- */
-void _MoveCursorUp(int move, sink::SinkHandle sink_handle) {
-  if (move > 0) {
-    std::cout << "\033[" << move << "A";
-  } else if (move < 0) {
-    std::cout << std::string(-move, '\n');
-  }
-  _ConditionalFlush(sink_handle);
 }
 
 /**
@@ -412,7 +394,7 @@ int _DrawStatusbarComponent(const sink::SinkHandle& sink_handle,
     }
   }
 
-  _MoveCursorUp(move, sink_handle);
+  sink::MoveCursorUp(sink_handle, move);
   ClearCurrentLine(sink_handle);
   ssize_t written = sink::SinkWriteStr(sink_handle, status_str);
   if (written <= 0) {
@@ -421,7 +403,7 @@ int _DrawStatusbarComponent(const sink::SinkHandle& sink_handle,
     return -8;
   }
   _ConditionalFlush(sink_handle);
-  _MoveCursorUp(-move, sink_handle);
+  sink::MoveCursorUp(sink_handle, -move);
 
   return err;
 }
@@ -501,7 +483,7 @@ int LogV(const LogLevel log_level, const std::string& filename,
   }
 
   va_list args_copy;
-  _MoveCursorUp(move, sink_handle);
+  sink::MoveCursorUp(sink_handle, move);
   if (statusbars_active) printf("\r\033[2K\r");
   va_copy(args_copy, args);
   unsigned int size = std::vsnprintf(nullptr, 0, fmt, args_copy);
@@ -529,7 +511,7 @@ int LogV(const LogLevel log_level, const std::string& filename,
   }
 
   _ConditionalFlush(sink_handle);
-  _MoveCursorUp(-move, sink_handle);
+  sink::MoveCursorUp(sink_handle, -move);
 
   if (statusbars_active) {
     for (std::size_t i = 0; i < _statusbar_registry.size(); ++i) {
@@ -776,9 +758,9 @@ int DestroyStatusbarHandle(StatusbarHandle& statusbar_handle) {
   Statusbar& target = _statusbar_registry[statusbar_handle.idx];
 
   for (std::size_t i = 0; i < target.positions.size(); i++) {
-    _MoveCursorUp(target.positions[i], sink_handle);
+    sink::MoveCursorUp(sink_handle, target.positions[i]);
     ClearCurrentLine(sink_handle);
-    _MoveCursorUp(-target.positions[i], sink_handle);
+    sink::MoveCursorUp(sink_handle, -target.positions[i]);
   }
   sink::FlushSinkHandle(sink_handle);
 
